@@ -33,9 +33,17 @@ function check(value, msg) { assert.ok(value, msg); checks++; }
     name.click(); input.value = '<测试>123456789012345'; key('Enter');
     check(!saved().includes('<') && Array.from(saved()).length === 12, 'Sanitizes markup and limits length');
     check(d.getElementById('slotList').textContent.includes(saved()), 'Save slot display synced');
-    for (const selector of ['.lobby-iconbtn', '.lobby-quickbtn', '.lobby-coins', '.lobby-name-row .rank-badge']) {
-      const css = w.getComputedStyle(d.querySelector(selector));
+    check(d.querySelectorAll('.lobby-topbtns button').length === 9, 'Nine unique functions in top navigation');
+    check(!d.querySelector('.lobby-quickbtns'), 'Duplicate bottom navigation removed');
+    for (const id of ['lbQTasks', 'lbQAchieve', 'lbQShop', 'lbQStorage', 'lbQTaskBadge']) check(!d.getElementById(id), 'Removed duplicate: ' + id);
+    for (const id of ['lbQCheckin', 'lbQStats', 'lbQHelp']) check(d.querySelector('.lobby-topbtns').contains(d.getElementById(id)), 'Moved to top: ' + id);
+    for (const selector of ['.lobby-iconbtn', '.lobby-coins', '.lobby-name-row .rank-badge', '.panel', '.mode-card', '.diff-card']) {
+      const actual = d.querySelector(selector);
+      const el = actual || d.createElement('div');
+      if (!actual) { el.className = selector.slice(1); d.body.appendChild(el); }
+      const css = w.getComputedStyle(el);
       check(css.borderTopWidth === '0px', selector + ' has no border');
+      if (!actual) el.remove();
     }
     check(errors.length === 0, 'No script errors: ' + errors.join(';'));
     const stored = w.localStorage.getItem('texas_poker_device_saves_v2');

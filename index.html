@@ -893,6 +893,57 @@
   #arcTable{flex:1;min-height:190px;display:flex;align-items:center;justify-content:space-around;gap:10px;flex-wrap:wrap;padding:12px;border-radius:40%;background:radial-gradient(ellipse,rgba(34,105,81,.25),transparent 70%)}.arc-seat{text-align:center;min-width:120px;max-width:210px}.arc-seat h3{font-size:13px;color:#c9d9dc;margin:6px}.arc-seat p{font-size:12px;color:#a1b6b9;margin:6px}.arc-seat.out{opacity:.55}.arc-cards{display:flex;justify-content:center;gap:5px;min-height:68px;align-items:center}.arc-card{display:inline-flex;flex-direction:column;justify-content:space-between;width:42px;height:62px;padding:5px;background:linear-gradient(145deg,#faf7ed,#d7d8cf);color:#1a2934;border-radius:6px;font:bold 20px Georgia;box-shadow:0 4px 8px #0003;}.arc-card.red{color:#af303b}.arc-card.back{background:repeating-linear-gradient(45deg,#253e58,#253e58 4px,#2c4c68 4px,#2c4c68 8px);color:#b7c5d5;justify-content:center}.arc-die{display:inline-flex;align-items:center;justify-content:center;width:68px;height:68px;margin:9px;background:#ece7d7;color:#9f3440;border-radius:14px;font-size:40px;box-shadow:0 5px 0 #a6a99b;}
   #arcMessage{text-align:center;min-height:22px;color:#ebce91;font-size:14px}#arcActions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}#arcActions button.primary{background:linear-gradient(120deg,#b39151,#e1c184);color:#1b2530}#arcHistory{text-align:center;font-size:11px;color:#91a6b1;min-height:16px}#arcExit{position:absolute;inset:35% 14%;padding:25px;background:#152b35;border:1px solid #a08758;border-radius:12px;z-index:10;text-align:center}#arcExit span{display:block;margin-bottom:18px}
   @media(max-height:460px){.game-tile{height:135px}.game-shelf{margin-top:10px}.lobby-logo{font-size:27px}}
+
+  /* 轻量牌馆：功能集中顶部，层次来自光色与留白，而非嵌套描边。 */
+  .lobby-top { gap:18px; padding:18px 24px 8px; }
+  .lobby-topbtns { gap:2px; align-items:center; }
+  .lobby-iconbtn { width:auto; min-width:44px; height:38px; padding:0 8px; font-size:12px; letter-spacing:1px; color:#b4c1c7; opacity:1; }
+  .lobby-iconbtn:hover { color:#f0d8a2; background:rgba(224,197,145,.06); }
+  .lobby-iconbtn .badge { top:0; right:0; min-width:6px; width:6px; height:6px; padding:0; overflow:hidden; font-size:0; box-shadow:0 0 9px #a6d5b566; }
+  .lobby-coins { min-width:58px; }
+  .lobby-logo-area { padding-top:30px; gap:12px; }
+  .lobby-logo { font-size:37px; letter-spacing:10px; filter:none; }
+  .lobby-subtitle { color:#9faead; font-weight:400; }
+  .game-shelf { margin-top:24px; gap:20px; }
+  .game-tile { height:180px; padding-top:22px; border-radius:24px; background:radial-gradient(ellipse at 50% 15%,rgba(100,141,137,.11),transparent 78%); }
+  .game-tile.selected { background:radial-gradient(ellipse at 50% 20%,rgba(207,168,91,.2),rgba(156,118,61,.035) 75%,transparent); box-shadow:none; }
+  .game-tile.selected::after { content:''; width:5px; height:5px; border-radius:50%; background:#e5c789; position:absolute; bottom:5px; box-shadow:0 0 14px #d8b97b80; }
+  .game-tile:hover { background:radial-gradient(ellipse at 50% 20%,rgba(174,196,185,.16),transparent 85%); }
+  .game-tile[data-game="blackjack"] .tile-art { color:#aacdbf; }
+  .game-tile[data-game="gold"] .tile-art { color:#d9ada5; }
+  .game-tile[data-game="dice"] .tile-art { color:#b8bbdf; }
+  .game-tile small { color:#a7b6ba; }
+  .lobby-bottom { padding-bottom:28px; gap:13px; }
+  .lobby-start-btn { height:54px; width:270px; font-size:18px; border-radius:28px; }
+  .lobby-hint { color:#90a09f; }
+  .diff-header, .tab-row { border:0; }
+  .diff-back, .iconbtn, .coins, .mode-tag, .rank-badge { border:0; background:rgba(255,255,255,.035); }
+  .mode-card, .diff-card { border:0; background:linear-gradient(160deg,rgba(77,111,109,.2),rgba(19,31,39,.12)); border-radius:24px; }
+  .mode-card.ranked { background:radial-gradient(ellipse at top,rgba(170,130,62,.2),rgba(26,32,36,.15)); }
+  .mode-card:hover, .diff-card:not(.locked):hover { background-color:rgba(210,184,128,.07); transform:translateY(-3px); }
+  .panel { border:0; background:linear-gradient(145deg,#1b2c33,#122029); box-shadow:0 24px 80px #0008; border-radius:22px; }
+  .panel h2 { color:#e4c996; }
+  .ach-toolbar { background:#192a32; }
+  .ach-item, .task-item, .shop-item, .dex-cell, .ci-cell, .stat-box, .stat-cell, .go-stat, .settle-row, .rank-card { border:0; background:linear-gradient(110deg,rgba(176,199,198,.055),rgba(176,199,198,.015)); }
+  .slot-item, .slot-item.empty { border:0; background:rgba(164,185,193,.035); }
+  .slot-item.active { box-shadow:none; background:linear-gradient(100deg,rgba(196,161,94,.16),rgba(196,161,94,.025)); }
+  .shop-item.eq, .ci-cell.today { background:linear-gradient(120deg,rgba(221,184,107,.17),rgba(221,184,107,.035)); box-shadow:none; }
+  .shop-item.eq .t, .ci-cell.today .d { color:#efce8b; }
+  #settleFoot, #raisePanel, #arcExit, .toast { border:0; box-shadow:0 12px 35px #0004; }
+  .task-item .pg, .ach-item .d, .shop-item .d, .stat-box .l, .stat-cell .l, .go-stat .l { color:#91a5b2; }
+  #table { background:radial-gradient(ellipse at 50% 38%,#296d58,#154334 70%,#103328); box-shadow:0 12px 60px #0006,inset 0 0 60px #071d2033; }
+  #table::after { border:0; }
+  .seat { border:0; background:linear-gradient(145deg,rgba(17,35,40,.93),rgba(10,22,30,.83)); }
+  .seat.active { box-shadow:0 5px 26px #dbb96430,inset 0 -2px #d3b77f; }
+  .seat.winner { box-shadow:0 5px 26px #68bb9430,inset 0 -2px #80c9a4; animation:none; }
+  #arcadeScreen[data-game="blackjack"] { background:radial-gradient(ellipse at 48% 42%,#21483f,#10242a 65%,#0d1822); }
+  #arcadeScreen[data-game="gold"] { background:radial-gradient(ellipse at 48% 42%,#483334,#281f2a 65%,#171923); }
+  #arcadeScreen[data-game="dice"] { background:radial-gradient(ellipse at 48% 42%,#333c52,#202839 65%,#141b28); }
+  #arcHelp { background:rgba(155,178,191,.055); color:#b9c6cb; }
+  .arc-toolbar select, .arc-btn { background:rgba(162,190,194,.065); }
+  #arcBack, #arcRules, #arcRefill { background:transparent; }
+  button:focus-visible, select:focus-visible { outline:2px solid #d8c08b; outline-offset:3px; }
+  @media(prefers-reduced-motion:reduce) { *, *::before, *::after { animation:none!important; transition:none!important; } }
 </style>
 </head>
 <body>
@@ -928,14 +979,17 @@
         <span class="icon">🪙</span>
         <span id="lbCoins">0</span>
       </div>
-      <div class="lobby-topbtns">
-        <button class="lobby-iconbtn" id="lbBtnTasks" title="任务">📋<span class="badge" id="lbTaskBadge" style="display:none">!</span></button>
-        <button class="lobby-iconbtn" id="lbBtnAchieve" title="成就">🏆</button>
-        <button class="lobby-iconbtn" id="lbBtnShop" title="商城">🛒</button>
-        <button class="lobby-iconbtn" id="lbBtnStorage" title="存档">💾</button>
-        <button class="lobby-iconbtn" id="lbBtnSound" title="音效">🔊</button>
-        <button class="lobby-iconbtn" id="lbBtnSettings" title="设置">⚙️</button>
-      </div>
+      <nav class="lobby-topbtns" aria-label="大厅功能">
+        <button class="lobby-iconbtn" id="lbBtnTasks" title="任务与奖励">任务<span class="badge" id="lbTaskBadge" style="display:none">!</span></button>
+        <button class="lobby-iconbtn" id="lbBtnAchieve" title="查看成就">成就</button>
+        <button class="lobby-iconbtn" id="lbBtnShop" title="道具与装扮">商城</button>
+        <button class="lobby-iconbtn" id="lbQCheckin" title="每日签到与周常">签到<span class="badge green" id="lbQCheckinBadge" style="display:none">!</span></button>
+        <button class="lobby-iconbtn" id="lbQStats" title="战绩、图鉴与段位">档案</button>
+        <button class="lobby-iconbtn" id="lbBtnStorage" title="管理本地存档">存档</button>
+        <button class="lobby-iconbtn" id="lbQHelp" title="查看玩法规则">规则</button>
+        <button class="lobby-iconbtn" id="lbBtnSound" title="切换游戏音效">音效开</button>
+        <button class="lobby-iconbtn" id="lbBtnSettings" title="音乐、音量与偏好">设置</button>
+      </nav>
     </div>
     <div class="save-status">
       <span class="dot" id="saveDot"></span>
@@ -952,22 +1006,13 @@
       </div>
     </div>
     <div class="lobby-bottom">
-      <div class="lobby-quickbtns">
-        <button class="lobby-quickbtn" id="lbQTasks"><span class="ic">🎯</span><span>任务</span><span class="badge green" id="lbQTaskBadge" style="display:none">!</span></button>
-        <button class="lobby-quickbtn" id="lbQAchieve"><span class="ic">🏅</span><span>成就</span></button>
-        <button class="lobby-quickbtn" id="lbQShop"><span class="ic">🏪</span><span>商城</span></button>
-        <button class="lobby-quickbtn" id="lbQCheckin"><span class="ic">📅</span><span>签到</span><span class="badge green" id="lbQCheckinBadge" style="display:none">!</span></button>
-        <button class="lobby-quickbtn" id="lbQStats"><span class="ic">📊</span><span>档案</span></button>
-        <button class="lobby-quickbtn" id="lbQStorage"><span class="ic">💾</span><span>存档</span></button>
-        <button class="lobby-quickbtn" id="lbQHelp"><span class="ic">❓</span><span>规则</span></button>
-      </div>
       <button class="btn-primary lobby-start-btn" id="lbStartBtn">开始游戏</button>
       <div class="lobby-hint" id="hubHint">已选德州扑克 · 所有对手均为本地AI</div>
     </div>
   </div>
 
   <section id="arcadeScreen" aria-label="单机游戏牌桌">
-    <header class="arc-head"><button id="arcBack" class="arc-btn">返回大厅</button><div><h2 id="arcTitle">21点</h2><small id="arcModeLabel"></small></div><strong id="arcBalance"></strong><button id="arcRules" class="arc-btn">规则</button></header>
+    <header class="arc-head"><button id="arcBack" class="arc-btn">返回大厅</button><div><h2 id="arcTitle">21点</h2><small id="arcModeLabel"></small></div><strong id="arcBalance"></strong><button id="arcSettings" class="arc-btn" title="设置当前游戏的音乐和音量">音乐设置</button><button id="arcRules" class="arc-btn">规则</button></header>
     <div class="arc-toolbar"><label>模式 <select id="arcMode"><option value="coins">金币场</option><option value="practice">免费练习</option></select></label><label>下注 <select id="arcBet"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option></select></label><button id="arcRefill" class="arc-btn">补满练习筹码</button><span id="arcStats"></span></div>
     <div id="arcHelp" hidden></div><div id="arcTable" aria-live="polite"></div><div id="arcMessage" role="status"></div><div id="arcActions"></div><div id="arcHistory"></div>
     <div id="arcExit" hidden><span>当前局尚未结束，返回将放弃已投入筹码。</span><button id="arcExitYes" class="arc-btn">确认离桌</button><button id="arcExitNo" class="arc-btn">继续本局</button></div>
@@ -1100,7 +1145,7 @@
         <p>主界面与牌桌是<b style="color:#f2c14e;">两套不同的 BGM</b>，进游戏会自动切换；四个场次还各有一套。</p>
         <p>默认用 WebAudio 实时合成（鼓组 + 贝斯 + 电钢 + 铺底 + 混响），无音频文件、离线可播。<br>
            想换真实音乐：把 mp3/ogg 放进 <b style="color:#8fa0b4;">assets/</b> 目录即可自动接管
-           （<b>bgm-lobby</b> 主界面 / <b>bgm-table</b> 牌桌 / bgm-easy·normal·hard·champion 各场次）。<br>
+           （<b>bgm-lobby</b> 大厅 / <b>bgm-table</b> 德州通用 / bgm-easy·normal·hard·champion 德州各场次 / <b>bgm-blackjack·gold·dice</b> 三款小游戏）。<br>
            设置面板可分别调节主音量 / 音效 / 音乐，并会显示当前 BGM 来源。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🧠 AI 心理博弈</p>
         <p>AI 会观察你的下注风格，如果你经常弃牌它们会更频繁诈唬；如果你爱跟注它们会收紧范围。</p>
@@ -1987,6 +2032,9 @@ var ASSET_DIR = 'assets/';
 var BGM_FILES = {
   lobby: ['bgm-lobby.mp3', 'bgm-lobby.ogg', 'bgm-lobby.m4a'],
   table: ['bgm-table.mp3', 'bgm-table.ogg', 'bgm-table.m4a'],
+  blackjack: ['bgm-blackjack.mp3', 'bgm-blackjack.ogg'],
+  gold: ['bgm-gold.mp3', 'bgm-gold.ogg'],
+  dice: ['bgm-dice.mp3', 'bgm-dice.ogg'],
   easy: ['bgm-easy.mp3', 'bgm-easy.ogg', 'bgm-table.mp3'],
   normal: ['bgm-normal.mp3', 'bgm-normal.ogg', 'bgm-table.mp3'],
   hard: ['bgm-hard.mp3', 'bgm-hard.ogg', 'bgm-table.mp3'],
@@ -2198,6 +2246,27 @@ var TRACKS = {
   }
 };
 
+/* 三款独立游戏主题：不同旋律、速度、和声与音色，不借用大厅曲目。 */
+TRACKS.blackjack = {
+  tempo:96, swing:0.12, drums:'brush', keys:'rhodes', padVol:0.035,
+  bars:[{b:'D2',c:['D3','F3','A3','C4']},{b:'G1',c:['G3','B3','D4','F4']},{b:'C2',c:['C3','E3','G3','B3']},{b:'A1',c:['A2','C3','E3','G3']}],
+  melA:['F4',null,'A4',null,'C5','A4',null,'F4',null,'D4','E4',null,'G4',null,null,null],
+  melB:['B4',null,'G4','E4',null,'D4',null,'C4','E4',null,'G4',null,'A4',null,null,null]
+};
+TRACKS.gold = {
+  tempo:108, swing:0, drums:'light', keys:'pluck', padVol:0.025,
+  bars:[{b:'D2',c:['D3','A3','D4']},{b:'C2',c:['C3','G3','D4']},{b:'A1',c:['A2','E3','A3']},{b:'G1',c:['G2','D3','A3']}],
+  melA:['D5',null,'A4','G4',null,'E4',null,'D4','E4','G4',null,'A4',null,null,'D5',null],
+  melB:['A4','G4',null,'E4','D4',null,null,'E4','G4',null,'A4',null,'G4','E4',null,null]
+};
+TRACKS.dice = {
+  tempo:124, swing:0, drums:'basic', keys:'bell', padVol:0.02,
+  bars:[{b:'G1',c:['G3','B3','D4']},{b:'E2',c:['E3','G3','B3']},{b:'C2',c:['C3','E3','G3']},{b:'D2',c:['D3','F#3','A3']}],
+  melA:['G4',null,'B4','D5',null,'B4','G4',null,'E5',null,'D5',null,'B4','A4',null,null],
+  melB:['C5','E5',null,'G5',null,'E5','C5',null,'D5',null,'A4','F#4',null,'G4',null,null]
+};
+var TRACK_LABELS = {lobby:'小馆夜话',easy:'德州 · 轻松入局',normal:'德州 · 稳定节拍',hard:'德州 · 暗流',champion:'德州 · 决胜',blackjack:'21点 · 微醺摇摆',gold:'炸金花 · 弦上试探',dice:'猜骰子 · 跳动星光'};
+
 /* 鼓组型（16 分音符 × 1 小节，数值为力度，0 = 不打） */
 var DRUMS = {
   brush: {                       /* 爵士刷子：叮叮镲打点为主 */
@@ -2272,7 +2341,7 @@ var Music = {
     player.musicOn = !player.musicOn;
     saveAllSaves(true);
     if (!player.musicOn) bgmStop();
-    else bgmPlay(App.screen === 'game' ? tableTrackName() : 'lobby');
+    else bgmPlay(currentTrackName());
     return player.musicOn;
   },
 
@@ -2326,7 +2395,7 @@ var Music = {
     /* --- 旋律：前 4 小节 A 段，后 4 小节 B 段（8 分音符） --- */
     if (step % 2 === 0) {
       var slot = step >> 1;                       // 0..7
-      var mel = this.bar < 4 ? tr.melA : tr.melB;
+      var mel = this.bar < tr.bars.length / 2 ? tr.melA : tr.melB;
       var idx = (this.bar % 2) * 8 + slot;        // 两小节一句，共 16 格
       var mNote = mel[idx];
       // 每乐句第 2 小节末尾留白，制造呼吸感
@@ -2422,7 +2491,13 @@ var Music = {
 
   /* --- 乐器 --- */
   _keys: function (f, when, dur, vol, kind) {
-    if (kind === 'rhodes') {
+    if (kind === 'pluck') {
+      this._note(f, when, dur * 0.6, 'triangle', vol, musicGain, {fm:true,fmRatio:2,fmDepth:0.45,filter:2200});
+      this._note(f * 3, when, dur * 0.18, 'sine', vol * 0.12, musicGain, {});
+    } else if (kind === 'bell') {
+      this._note(f, when, dur * 0.85, 'sine', vol * 0.85, musicGain, {fm:true,fmRatio:3.5,fmDepth:0.8,filter:4200});
+      this._note(f * 2, when, dur * 0.3, 'sine', vol * 0.13, musicGain, {});
+    } else if (kind === 'rhodes') {
       this._note(f, when, dur, 'sine', vol, musicGain, { fm: true, fmRatio: 2.01, fmDepth: 1.6, filter: 3200 });
       this._note(f * 2, when, dur * 0.5, 'sine', vol * 0.22, musicGain, {});
     } else {
@@ -2556,8 +2631,15 @@ function bgmSourceLabel() {
   if (player.volMaster === 0 || player.volMusic === 0) return '音量为零';
   if (document.hidden) return '后台暂停 · 返回后恢复';
   if (!audioCtx || audioCtx.state !== 'running') return '等待点击恢复声音';
-  if (Music.playing) return '内置实时合成 · ' + Music.name;
+  if (Music.playing) return '内置实时合成 · ' + (TRACK_LABELS[Music.name] || Music.name);
   return '未播放 · 点击恢复音乐';
+}
+
+/* 场景切换、解锁、恢复及音乐开关共用同一个路由。 */
+function currentTrackName() {
+  if (App.screen === 'arcade' && Arcade && TRACKS[Arcade.game]) return Arcade.game;
+  if (App.screen === 'game') return tableTrackName();
+  return 'lobby';
 }
 
 /* 当前应播放的牌桌曲目 */
@@ -2575,7 +2657,7 @@ function unlockAudio() {
   audioUnlocked = audioCtx.state === 'running';
   applyVolumes();
   if (player && player.musicOn) {
-    bgmPlay(App.screen === 'game' ? tableTrackName() : 'lobby');
+    bgmPlay(currentTrackName());
   }
 }
 
@@ -2790,7 +2872,7 @@ function showScreen(name) {
   // 场景音乐切换
   try {
     if (player && player.musicOn) {
-      bgmPlay(name === 'game' ? tableTrackName() : 'lobby');
+      bgmPlay(currentTrackName());
     }
   } catch (e) {}
 }
@@ -2857,6 +2939,7 @@ function arcadeSettle(payout,label) {
 function openArcade(game) {
   if(G.active||!ARCADE_NAMES[game]||(Arcade.round&&!Arcade.round.done))return false;
   arcadeRecover();Arcade.game=game;Arcade.round=null;Arcade.message='金币共用，练习筹码不兑换；新游戏不触发德州任务。';
+  $('arcadeScreen').dataset.game=game;
   showScreen('arcade');$('arcHelp').hidden=true;renderArcade();return true;
 }
 function blackjackValue(cards) {var total=0,aces=0;cards.forEach(function(c){total+=c.r===14?11:Math.min(10,c.r);if(c.r===14)aces++;});while(total>21&&aces){total-=10;aces--;}return {total:total,soft:aces>0};}
@@ -2927,6 +3010,7 @@ function arcadeLeave(confirm){var r=Arcade.round;if(r&&!r.done&&!confirm){$('arc
   $('arcExit').hidden=true;Arcade.round=null;showScreen('lobby');renderLobby();}
 function initArcade(){document.querySelectorAll('[data-game]').forEach(function(b){b.addEventListener('click',function(){hubGame=b.dataset.game;document.querySelectorAll('[data-game]').forEach(function(x){x.classList.toggle('selected',x===b);});$('hubHint').textContent='已选'+(hubGame==='holdem'?'德州扑克':ARCADE_NAMES[hubGame])+' · 纯单机';$('lbStartBtn').textContent='开始'+(hubGame==='holdem'?'游戏':ARCADE_NAMES[hubGame]);});});
   $('arcActions').addEventListener('click',function(e){var b=e.target.closest('[data-arc]');if(b&&!b.disabled)arcadeDispatch(b.dataset.arc);});$('arcMode').addEventListener('change',function(){if(Arcade.round&&!Arcade.round.done)return;Arcade.mode=this.value==='practice'?'practice':'coins';Arcade.round=null;renderArcade();});$('arcBet').addEventListener('change',renderArcade);
+  $('arcSettings').addEventListener('click',function(){initAudio();sfx('click');openSettings();});
   $('arcRules').addEventListener('click',function(){$('arcHelp').hidden=!$('arcHelp').hidden;});$('arcRefill').addEventListener('click',function(){if(Arcade.mode==='practice'&&(!Arcade.round||Arcade.round.done)){Arcade.practice=500;renderArcade();}});
   $('arcBack').addEventListener('click',function(){arcadeLeave(false);});$('arcExitYes').addEventListener('click',function(){arcadeLeave(true);});$('arcExitNo').addEventListener('click',function(){$('arcExit').hidden=true;});}
 
@@ -3189,7 +3273,8 @@ function renderLobby() {
   var need = player.level * 100;
   var pct = Math.min(100, (player.exp / need) * 100);
   $('lbExp').style.width = pct + '%';
-  $('lbBtnSound').textContent = player.soundOn ? '🔊' : '🔇';
+  $('lbBtnSound').textContent = player.soundOn ? '音效开' : '音效关';
+  $('lbBtnSound').setAttribute('aria-pressed', String(player.soundOn));
 
   // 段位徽章（单机版不显示人物头像）
   var ri = rankInfo();
@@ -3202,7 +3287,6 @@ function renderLobby() {
   var nbDone = checkNewbieHasClaimable();
   var dailyDone = checkDailyHasClaimable();
   $('lbTaskBadge').style.display = (nbDone || dailyDone) ? 'block' : 'none';
-  $('lbQTaskBadge').style.display = (nbDone || dailyDone) ? 'block' : 'none';
   var ciDone = hasCheckinClaimable();
   var wkDone = checkWeeklyHasClaimable();
   $('lbQCheckinBadge').style.display = (ciDone || wkDone) ? 'block' : 'none';
@@ -4159,9 +4243,8 @@ function updateTasksBadges() {
   if (nbEl) nbEl.style.display = nb ? 'inline-block' : 'none';
   if (dlEl) dlEl.style.display = dl ? 'inline-block' : 'none';
   var any = nb || dl;
-  var b1 = $('lbTaskBadge'), b2 = $('lbQTaskBadge');
-  if (b1) b1.style.display = any ? 'block' : 'none';
-  if (b2) b2.style.display = any ? 'block' : 'none';
+  var badge = $('lbTaskBadge');
+  if (badge) badge.style.display = any ? 'block' : 'none';
 }
 
 function claimNewbie(id) {
@@ -5466,20 +5549,13 @@ function bindEvents() {
     initAudio(); sfx('click');
     openTasks();
   });
-  $('lbQTasks').addEventListener('click', function(){
-    initAudio(); sfx('click');
-    openTasks();
-  });
   $('lbBtnAchieve').addEventListener('click', function(){ initAudio(); sfx('click'); openAchieve(); });
-  $('lbQAchieve').addEventListener('click', function(){ initAudio(); sfx('click'); openAchieve(); });
   $('lbBtnStorage').addEventListener('click', function(){ initAudio(); sfx('click'); openStorage(); });
-  $('lbQStorage').addEventListener('click', function(){ initAudio(); sfx('click'); openStorage(); });
   $('lbQHelp').addEventListener('click', function(){ initAudio(); sfx('click'); openHelp(); });
   $('lbBtnSound').addEventListener('click', function(){ initAudio(); toggleSound(); });
 
   // 商城 / 签到 / 档案 / 设置
   $('lbBtnShop').addEventListener('click', function(){ initAudio(); sfx('click'); openShop(); });
-  $('lbQShop').addEventListener('click', function(){ initAudio(); sfx('click'); openShop(); });
   $('lbQCheckin').addEventListener('click', function(){ initAudio(); sfx('click'); openCheckin(); });
   $('lbQStats').addEventListener('click', function(){ initAudio(); sfx('click'); openStats(); });
   $('lbBtnSettings').addEventListener('click', function(){ initAudio(); sfx('click'); openSettings(); });
@@ -5580,13 +5656,13 @@ function bindEvents() {
     if (document.hidden) bgmStop();
     else {
       unlockAudio();
-      if (player && player.musicOn) bgmPlay(App.screen === 'game' ? tableTrackName() : 'lobby');
+      if (player && player.musicOn) bgmPlay(currentTrackName());
     }
   });
   window.addEventListener('pagehide', bgmStop);
   window.addEventListener('pageshow', function () {
     unlockAudio();
-    if (player && player.musicOn) bgmPlay(App.screen === 'game' ? tableTrackName() : 'lobby');
+    if (player && player.musicOn) bgmPlay(currentTrackName());
   });
   window.addEventListener('orientationchange', function () {
     setTimeout(checkOrientation, 200);

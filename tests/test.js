@@ -641,6 +641,35 @@ const sleepTick = () => new Promise(r => setImmediate(r));
     ok(false, 'BGM 调度器测试异常：' + e.message);
   }
 
+  /* ---- 四游戏独立曲目、循环及开关恢复 ---- */
+  try {
+    const previousScreen = ctx.App.screen;
+    const previousDifficulty = ctx.App.difficulty;
+    const previousGame = ctx.Arcade.game;
+    const melodies = ['lobby','easy','blackjack','gold','dice'].map(k => JSON.stringify(ctx.TRACKS[k].melA));
+    ok(new Set(melodies).size === 5, '大厅与四款游戏旋律互不重复');
+    for (const game of ['blackjack','gold','dice']) {
+      const tr = ctx.TRACKS[game];
+      const pitches = tr.bars.flatMap(b => [b.b, ...b.c]).concat(tr.melA, tr.melB).filter(Boolean);
+      ok(pitches.every(p => Number.isFinite(ctx.NOTE[p])), game + '全部音高可合成');
+      ok(!ctx.BGM_FILES[game].some(p => /bgm-(table|lobby)/.test(p)), game + '外置音频不串用大厅/德州');
+      ctx.Arcade.game = game; ctx.showScreen('arcade');
+      ok(ctx.currentTrackName() === game && ctx.Music.name === game && ctx.Music.playing, game + '场景真实启动对应调度器');
+      let scheduled = 0; const baseSchedule = ctx.Music._schedule;
+      ctx.Music._schedule = function(...args) { scheduled++; return baseSchedule.apply(this, args); };
+      for (let i = 0; i < 500; i++) { ctx.audioCtx.currentTime += 0.04; ctx.Music._tick(); }
+      ctx.Music._schedule = baseSchedule;
+      ok(scheduled > 64 && ctx.Music.bar < tr.bars.length, game + '跨完整循环持续调度');
+      ctx.Music.toggle(); ok(!ctx.Music.playing, game + '关闭音乐停止调度');
+      ctx.Music.toggle(); ok(ctx.Music.name === game, game + '重新开启恢复当前游戏而非大厅');
+      ctx.bgmStop(); ctx.unlockAudio(); ok(ctx.Music.name === game, game + '音频恢复仍使用本场主题');
+    }
+    ctx.App.difficulty='normal'; ctx.showScreen('game');
+    ok(ctx.Music.name === 'normal', '德州保留分难度曲目');
+    ctx.showScreen('lobby'); ok(ctx.Music.name === 'lobby', '返回大厅切回大厅音乐');
+    ctx.bgmStop(); ctx.App.screen=previousScreen; ctx.App.difficulty=previousDifficulty; ctx.Arcade.game=previousGame;
+  } catch (e) { ok(false, '四游戏音乐测试异常：' + e.stack); }
+
   /* ---- 外置音频缺失时应回落内置合成 ---- */
   try {
     // vm 环境没有 Audio 构造器，bgmFileEl 必须判空并回落
