@@ -128,6 +128,70 @@ function click(el) {
   click($('ovHelp').querySelector('[data-close="ovHelp"]'));
   await tick(20);
 
+  console.log('【v11 新面板】');
+  click($('lbBtnShop'));
+  await tick(30);
+  ok($('ovShop').classList.contains('show'), '打开商城面板');
+  ok($('shopList').querySelectorAll('.shop-item').length === 11,
+     '商城渲染 11 件商品（实际 ' + $('shopList').querySelectorAll('.shop-item').length + '）');
+  ok($('shopCoins').textContent === '1,000', '商城顶栏显示金币');
+  click($('ovShop').querySelector('[data-close="ovShop"]'));
+  await tick(20);
+
+  click($('lbQStats'));
+  await tick(30);
+  ok($('ovStats').classList.contains('show'), '打开档案面板');
+  ok($('statPanel').querySelectorAll('.stat-box').length === 9, '数据面板 9 项指标');
+  click($('tabSDex'));
+  await tick(30);
+  ok($('dexPanel').style.display === 'block' && $('statPanel').style.display === 'none',
+     '切换到牌型图鉴');
+  ok($('dexPanel').querySelectorAll('.dex-cell').length === 9, '图鉴 9 格');
+  ok($('dexPanel').querySelectorAll('.dex-cell.got').length === 0, '新档图鉴全部未解锁');
+  click($('tabSRank'));
+  await tick(30);
+  ok($('rankPanel').style.display === 'block', '切换到段位页');
+  ok($('rankPanel').querySelectorAll('.rank-row').length === 1, '段位面板渲染段位卡');
+  ok($('rankPanel').textContent.indexOf('青铜') >= 0, '新档段位为青铜');
+  click($('ovStats').querySelector('[data-close="ovStats"]'));
+  await tick(20);
+
+  click($('lbQCheckin'));
+  await tick(30);
+  ok($('ovCheckin').classList.contains('show'), '打开签到面板');
+  ok($('ciPanel').querySelectorAll('.ci-cell').length === 7, '签到 7 天格子');
+  ok(!!$('btnClaimCheckin'), '存在签到领取按钮');
+  var coinBefore = $('lbCoins').textContent;
+  click($('btnClaimCheckin'));
+  await tick(60);
+  ok($('lbCoins').textContent === '1,060', '签到后金币 1,000 → 1,060（实际 ' + $('lbCoins').textContent + '）');
+  ok($('ciPanel').textContent.indexOf('今日已签到') >= 0, '领取后按钮变为已签到');
+  click($('tabWk'));
+  await tick(30);
+  ok($('wkPanel').querySelectorAll('.task-item').length === 6, '周常 6 项挑战');
+  click($('ovCheckin').querySelector('[data-close="ovCheckin"]'));
+  await tick(20);
+
+  click($('lbBtnSettings'));
+  await tick(30);
+  ok($('ovSettings').classList.contains('show'), '打开设置面板');
+  ok($('volMaster').value === '80' && $('volSfx').value === '90' && $('volMusic').value === '50',
+     '音量滑块默认 80 / 90 / 50');
+  $('volMusic').value = '20';
+  $('volMusic').dispatchEvent(new window.Event('input', { bubbles: true }));
+  await tick(20);
+  ok($('volMusicV').textContent === '20%', '拖动音乐音量后数值同步');
+  click($('setMusicToggle'));
+  await tick(30);
+  ok($('setMusicToggle').textContent.indexOf('关') >= 0, '点击后音乐开关变为关闭');
+  click($('setMusicToggle'));
+  await tick(30);
+  ok($('setMusicToggle').textContent.indexOf('开') >= 0, '再次点击恢复开启');
+  click($('ovSettings').querySelector('[data-close="ovSettings"]'));
+  await tick(20);
+
+  ok($('lbRank').textContent.indexOf('青铜') >= 0, '大厅显示段位徽章（' + $('lbRank').textContent + '）');
+
   console.log('【进入牌桌】');
   click($('lbStartBtn'));
   await tick(30);
@@ -136,7 +200,8 @@ function click(el) {
   ok($('gameScreen').classList.contains('active'), '进入游戏界面');
   ok($('lobbyScreen').style.display === 'none', '大厅已隐藏');
   ok($('topbar').querySelector('#pLevel').textContent === 'Lv.1', '顶栏等级正常');
-  ok($('pCoins').textContent === '1,000', '顶栏金币 1,000（实际 ' + $('pCoins').textContent + '）');
+  ok($('pCoins').textContent === '1,060',
+     '顶栏金币与大厅一致（签到后 1,060，实际 ' + $('pCoins').textContent + '）');
   const seats = [0,1,2,3].map(i => $('seat' + i));
   ok(seats.every(s => s.querySelector('.chips')), '4 个座位均渲染了筹码');
 
@@ -194,6 +259,103 @@ function click(el) {
   ok($('lobbyScreen').style.display === 'flex', '发牌途中离桌可正常返回大厅');
   ok(errors.length === 0, '发牌途中离桌无未捕获异常'
      + (errors.length ? '：' + errors.slice(0, 3).join(' | ') : '') + '（离桌时' + (dealing ? '正在发牌' : '已进入下注') + '）');
+
+  /* ============================================================
+     预置 v10 老存档：验证迁移 + 商城购买 / 装备 + 统计 / 图鉴
+     ============================================================ */
+  console.log('【老存档迁移 + 商城链路】');
+  var seeded = {
+    activeSlot: 1,
+    slots: {
+      1: {
+        player: {
+          name: '土豪', version: 10, level: 5, coins: 999999,
+          totalHands: 120, totalWins: 60, maxStreak: 4, maxWin: 8888,
+          achievements: {}, newbieTasks: {}, newbieProgress: {},
+          dailyTasks: null, dailyProgress: {}, dailyClaimed: {}, soundOn: true,
+          stats: { vpip: 40, vpipTotal: 100, showdowns: 30, allIns: 8, allInWins: 5,
+                   bluffTotal: 10, bluffWins: 4, biggestPot: 8888,
+                   totalWagered: 50000, totalNet: 12000 },
+          handDex: { 0: 20, 1: 50, 2: 20, 3: 8, 4: 5, 5: 3, 6: 2, 7: 1, 8: 0 },
+          rankPoints: 520, rankPeak: 4
+        },
+        createdAt: Date.now(), lastPlayed: Date.now()
+      },
+      2: null, 3: null
+    }
+  };
+  var vc2 = new VirtualConsole();
+  var errs2 = [];
+  vc2.on('jsdomError', function (e) {
+    var m = String((e && e.message) || e);
+    if (/Could not parse CSS|Not implemented/.test(m)) return;
+    errs2.push(m);
+  });
+  var dom2 = new JSDOM(html, {
+    runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://localhost/',
+    virtualConsole: vc2,
+    beforeParse: function (w) {
+      w.localStorage.setItem('texas_poker_multi_saves_v1', JSON.stringify(seeded));
+    }
+  });
+  await tick(120);
+  var d2 = dom2.window.document;
+  function g2(id) { return d2.getElementById(id); }
+  function click2(el) { el.dispatchEvent(new dom2.window.MouseEvent('click', { bubbles: true, cancelable: true })); }
+
+  ok(errs2.length === 0, 'v10 老存档载入无异常' + (errs2.length ? '：' + errs2[0] : ''));
+  ok(g2('lbName').textContent === '土豪', '迁移保留玩家名（' + g2('lbName').textContent + '）');
+  ok(g2('lbCoins').textContent === '999,999', '迁移保留金币 999,999（实际 ' + g2('lbCoins').textContent + '）');
+  ok(g2('lbLevel').textContent === 'Lv.5', '迁移保留等级 Lv.5');
+  ok(g2('lbRank').textContent.indexOf('铂金') >= 0, '520 分对应铂金段位（' + g2('lbRank').textContent + '）');
+
+  // 商城：购买 → 装备 → 卸下
+  click2(g2('lbBtnShop'));
+  await tick(60);
+  ok(g2('ovShop').classList.contains('show'), '土豪档打开商城');
+  var buyBtn = d2.querySelector('#shopList [data-buy="cb_gold"]');
+  ok(!!buyBtn, '鎏金牌背存在购买按钮');
+  click2(buyBtn);
+  await tick(80);
+  var eqBtn = d2.querySelector('#shopList [data-equip="cb_gold"]');
+  ok(!!eqBtn && eqBtn.textContent.trim() === '装备', '购买后按钮变为「装备」');
+  click2(eqBtn);
+  await tick(80);
+  var eqBtn2 = d2.querySelector('#shopList [data-equip="cb_gold"]');
+  ok(!!eqBtn2 && eqBtn2.textContent.trim() === '卸下', '点击后变为「卸下」，装备已生效');
+  ok(eqBtn2.closest('.shop-item').className.indexOf('eq') >= 0, '已装备商品高亮显示');
+
+  // 消耗品：购买 → 使用 → 库存耗尽
+  var buyPeek = d2.querySelector('#shopList [data-buy="peek3"]');
+  ok(!!buyPeek, '透视卡存在购买按钮');
+  click2(buyPeek);
+  await tick(80);
+  var usePeek = d2.querySelector('#shopList [data-use="peek3"]');
+  ok(!!usePeek, '购买后出现「使用」按钮');
+  click2(usePeek);
+  await tick(80);
+  ok(d2.querySelector('#shopList [data-use="peek3"]') === null, '使用后库存耗尽，使用按钮消失');
+  click2(g2('ovShop').querySelector('[data-close="ovShop"]'));
+  await tick(30);
+
+  // 档案：统计 / 图鉴 / 段位
+  click2(g2('lbQStats'));
+  await tick(60);
+  var statTxt = g2('statPanel').textContent;
+  ok(g2('statPanel').querySelectorAll('.stat-box').length === 9, '9 项统计指标');
+  ok(statTxt.indexOf('40%') >= 0, '入池率显示 40%（VPIP 40 / 100）');
+  ok(statTxt.indexOf('+$12,000') >= 0, '净盈亏显示 +$12,000');
+  click2(g2('tabSDex'));
+  await tick(40);
+  ok(g2('dexPanel').querySelectorAll('.dex-cell.got').length === 8, '图鉴已解锁 8 / 9 种');
+  click2(g2('tabSRank'));
+  await tick(40);
+  ok(g2('rankPanel').textContent.indexOf('铂金') >= 0, '段位页显示铂金');
+  ok(g2('rankPanel').textContent.indexOf('520') >= 0, '段位页显示 520 分');
+  click2(g2('ovStats').querySelector('[data-close="ovStats"]'));
+  await tick(30);
+
+  ok(errs2.length === 0, '土豪档全流程无未捕获错误' + (errs2.length ? '：' + errs2[0] : ''));
 
   await tick(50);
   ok(errors.length === 0, '全流程无未捕获错误' + (errors.length ? '：' + errors.slice(0, 3).join(' | ') : ''));

@@ -424,6 +424,211 @@ const sleepTick = () => new Promise(r => setImmediate(r));
     ok(false, '多存档增删异常: ' + e.message);
   }
 
+  /* ============================================================
+     测试 4：v11 生态新系统（段位 / 签到 / 周常 / 商城 / 图鉴 / BGM）
+     ============================================================ */
+  console.log('【测试 4】v11 生态新系统');
+  ctx.G.active = false;   // 停掉上一轮对局，避免干扰
+
+  /* ---- 段位 ---- */
+  ctx.createNewSaveAt(1);
+  ok(ctx.player.rankPoints === 0 && ctx.player.rankTier === 0, '新档段位从青铜 0 分开始');
+  ctx.addRankPoints(120);
+  ok(ctx.rankTierFor(ctx.player.rankPoints) === 1, '积分 120 晋升白银');
+  ok(ctx.rankInfo().name === '白银', 'rankInfo 返回白银');
+  var coinsBeforeRank = ctx.player.coins;
+  ctx.addRankPoints(150);                       // 270 → 黄金
+  ok(ctx.rankTierFor(ctx.player.rankPoints) === 2, '积分 270 晋升黄金');
+  ok(ctx.player.coins > coinsBeforeRank,
+     '升段发放奖励（' + coinsBeforeRank + ' → ' + ctx.player.coins + '）');
+  ctx.addRankPoints(-1000);
+  ok(ctx.player.rankPoints === 0, '积分不会低于 0');
+  ok(ctx.rankTierFor(0) === 0, '0 分回落青铜');
+  ok(ctx.player.rankPeak === 2, '历史最高段位保留为黄金');
+
+  /* ---- 每日签到 ---- */
+  ctx.createNewSaveAt(1);
+  ctx.ensureCheckin();
+  ok(ctx.player.checkin.streak === 1, '首次签到连续天数 = 1');
+  ok(ctx.hasCheckinClaimable() === true, '首日可领取');
+  var c0 = ctx.player.coins;
+  ctx.claimCheckin();
+  ok(ctx.player.coins === c0 + 60, '领取第 1 天奖励 60（' + c0 + ' → ' + ctx.player.coins + '）');
+  ok(ctx.hasCheckinClaimable() === false, '领取后不可再领');
+  ok(ctx.claimCheckin() === false, '重复领取被拒绝');
+  ok(ctx.checkinRewardOf(7) === 888, '第 7 天奖励 888');
+  ok(ctx.checkinRewardOf(8) === 60, '第 8 天循环回第 1 档');
+  ctx.player.checkin = { date: '2000-01-01', streak: 5, claimed: true };
+  ctx.ensureCheckin();
+  ok(ctx.player.checkin.streak === 1, '断签后连续天数重置为 1');
+
+  /* ---- 周常挑战 ---- */
+  ctx.createNewSaveAt(1);
+  ctx.ensureWeekly();
+  ok(!!ctx.player.weekly && !!ctx.player.weekly.week,
+     '周常已初始化，周键 = ' + (ctx.player.weekly && ctx.player.weekly.week));
+  ok(ctx.weekKeyOf('2026-09-13') === '2026-09-07', '2026-09-13（周日）归属周键 2026-09-07');
+  ok(ctx.weekKeyOf('2026-09-14') === '2026-09-14', '2026-09-14（周一）开启新周');
+  ctx.bumpWeeklyProgress('w_play_30', 10);
+  ok(ctx.player.weekly.progress['w_play_30'] === 10, '周常进度累加');
+  for (var wi2 = 0; wi2 < 25; wi2++) ctx.bumpWeeklyProgress('w_play_30', 1);
+  ok(ctx.checkWeeklyHasClaimable() === true, '达标后出现可领取项');
+  var cWeekly = ctx.player.coins;
+  ctx.claimWeekly('w_play_30');
+  ok(ctx.player.coins === cWeekly + 800, '领取周常奖励 800');
+  ok(ctx.claimWeekly('w_play_30') === false, '周常不可重复领取');
+
+  /* ---- 商城与道具 ---- */
+  ctx.createNewSaveAt(1);
+  ctx.player.coins = 50000;
+  ok(ctx.buyItem('cb_gold').ok === true, '购买鎏金牌背成功');
+  ok(ctx.player.coins === 48000, '扣除 2,000 金币');
+  ok(ctx.hasItem('cb_gold') === true, '背包记录已拥有');
+  ok(ctx.buyItem('cb_gold').ok === false, '外观不可重复购买');
+  ctx.equipItem('cb_gold');
+  ok(ctx.isEquipped('cb_gold') === true, '装备成功');
+  ok(ctx.cardBackClass().indexOf('back-gold') >= 0, '牌背样式生效：' + ctx.cardBackClass());
+  ctx.equipItem('cb_gold');
+  ok(ctx.isEquipped('cb_gold') === false, '再次点击卸下');
+  ctx.player.coins = 100;
+  var poor = ctx.buyItem('t_dragon');
+  ok(poor.ok === false && poor.msg.indexOf('金币不足') >= 0, '金币不足时购买被拒');
+  ctx.player.coins = 50000;
+  ctx.buyItem('peek3');
+  ok(ctx.player.buffs.peek === 0, '购买透视卡不直接加 buff');
+  ok(ctx.useItem('peek3').ok === true && ctx.player.buffs.peek === 3, '使用透视卡 +3 次');
+  ok((ctx.player.inventory['peek3'] || 0) === 0, '使用后库存清空');
+  ctx.buyItem('revive');
+  ok(ctx.useItem('revive').ok === false, '复活券不可手动使用（破产时自动生效）');
+  ctx.buyItem('exp2x');
+  ctx.useItem('exp2x');
+  ok(ctx.player.buffs.exp2x === 10, '双倍经验卡生效 10 手');
+  ok(ctx.useItem('exp2x').ok === false, '双倍经验生效中不可重复使用');
+  ctx.equipItem('t_shark');
+  ok(ctx.titleText() === '', '未购买称号时无称号文本');
+  ctx.player.coins = 50000;
+  ctx.buyItem('t_shark');
+  ctx.equipItem('t_shark');
+  ok(ctx.titleText() === '牌桌鲨鱼', '装备称号后文本正确：' + ctx.titleText());
+
+  /* ---- 图鉴与统计 ---- */
+  ctx.createNewSaveAt(1);
+  ctx.recordDex(5); ctx.recordDex(5); ctx.recordDex(8);
+  ok(ctx.player.handDex[5] === 2, '同花图鉴计数 2');
+  ok(ctx.player.handDex[8] === 1, '同花顺图鉴计数 1');
+  ok(ctx.dexUnlocked() === 2, '已解锁 2 种牌型');
+  ctx.bumpStat('vpipTotal', 4);
+  ctx.bumpStat('vpip', 2);
+  ok(ctx.statPct(2, 4) === '50%', 'statPct 比例计算正确');
+  ok(ctx.player.stats.vpipTotal === 4, '统计字段累加');
+
+  /* ---- 程序化 BGM ---- */
+  ok(!!ctx.TRACKS.lobby && ctx.TRACKS.lobby.bars.length === 4, '大厅曲目含 4 小节和声进行');
+  ['easy', 'normal', 'hard', 'champion'].forEach(function (k) {
+    ok(!!ctx.TRACKS[k], '存在 ' + k + ' 场次曲目');
+  });
+  ok(ctx.TRACKS.champion.tempo > ctx.TRACKS.easy.tempo,
+     '冠军场节奏快于简单场（' + ctx.TRACKS.champion.tempo + ' > ' + ctx.TRACKS.easy.tempo + '）');
+  ok(Math.abs(ctx.NOTE['A4'] - 440) < 0.01, '音名表 A4 = 440Hz');
+  ok(Math.abs(ctx.NOTE['C4'] - 261.63) < 0.05, '音名表 C4 ≈ 261.63Hz');
+  try {
+    ctx.Music.play('lobby');
+    ctx.Music.stop();
+    ctx.unlockAudio();
+    ok(true, '无 AudioContext 环境下 Music / unlockAudio 调用安全');
+  } catch (e) {
+    ok(false, 'Music 调用异常：' + e.message);
+  }
+
+  /* ---- 用可控时钟的假 AudioContext 驱动调度器 ---- */
+  function FakeParam() { this.value = 0; }
+  ['setValueAtTime', 'linearRampToValueAtTime', 'exponentialRampToValueAtTime']
+    .forEach(function (m) { FakeParam.prototype[m] = function () { return this; }; });
+  function FakeNode(ctx) {
+    this.gain = new FakeParam(); this.frequency = new FakeParam();
+    this.Q = new FakeParam(); this.type = ''; this.buffer = null;
+  }
+  FakeNode.prototype.connect = function () {};
+  FakeNode.prototype.start = function () { this._ctx.started++; };
+  FakeNode.prototype.stop = function () {};
+  function FakeAC() {
+    this.currentTime = 0; this.sampleRate = 48000; this.state = 'running';
+    this.started = 0; this.buffers = 0;
+    var self = this;
+    this.destination = new FakeNode(this);
+    ['createGain', 'createOscillator', 'createBiquadFilter', 'createBufferSource'].forEach(function (m) {
+      self[m] = function () { var n = new FakeNode(self); n._ctx = self; return n; };
+    });
+  }
+  FakeAC.prototype.createBuffer = function (ch, len) {
+    this.buffers++;
+    return { getChannelData: function () { return new Float32Array(len); } };
+  };
+  FakeAC.prototype.resume = function () { this.state = 'running'; };
+
+  var savedST = ctx.setTimeout;
+  ctx.setTimeout = function () { return 0; };          // 禁止调度器自我续期，改为手动驱动
+  try {
+    ctx.window.AudioContext = FakeAC;
+    ctx.audioCtx = null; ctx.masterGain = null; ctx.sfxGain = null; ctx.musicGain = null;
+    ctx.initAudio();
+    ok(!!ctx.audioCtx, 'initAudio 成功创建 AudioContext');
+    ok(!!ctx.masterGain && !!ctx.sfxGain && !!ctx.musicGain, '音频图三条总线建立');
+    ctx.applyVolumes();
+    ok(Math.abs(ctx.masterGain.gain.value - 0.8) < 0.001, '主音量默认 0.8');
+    ok(Math.abs(ctx.musicGain.gain.value - 0.17) < 0.001, '音乐总线 = 0.5 × 0.34 = 0.17');
+
+    var fake = ctx.audioCtx;
+    var notes = 0, hats = 0;
+    var origNote = ctx.Music._note.bind(ctx.Music);
+    var origNoise = ctx.Music._noise.bind(ctx.Music);
+    ctx.Music._note = function () { notes++; return origNote.apply(ctx.Music, arguments); };
+    ctx.Music._noise = function () { hats++; return origNoise.apply(ctx.Music, arguments); };
+
+    ctx.Music.play('champion');
+    ok(ctx.Music.playing === true, 'Music.play 启动调度器');
+    ok(ctx.Music.name === 'champion', '曲目切换为 champion');
+    // 模拟 8 秒音频时钟（每 100ms 推进一次）
+    for (var ti = 0; ti < 80; ti++) {
+      fake.currentTime += 0.1;
+      ctx.Music._tick();
+    }
+    ok(notes > 40, '8 秒调度了 ' + notes + ' 个音符（和声 + 贝斯 + 旋律）');
+    ok(hats > 15, '8 秒调度了 ' + hats + ' 次打击噪声');
+    ok(fake.started > 0, '振荡器实际启动 ' + fake.started + ' 次');
+    ok(fake.buffers > 0, '噪声缓冲区创建 ' + fake.buffers + ' 次');
+    ok(ctx.Music.step >= 0 && ctx.Music.step < 16, '步进指针在 0..15 内循环（当前 ' + ctx.Music.step + '）');
+    ok(ctx.Music.bar >= 0 && ctx.Music.bar < 4, '小节指针在 0..3 内循环（当前 ' + ctx.Music.bar + '）');
+
+    // 时钟跳变保护：一次性跳 30 秒，不应补发海量音符
+    var beforeJump = notes;
+    fake.currentTime += 30;
+    ctx.Music._tick();
+    ok(notes - beforeJump < 40, '时钟跳变 30 秒仅补发 ' + (notes - beforeJump) + ' 个音符（有上限保护）');
+
+    ctx.Music.stop();
+    ok(ctx.Music.playing === false, 'Music.stop 停止调度');
+    ctx.Music._note = origNote; ctx.Music._noise = origNoise;
+  } catch (e) {
+    ok(false, 'BGM 调度器测试异常：' + e.message);
+  }
+  ctx.setTimeout = savedST;
+  ctx.audioCtx = null;   // 复位，避免影响后续用例
+
+  /* ---- 老存档迁移 v10 → v11 ---- */
+  var legacy = {
+    name: '老玩家', version: 10, level: 7, coins: 4242, totalHands: 88,
+    achievements: {}, newbieTasks: {}, newbieProgress: {}
+  };
+  var mg = ctx.migratePlayer(legacy);
+  ok(mg.version === 11, '迁移后版本号升级到 11');
+  ok(mg.coins === 4242 && mg.level === 7, '迁移保留原有金币与等级');
+  ok(mg.rankPoints === 0 && typeof mg.musicOn === 'boolean', '迁移补齐段位与音乐字段');
+  ok(!!mg.stats && mg.stats.vpip === 0, '迁移补齐统计结构');
+  ok(!!mg.equipped && mg.equipped.cardBack === 'classic', '迁移补齐装备结构');
+  ok(!!mg.handDex && !!mg.inventory && !!playerBuffsOk(mg), '迁移补齐图鉴 / 背包 / 增益');
+  function playerBuffsOk(p) { return p.buffs && typeof p.buffs.exp2x === 'number'; }
+
   /* ---- 破产结算流程 ---- */
   async function advanceToHandOver(maxTicks) {
     let g = 0;

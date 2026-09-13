@@ -289,16 +289,16 @@
     font-size:11px; color:rgba(255,255,255,.45);
     letter-spacing:3px; z-index:5; }
 
-  .seat { position:absolute; width:180px; height:82px;
+  .seat { position:absolute; width:180px; height:106px;
     border-radius:12px; background:rgba(8,16,22,.9);
     border:2px solid rgba(255,255,255,.1);
     backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
     padding:5px 8px; text-align:center;
     transition:all .2s; z-index:10; }
-  .seat.pos-0 { left:390px; top:346px; }
-  .seat.pos-1 { left:6px;   top:200px; }
-  .seat.pos-2 { left:390px; top:48px; }
-  .seat.pos-3 { left:774px; top:200px; }
+  .seat.pos-0 { left:390px; top:338px; }
+  .seat.pos-1 { left:6px;   top:190px; }
+  .seat.pos-2 { left:390px; top:46px; }
+  .seat.pos-3 { left:774px; top:190px; }
   .seat.active { border-color:#ffd97a;
     box-shadow:0 0 0 3px rgba(255,217,122,.25),0 0 22px rgba(255,217,122,.4); }
   .seat.folded { opacity:.3; }
@@ -310,7 +310,7 @@
     to { box-shadow:0 0 0 5px rgba(74,222,128,.55),0 0 42px rgba(74,222,128,.85); }
   }
   .seat .cards { display:flex; gap:3px; justify-content:center;
-    height:50px; align-items:center; margin-bottom:1px; }
+    height:44px; align-items:center; margin-bottom:1px; }
   .seat .info { display:flex; align-items:center;
     justify-content:center; gap:4px; line-height:1; }
   .seat .avatar { font-size:14px; }
@@ -323,9 +323,9 @@
     font-size:9px; font-weight:900; vertical-align:-1px; }
   .seat .chips { font-size:11.5px; color:#8fd6b0; font-weight:800; }
   .seat .action { font-size:10px; font-weight:700;
-    color:#ffd97a; height:12px; line-height:12px; margin-top:1px; }
+    color:#ffd97a; height:11px; line-height:11px; margin-top:0; }
   .seat .res { font-size:10px; font-weight:700;
-    color:#7dd3fc; height:12px; line-height:12px; }
+    color:#7dd3fc; height:11px; line-height:11px; }
   .seat.thinking { border-color:#a78bfa;
     box-shadow:0 0 0 2px rgba(167,139,250,.25),0 0 18px rgba(167,139,250,.4); }
   .seat .thinking-dots { position:absolute; top:-10px; left:50%;
@@ -347,7 +347,7 @@
     box-shadow:0 2px 6px rgba(0,0,0,.5),inset 0 0 0 2px #e9edf3; }
   .card.empty { background:rgba(255,255,255,.04);
     box-shadow:none; border:1px dashed rgba(255,255,255,.12); }
-  .card.small { width:34px; height:47px; border-radius:5px; }
+  .card.small { width:31px; height:43px; border-radius:5px; }
   .card.small .r { font-size:11px; }
   .card.small .s { font-size:13px; }
   .card.deal { animation:cardDeal .32s ease-out; }
@@ -684,6 +684,107 @@
     background: linear-gradient(135deg, #f2c14e, #c8932a); color: #2a1a0a;
   }
   .confirm-btns .gold:active { transform: scale(.96); }
+
+  /* ============================================================
+     v11：外观皮肤 / 商城 / 档案 / 签到 / 音量
+     ============================================================ */
+  .card.back-gold {
+    background: repeating-linear-gradient(45deg,#b8862f 0 5px,#7a5416 5px 10px);
+    box-shadow: 0 2px 6px rgba(0,0,0,.5), inset 0 0 0 2px #f2c14e; }
+  .card.back-jade {
+    background: repeating-linear-gradient(45deg,#2e7d6b 0 5px,#17564a 5px 10px);
+    box-shadow: 0 2px 6px rgba(0,0,0,.5), inset 0 0 0 2px #7fd6b0; }
+  .card.back-crimson {
+    background: repeating-linear-gradient(45deg,#a83030 0 5px,#6e1c1c 5px 10px);
+    box-shadow: 0 2px 6px rgba(0,0,0,.5), inset 0 0 0 2px #f2c14e; }
+
+  .seat.frame-gold, .lobby-avatar.frame-gold {
+    outline: 2px solid #f2c14e; outline-offset: 1px; }
+  .seat.frame-neon, .lobby-avatar.frame-neon {
+    outline: 2px solid #3ec6ff; outline-offset: 1px;
+    box-shadow: 0 0 16px rgba(62,198,255,.45); }
+  .title-tag { font-size: 9px; color: #f2c14e; font-weight: 800;
+    background: rgba(242,193,78,.12); border: 1px solid rgba(242,193,78,.35);
+    padding: 0 4px; border-radius: 4px; margin-left: 3px; }
+
+  /* 段位徽章 */
+  .rank-badge { display: inline-flex; align-items: center; gap: 3px;
+    padding: 1px 7px; border-radius: 8px; font-size: 10px; font-weight: 900;
+    background: linear-gradient(180deg, rgba(242,193,78,.22), rgba(242,193,78,.06));
+    border: 1px solid rgba(242,193,78,.4); color: #f2c14e; }
+  .rank-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+    background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.06);
+    border-radius: 12px; margin-bottom: 12px; }
+  .rank-row .ic { font-size: 30px; }
+  .rank-row .mid { flex: 1; }
+  .rank-row .nm { font-size: 15px; font-weight: 900; color: #f2c14e; }
+  .rank-row .pt { font-size: 11px; color: #8fa0b4; margin-top: 2px; }
+  .rank-bar { height: 6px; background: rgba(255,255,255,.08);
+    border-radius: 3px; overflow: hidden; margin-top: 5px; }
+  .rank-fill { height: 100%; width: 0%;
+    background: linear-gradient(90deg,#f2c14e,#c8932a); transition: width .4s; }
+
+  /* 商城 */
+  .shop-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
+  .shop-item { display: flex; align-items: center; gap: 11px; padding: 10px 12px;
+    background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.06);
+    border-radius: 12px; }
+  .shop-item.owned { border-color: rgba(74,222,128,.3); }
+  .shop-item.eq { border-color: #f2c14e; background: rgba(242,193,78,.09); }
+  .shop-item .ic { font-size: 26px; flex-shrink: 0; }
+  .shop-item .info { flex: 1; min-width: 0; }
+  .shop-item .t { font-size: 12.5px; font-weight: 800; color: #cfdae5; }
+  .shop-item .d { font-size: 10.5px; color: #566c82; margin-top: 2px; line-height: 1.4; }
+  .shop-item .own { font-size: 10px; color: #4ade80; font-weight: 800; margin-top: 2px; }
+  .shop-item .act { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+  .shop-btn { padding: 5px 11px; border-radius: 8px; border: none;
+    font-size: 11px; font-weight: 900; cursor: pointer; font-family: inherit;
+    background: linear-gradient(180deg,#ffd97a,#d29a3a); color: #2a1a0a; }
+  .shop-btn:active { transform: scale(.94); }
+  .shop-btn.ghost { background: rgba(255,255,255,.08); color: #9fb0c2; }
+  .shop-btn.green { background: linear-gradient(180deg,#2e9e6b,#1e7a4f); color: #fff; }
+  .shop-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .shop-price { font-size: 11px; font-weight: 900; color: #f2c14e; text-align: center; }
+
+  /* 图鉴 */
+  .dex-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; }
+  .dex-cell { padding: 10px 6px; text-align: center; border-radius: 12px;
+    background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.06); }
+  .dex-cell.got { background: rgba(74,222,128,.08); border-color: rgba(74,222,128,.3); }
+  .dex-cell .nm { font-size: 12px; font-weight: 800; color: #566c82; }
+  .dex-cell.got .nm { color: #8fd6b0; }
+  .dex-cell .ct { font-size: 15px; font-weight: 900; color: #8fa0b4; margin-top: 3px; }
+  .dex-cell.got .ct { color: #f2c14e; }
+
+  /* 签到 */
+  .checkin-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 7px;
+    margin-bottom: 14px; }
+  .ci-cell { padding: 9px 3px; text-align: center; border-radius: 10px;
+    background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.06); }
+  .ci-cell.done { background: rgba(74,222,128,.1); border-color: rgba(74,222,128,.35); }
+  .ci-cell.today { border-color: #f2c14e; background: rgba(242,193,78,.1); }
+  .ci-cell .d { font-size: 10px; color: #8fa0b4; font-weight: 700; }
+  .ci-cell .v { font-size: 11px; font-weight: 900; color: #f2c14e; margin-top: 3px; }
+  .ci-cell.done .v { color: #4ade80; }
+
+  /* 统计 */
+  .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; }
+  .stat-box { padding: 10px 6px; text-align: center; border-radius: 12px;
+    background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.06); }
+  .stat-box .v { font-size: 16px; font-weight: 900; color: #8fd6b0; }
+  .stat-box .l { font-size: 10.5px; color: #566c82; margin-top: 3px; }
+  .stat-box.gold .v { color: #f2c14e; }
+
+  /* 音量 */
+  .vol-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+  .vol-row .lb { width: 56px; font-size: 12px; color: #8fa0b4; font-weight: 700; }
+  .vol-row input[type=range] { flex: 1; height: 6px; -webkit-appearance: none;
+    appearance: none; background: #1a2531; border-radius: 3px; outline: none; }
+  .vol-row input[type=range]::-webkit-slider-thumb { -webkit-appearance: none;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: linear-gradient(180deg,#ffd97a,#d29a3a); cursor: pointer; }
+  .vol-row .vv { width: 46px; text-align: right; font-size: 12px;
+    color: #f2c14e; font-weight: 800; }
 </style>
 </head>
 <body>
@@ -703,6 +804,7 @@
         <div class="lobby-name-row">
           <span class="lobby-lvl" id="lbLevel">Lv.1</span>
           <span class="lobby-name" id="lbName">玩家</span>
+          <span class="rank-badge" id="lbRank">🥉 青铜</span>
         </div>
         <div class="lobby-expbar"><div class="lobby-expfill" id="lbExp"></div></div>
       </div>
@@ -713,8 +815,10 @@
       <div class="lobby-topbtns">
         <button class="lobby-iconbtn" id="lbBtnTasks" title="任务">📋<span class="badge" id="lbTaskBadge" style="display:none">!</span></button>
         <button class="lobby-iconbtn" id="lbBtnAchieve" title="成就">🏆</button>
+        <button class="lobby-iconbtn" id="lbBtnShop" title="商城">🛒</button>
         <button class="lobby-iconbtn" id="lbBtnStorage" title="存档">💾</button>
         <button class="lobby-iconbtn" id="lbBtnSound" title="音效">🔊</button>
+        <button class="lobby-iconbtn" id="lbBtnSettings" title="设置">⚙️</button>
       </div>
     </div>
     <div class="save-status">
@@ -732,6 +836,9 @@
       <div class="lobby-quickbtns">
         <button class="lobby-quickbtn" id="lbQTasks"><span class="ic">🎯</span><span>任务</span><span class="badge green" id="lbQTaskBadge" style="display:none">!</span></button>
         <button class="lobby-quickbtn" id="lbQAchieve"><span class="ic">🏅</span><span>成就</span></button>
+        <button class="lobby-quickbtn" id="lbQShop"><span class="ic">🏪</span><span>商城</span></button>
+        <button class="lobby-quickbtn" id="lbQCheckin"><span class="ic">📅</span><span>签到</span><span class="badge green" id="lbQCheckinBadge" style="display:none">!</span></button>
+        <button class="lobby-quickbtn" id="lbQStats"><span class="ic">📊</span><span>档案</span></button>
         <button class="lobby-quickbtn" id="lbQStorage"><span class="ic">💾</span><span>存档</span></button>
         <button class="lobby-quickbtn" id="lbQHelp"><span class="ic">❓</span><span>规则</span></button>
       </div>
@@ -769,6 +876,7 @@
         <button class="iconbtn" id="btnAchieve" title="成就">🏆</button>
         <button class="iconbtn" id="btnTasks" title="任务">📋</button>
         <button class="iconbtn" id="btnSound" title="音效">🔊</button>
+        <button class="iconbtn" id="btnSettings" title="设置">⚙️</button>
         <button class="iconbtn exit" id="btnExit" title="退出并保存">🚪</button>
       </div>
     </div>
@@ -838,8 +946,18 @@
         <p>每次轮到你时右下角出现倒计时圆环。超时自动过牌/弃牌。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">💾 多存档</p>
         <p>共 3 个存档槽，每个独立记录金币、等级、成就与任务。金币用完后可以开新档重玩新手场。</p>
-        <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎁 新手任务</p>
-        <p>新手任务包含 21 个关卡，全部完成可获得 8,000+ 金币。每日任务每天刷新。</p>
+        <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎁 任务与成就</p>
+        <p>新手任务 21 关（全清约 8,250🪙）、每日任务每天刷新、周常挑战每周一刷新 6 项，另有 16 项成就。</p>
+        <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🏅 段位排位</p>
+        <p>青铜 → 白银 → 黄金 → 铂金 → 钻石 → 大师 → 传奇。赢一局 +12 起（赢额越大加成越高，上限 +26），弃牌失利 -5，摊牌失利 -10，积分跌破段位线会降段。</p>
+        <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">📅 每日签到</p>
+        <p>7 天一轮，奖励逐日递增（60 → 888🪙），断签重新从第 1 天开始。</p>
+        <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🛒 商城与道具</p>
+        <p>金币的消费出口。牌背 / 头像框 / 称号为买断外观，可随时装备；复活券、双倍经验卡、透视卡为消耗品，能在牌局里提供真实优势（透视卡可在翻牌后公开一位对手底牌）。</p>
+        <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">📊 档案</p>
+        <p>记录入池率 VPIP、胜率、全下胜率、诈唬成功率、最大底池、累计盈亏，以及 9 类牌型图鉴。</p>
+        <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎵 音乐与音效</p>
+        <p>背景音乐为 WebAudio 实时合成，无音频文件，离线可播。设置面板可分别调节主音量 / 音效 / 音乐。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🧠 AI 心理博弈</p>
         <p>AI 会观察你的下注风格，如果你经常弃牌它们会更频繁诈唬；如果你爱跟注它们会收紧范围。</p>
       </div>
@@ -931,6 +1049,84 @@
     </div>
   </div>
 
+  <!-- 商城 -->
+  <div class="overlay" id="ovShop">
+    <div class="panel">
+      <h2>🛒 商城
+        <span style="font-size:12px;color:#f2c14e;letter-spacing:0;font-weight:800;margin-left:auto">
+          🪙 <span id="shopCoins">0</span>
+        </span>
+        <button class="closebtn" data-close="ovShop">✕</button>
+      </h2>
+      <div style="font-size:11.5px;color:#8fa0b4;margin-bottom:12px;line-height:1.7;">
+        外观类买断后永久拥有，可随时装备 / 卸下；消耗品立即生效，可在牌局中提供实际优势。
+      </div>
+      <div class="shop-grid" id="shopList"></div>
+    </div>
+  </div>
+
+  <!-- 档案：数据 / 图鉴 / 段位 -->
+  <div class="overlay" id="ovStats">
+    <div class="panel">
+      <h2>📊 档案 <button class="closebtn" data-close="ovStats">✕</button></h2>
+      <div class="tab-row">
+        <button class="tab-btn active" id="tabSData" data-tab="sdata">数据面板</button>
+        <button class="tab-btn" id="tabSDex" data-tab="sdex">牌型图鉴</button>
+        <button class="tab-btn" id="tabSRank" data-tab="srank">段位</button>
+      </div>
+      <div id="statPanel"></div>
+      <div id="dexPanel" style="display:none"></div>
+      <div id="rankPanel" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- 签到 / 周常 -->
+  <div class="overlay" id="ovCheckin">
+    <div class="panel">
+      <h2>📅 签到与周常 <button class="closebtn" data-close="ovCheckin">✕</button></h2>
+      <div class="tab-row">
+        <button class="tab-btn active" id="tabCi" data-tab="ci">每日签到
+          <span class="badge" id="ciBadge" style="display:none">!</span>
+        </button>
+        <button class="tab-btn" id="tabWk" data-tab="wk">周常挑战
+          <span class="badge" id="wkBadge" style="display:none">!</span>
+        </button>
+      </div>
+      <div id="ciPanel"></div>
+      <div id="wkPanel" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- 设置：音效 / 音乐 / 音量 -->
+  <div class="overlay" id="ovSettings">
+    <div class="panel" style="max-width:420px;">
+      <h2>⚙️ 设置 <button class="closebtn" data-close="ovSettings">✕</button></h2>
+      <div style="display:flex;gap:10px;margin-bottom:14px;">
+        <button class="shop-btn ghost" id="setSfxToggle" style="flex:1;padding:10px;font-size:13px;">🔊 音效</button>
+        <button class="shop-btn ghost" id="setMusicToggle" style="flex:1;padding:10px;font-size:13px;">🎵 音乐</button>
+      </div>
+      <div class="vol-row">
+        <span class="lb">主音量</span>
+        <input type="range" id="volMaster" min="0" max="100" step="1">
+        <span class="vv" id="volMasterV">80%</span>
+      </div>
+      <div class="vol-row">
+        <span class="lb">音效</span>
+        <input type="range" id="volSfx" min="0" max="100" step="1">
+        <span class="vv" id="volSfxV">90%</span>
+      </div>
+      <div class="vol-row">
+        <span class="lb">音乐</span>
+        <input type="range" id="volMusic" min="0" max="100" step="1">
+        <span class="vv" id="volMusicV">50%</span>
+      </div>
+      <div style="font-size:11px;color:#566c82;line-height:1.7;margin-top:10px;">
+        音乐为程序化实时合成（WebAudio），不依赖任何音频文件，因此离线也能播放。<br>
+        浏览器策略要求先有一次点击才会解锁声音。
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -992,11 +1188,15 @@ var player = null;
 var activeSlot = 1;
 var allSaves = null;
 
+/* 存档结构版本：11 = 加入音乐 / 段位 / 商城 / 签到 / 周常 / 统计 / 图鉴 */
+var SAVE_VERSION = 11;
+var WEEK_START_DAY = 1;   // 0=周日, 1=周一
+
 /* 创建新玩家默认状态 */
 function createNewPlayer(name) {
   return {
     name: name || '玩家',
-    version: 10,
+    version: SAVE_VERSION,
     level: 1, exp: 0, coins: START_COINS,
     totalHands: 0, totalWins: 0, streak: 0, maxStreak: 0, maxWin: 0,
     achievements: {},
@@ -1007,9 +1207,81 @@ function createNewPlayer(name) {
     dailyProgress: {},
     dailyClaimed: {},
     soundOn: true,
+
+    /* ---- v11 新增 ---- */
+    musicOn: true,
+    volMaster: 0.8,
+    volSfx: 0.9,
+    volMusic: 0.5,
+
+    rankPoints: 0,          // 段位积分
+    rankTier: 0,            // 当前段位序号
+    rankPeak: 0,            // 历史最高段位
+    rankUpAt: 0,
+
+    inventory: {},          // 道具库存 { itemId: 数量 }
+    equipped: {             // 已装备外观
+      cardBack: 'classic',
+      frame: 'none',
+      title: ''
+    },
+    buffs: {                // 生效中的增益（按剩余手数/次数计）
+      exp2x: 0,
+      peek: 0
+    },
+
+    checkin: null,          // { date, streak, claimed }
+    weekly: null,           // { week, progress:{}, claimed:{} }
+
+    stats: {                // 详细统计
+      vpip: 0,              // 主动入池（跟注/加注）次数
+      vpipTotal: 0,         // 可入池机会数
+      showdowns: 0,
+      allIns: 0,
+      allInWins: 0,
+      bluffTotal: 0,
+      bluffWins: 0,
+      biggestPot: 0,
+      totalWagered: 0,
+      totalNet: 0
+    },
+    handDex: {},            // 牌型图鉴 { 0..8: 达成次数 }
+
     createdAt: Date.now(),
     lastPlayed: Date.now()
   };
+}
+
+/* 老存档迁移：补齐 v11 缺失字段，保证向上兼容不崩 */
+function migratePlayer(p) {
+  if (!p) return p;
+  var def = createNewPlayer(p.name);
+  var changed = false;
+  Object.keys(def).forEach(function (k) {
+    if (k === 'daily' || k === 'dailyTasks') return;   // 允许为 null
+    if (p[k] === undefined || p[k] === null) { p[k] = def[k]; changed = true; }
+  });
+  if (!p.equipped) { p.equipped = def.equipped; changed = true; }
+  ['cardBack', 'frame', 'title'].forEach(function (k) {
+    if (p.equipped[k] === undefined) { p.equipped[k] = def.equipped[k]; changed = true; }
+  });
+  if (!p.buffs) { p.buffs = def.buffs; changed = true; }
+  ['exp2x', 'peek'].forEach(function (k) {
+    if (typeof p.buffs[k] !== 'number') { p.buffs[k] = 0; changed = true; }
+  });
+  if (!p.stats) { p.stats = def.stats; changed = true; }
+  Object.keys(def.stats).forEach(function (k) {
+    if (typeof p.stats[k] !== 'number') { p.stats[k] = 0; changed = true; }
+  });
+  if (!p.handDex) { p.handDex = {}; changed = true; }
+  if (!p.inventory) { p.inventory = {}; changed = true; }
+  [['rankPoints', 0], ['rankTier', 0], ['rankPeak', p.rankTier || 0],
+   ['volMaster', 0.8], ['volSfx', 0.9], ['volMusic', 0.5]].forEach(function (pair) {
+    if (typeof p[pair[0]] !== 'number') { p[pair[0]] = pair[1]; changed = true; }
+  });
+  if (typeof p.musicOn !== 'boolean') { p.musicOn = true; changed = true; }
+  if (p.version !== SAVE_VERSION) { p.version = SAVE_VERSION; changed = true; }
+  return p;
 }
 
 /* 加载所有存档 */
@@ -1029,6 +1301,16 @@ function loadAllSaves() {
   } catch (e) {
     console.warn('读取存档失败', e);
   }
+
+  // 老存档字段迁移（v10 → v11）
+  if (allSaves && allSaves.slots) {
+    for (var si = 1; si <= MAX_SLOTS; si++) {
+      if (allSaves.slots[si] && allSaves.slots[si].player) {
+        migratePlayer(allSaves.slots[si].player);
+      }
+    }
+  }
+  if (player) migratePlayer(player);
 
   // 初始化默认存档结构
   if (!allSaves) {
@@ -1228,6 +1510,56 @@ var ACHIEVEMENTS = [
   { id:'newbie_master', name:'新手毕业', desc:'完成所有新手任务', icon:'🎓', reward:3000 }
 ];
 
+/* 段位 */
+var RANKS = [
+  { id:0, name:'青铜', icon:'🥉', min:0,    reward:0 },
+  { id:1, name:'白银', icon:'🥈', min:100,  reward:500 },
+  { id:2, name:'黄金', icon:'🥇', min:250,  reward:1200 },
+  { id:3, name:'铂金', icon:'💠', min:450,  reward:2500 },
+  { id:4, name:'钻石', icon:'💎', min:700,  reward:5000 },
+  { id:5, name:'大师', icon:'🔮', min:1000, reward:10000 },
+  { id:6, name:'传奇', icon:'👑', min:1400, reward:20000 }
+];
+
+/* 每日签到（7 天一轮，连续递增） */
+var CHECKIN_REWARDS = [60, 90, 140, 220, 320, 500, 888];
+
+/* 周常挑战（每周一刷新，全量 6 项） */
+var WEEKLY_TASKS = [
+  { id:'w_play_30', name:'完成 30 手牌局',      target:30,   reward:800 },
+  { id:'w_win_10',  name:'赢得 10 局',          target:10,   reward:1200 },
+  { id:'w_allin_3', name:'全下 3 次',           target:3,    reward:700 },
+  { id:'w_bluff_3', name:'诈唬成功 3 次',       target:3,    reward:1000 },
+  { id:'w_big_3',   name:'凑成 3 次同花及以上', target:3,    reward:900 },
+  { id:'w_streak_3',name:'达成一次 3 连胜',     target:1,    reward:1000 }
+];
+
+/* 商城 */
+var SHOP_ITEMS = [
+  { id:'revive',    type:'consume', name:'复活券',        icon:'💊', price:1500,
+    desc:'破产时补充金翻倍（$2,000 而非 $1,000）' },
+  { id:'exp2x',     type:'consume', name:'双倍经验卡',    icon:'📜', price:800,
+    desc:'接下来 10 手牌获得的经验翻倍' },
+  { id:'peek3',     type:'consume', name:'透视卡 ×3',     icon:'👁️', price:1200,
+    desc:'3 次机会，翻牌后偷看一位对手的底牌' },
+  { id:'cb_gold',   type:'skin', slot:'cardBack', name:'鎏金牌背', icon:'🟡', price:2000,
+    desc:'金色暗纹牌背', css:'gold' },
+  { id:'cb_jade',   type:'skin', slot:'cardBack', name:'青玉牌背', icon:'🟢', price:2000,
+    desc:'青玉渐变牌背', css:'jade' },
+  { id:'cb_crimson',type:'skin', slot:'cardBack', name:'朱砂牌背', icon:'🔴', price:2600,
+    desc:'朱砂云纹牌背', css:'crimson' },
+  { id:'fr_gold',   type:'skin', slot:'frame', name:'鎏金头像框', icon:'🖼️', price:3000,
+    desc:'座位与头像加鎏金边框', css:'gold' },
+  { id:'fr_neon',   type:'skin', slot:'frame', name:'霓虹头像框', icon:'💫', price:3600,
+    desc:'青色霓虹呼吸边框', css:'neon' },
+  { id:'t_pro',     type:'skin', slot:'title', name:'称号 · 老练牌手', icon:'🎩', price:4000,
+    desc:'名字后显示「老练牌手」', css:'老练牌手' },
+  { id:'t_shark',   type:'skin', slot:'title', name:'称号 · 牌桌鲨鱼', icon:'🦈', price:6000,
+    desc:'名字后显示「牌桌鲨鱼」', css:'牌桌鲨鱼' },
+  { id:'t_dragon',  type:'skin', slot:'title', name:'称号 · 东方巨龙', icon:'🐉', price:12000,
+    desc:'名字后显示「东方巨龙」', css:'东方巨龙' }
+];
+
 /* AI */
 var OPPONENTS = [
   { id:'xiaohong', name:'小红', avatar:'👩‍🦰', style:'aggressive',
@@ -1279,16 +1611,57 @@ function createPsychology(style) {
   };
 }
 
-/* 音效 */
-var audioCtx = null;
+/* ============================================================
+   音频图：osc → [sfxGain / musicGain] → masterGain → destination
+   ============================================================ */
+var audioCtx = null, masterGain = null, sfxGain = null, musicGain = null;
+
+/* 音名 → 频率（A4 = 440Hz） */
+var NOTE = {};
+(function () {
+  var names = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  for (var o = 0; o <= 8; o++) {
+    for (var i = 0; i < 12; i++) {
+      NOTE[names[i] + o] = 440 * Math.pow(2, (((o + 1) * 12 + i) - 69) / 12);
+    }
+  }
+})();
+
 function initAudio() {
   if (!audioCtx) {
-    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      audioCtx = new AC();
+      masterGain = audioCtx.createGain();
+      sfxGain = audioCtx.createGain();
+      musicGain = audioCtx.createGain();
+      sfxGain.connect(masterGain);
+      musicGain.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+      applyVolumes();
+    } catch (e) { audioCtx = null; }
   }
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioCtx && audioCtx.state === 'suspended') {
+    try { audioCtx.resume(); } catch (e) {}
+  }
 }
+
+/* 把存档里的音量设置应用到音频图 */
+function applyVolumes() {
+  if (!audioCtx || !masterGain) return;
+  var m = player ? player.volMaster : 0.8;
+  var s = player ? player.volSfx : 0.9;
+  var u = player ? player.volMusic : 0.5;
+  try {
+    masterGain.gain.value = Math.max(0, Math.min(1, m));
+    sfxGain.gain.value = Math.max(0, Math.min(1, s));
+    musicGain.gain.value = Math.max(0, Math.min(1, u)) * 0.34;  // 音乐整体压低，避免盖过音效
+  } catch (e) {}
+}
+
 function sfx(name) {
-  if (!player || !player.soundOn || !audioCtx) return;
+  if (!player || !player.soundOn || !audioCtx || !sfxGain) return;
   var t = audioCtx.currentTime;
   function tone(freq, dur, type, vol, delay) {
     try {
@@ -1299,8 +1672,29 @@ function sfx(name) {
       osc.frequency.setValueAtTime(freq, start);
       g.gain.setValueAtTime(vol || 0.06, start);
       g.gain.exponentialRampToValueAtTime(0.001, start + dur);
-      osc.connect(g); g.connect(audioCtx.destination);
+      osc.connect(g); g.connect(sfxGain);
       osc.start(start); osc.stop(start + dur);
+    } catch (e) {}
+  }
+  /* 噪声发生器：用于洗牌、筹码碰撞等质感音 */
+  function noise(dur, vol, filterHz, delay) {
+    try {
+      var start = t + (delay || 0);
+      var len = Math.max(1, Math.floor(audioCtx.sampleRate * dur));
+      var buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+      var data = buf.getChannelData(0);
+      for (var i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+      var src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      var bp = audioCtx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = filterHz || 1200;
+      bp.Q.value = 0.9;
+      var g = audioCtx.createGain();
+      g.gain.setValueAtTime(vol || 0.05, start);
+      g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+      src.connect(bp); bp.connect(g); g.connect(sfxGain);
+      src.start(start); src.stop(start + dur);
     } catch (e) {}
   }
   switch (name) {
@@ -1312,6 +1706,40 @@ function sfx(name) {
     case 'tick':  tone(600, 0.05, 'sine', 0.04); break;
     case 'heartbeat': tone(80, 0.15, 'sine', 0.08); break;
     case 'timeout': tone(180, 0.3, 'sawtooth', 0.08); break;
+    /* --- 新增质感音 --- */
+    case 'shuffle':
+      noise(0.09, 0.055, 2600, 0);
+      noise(0.09, 0.05, 2200, 0.085);
+      noise(0.11, 0.045, 1900, 0.17);
+      break;
+    case 'chipstack':
+      noise(0.05, 0.05, 3200, 0);
+      tone(880, 0.05, 'square', 0.03, 0.01);
+      tone(1180, 0.05, 'square', 0.026, 0.05);
+      break;
+    case 'flip':
+      noise(0.06, 0.05, 3000, 0);
+      tone(1400, 0.07, 'triangle', 0.035, 0.01);
+      break;
+    case 'allin':
+      noise(0.14, 0.07, 1500, 0);
+      tone(180, 0.22, 'sawtooth', 0.075, 0);
+      tone(260, 0.18, 'square', 0.05, 0.05);
+      tone(392, 0.26, 'triangle', 0.05, 0.1);
+      break;
+    case 'coin':
+      tone(1568, 0.06, 'sine', 0.06, 0);
+      tone(2093, 0.10, 'sine', 0.05, 0.055);
+      break;
+    case 'rankup':
+      [523, 659, 784, 1047, 1319].forEach(function (f, i) {
+        tone(f, 0.18, 'triangle', 0.075, i * 0.07);
+      });
+      break;
+    case 'buy':
+      tone(784, 0.07, 'triangle', 0.055, 0);
+      tone(1047, 0.10, 'triangle', 0.05, 0.07);
+      break;
     case 'win':
       tone(523, 0.10, 'sine', 0.09, 0);
       tone(659, 0.10, 'sine', 0.09, 0.09);
@@ -1327,6 +1755,207 @@ function sfx(name) {
     case 'achievement':
       [784,988,1319].forEach(function(f,i){ tone(f, 0.14, 'triangle', 0.09, i * 0.09); });
       break;
+  }
+}
+
+/* ============================================================
+   程序化 BGM —— WebAudio 实时合成，零音频文件
+   每首曲子 = 4 小节和声进行 + 16 分音符旋律 + 贝斯 + 打击
+   ============================================================ */
+var TRACKS = {
+  lobby: {              // 大厅：悠闲爵士 ii-V-I-VI
+    tempo: 88, wave: 'triangle', bassWave: 'sine', hat: 0.16, melVol: 0.16,
+    bars: [
+      { bass: 'D2',  notes: ['D3', 'F3', 'A3', 'C4'] },
+      { bass: 'G1',  notes: ['G2', 'B2', 'D3', 'F3'] },
+      { bass: 'C2',  notes: ['C3', 'E3', 'G3', 'B3'] },
+      { bass: 'A1',  notes: ['A2', 'C3', 'E3', 'G3'] }
+    ],
+    mel: ['E4',null,'G4',null,'A4',null,'G4','E4','F4',null,'A4',null,'C5',null,'A4',null]
+  },
+  easy: {               // 简单场：明亮轻快
+    tempo: 102, wave: 'sine', bassWave: 'triangle', hat: 0.14, melVol: 0.15,
+    bars: [
+      { bass: 'F1',  notes: ['F3', 'A3', 'C4'] },
+      { bass: 'C2',  notes: ['C3', 'E3', 'G3'] },
+      { bass: 'D2',  notes: ['D3', 'F3', 'A3'] },
+      { bass: 'A#1', notes: ['A#2', 'D3', 'F3'] }
+    ],
+    mel: ['A4',null,'C5','A4',null,'G4',null,null,'F4',null,'A4','C5',null,'G4',null,null]
+  },
+  normal: {             // 普通场：稳定律动
+    tempo: 116, wave: 'triangle', bassWave: 'square', hat: 0.18, melVol: 0.15,
+    bars: [
+      { bass: 'C2', notes: ['C3', 'E3', 'G3'] },
+      { bass: 'G1', notes: ['G2', 'B2', 'D3'] },
+      { bass: 'A1', notes: ['A2', 'C3', 'E3'] },
+      { bass: 'F1', notes: ['F2', 'A2', 'C3'] }
+    ],
+    mel: ['E4','G4',null,'C5',null,'B4',null,'G4','A4',null,'F4','A4',null,'G4',null,null]
+  },
+  hard: {               // 困难场：小调紧张
+    tempo: 128, wave: 'sawtooth', bassWave: 'square', hat: 0.2, melVol: 0.13,
+    bars: [
+      { bass: 'A1', notes: ['A2', 'C3', 'E3'] },
+      { bass: 'F1', notes: ['F2', 'A2', 'C3'] },
+      { bass: 'G1', notes: ['G2', 'A#2', 'D3'] },
+      { bass: 'E1', notes: ['E2', 'G2', 'B2'] }
+    ],
+    mel: ['A4',null,'C5','B4',null,'A4','G4',null,'F4',null,'A4','C5',null,'B4',null,null]
+  },
+  champion: {           // 冠军场：压迫感和声小调
+    tempo: 140, wave: 'sawtooth', bassWave: 'sawtooth', hat: 0.22, melVol: 0.13,
+    bars: [
+      { bass: 'D2',  notes: ['D3', 'F3', 'A3'] },
+      { bass: 'A#1', notes: ['A#2', 'D3', 'F3'] },
+      { bass: 'G1',  notes: ['G2', 'A#2', 'D3'] },
+      { bass: 'A1',  notes: ['A2', 'C#3', 'E3'] }
+    ],
+    mel: ['D4',null,'F4','A4',null,'G4','F4',null,'E4',null,'G4','A#4',null,'A4',null,null]
+  }
+};
+
+var Music = {
+  playing: false,
+  name: '',
+  track: null,
+  step: 0,
+  bar: 0,
+  nextTime: 0,
+  timer: null,
+
+  /* 播放指定曲目（同名不重启） */
+  play: function (name) {
+    if (!player || !player.musicOn) return;
+    if (this.playing && this.name === name) return;
+    this.name = name;
+    this.track = TRACKS[name] || null;
+    if (!this.track) { this.stop(); return; }
+
+    if (!audioCtx) initAudio();
+    if (!audioCtx || !musicGain) return;
+
+    this.step = 0;
+    this.bar = 0;
+    this.playing = true;
+    this.nextTime = audioCtx.currentTime + 0.08;
+    this._tick();
+  },
+
+  stop: function () {
+    this.playing = false;
+    this.name = '';
+    if (this.timer) { clearTimeout(this.timer); this.timer = null; }
+  },
+
+  /* 关闭开关时调用 */
+  toggle: function () {
+    if (!player) return;
+    player.musicOn = !player.musicOn;
+    saveAllSaves(true);
+    if (!player.musicOn) this.stop();
+    else this.play(App.screen === 'game' ? tableTrackName() : 'lobby');
+    return player.musicOn;
+  },
+
+  _tick: function () {
+    var self = this;
+    if (!this.playing || !audioCtx) { this.timer = null; return; }
+    try {
+      var stepDur = 60 / this.track.tempo / 4;   // 16 分音符
+      var now = audioCtx.currentTime;
+      /* 时钟大幅跳变（切后台再回来 / 无音频设备）时重新对齐，
+         否则会一次性补发成百上千个音符节点导致卡顿 */
+      if (this.nextTime < now - 0.25) this.nextTime = now + 0.05;
+      var guard = 0;
+      while (this.nextTime < now + 0.15 && guard++ < 64) {
+        this._schedule(this.step, this.nextTime);
+        this.nextTime += stepDur;
+        this.step++;
+        if (this.step >= 16) { this.step = 0; this.bar = (this.bar + 1) % this.track.bars.length; }
+      }
+    } catch (e) { /* 忽略单次调度异常 */ }
+    this.timer = setTimeout(function () { self._tick(); }, 25);
+  },
+
+  _schedule: function (step, when) {
+    var tr = this.track;
+    var bar = tr.bars[this.bar];
+    var stepDur = 60 / tr.tempo / 4;
+
+    // 和弦垫：每小节第 1 步铺一层长音
+    if (step === 0) {
+      for (var i = 0; i < bar.notes.length; i++) {
+        this._note(NOTE[bar.notes[i]], when, stepDur * 15, tr.wave, 0.055, musicGain);
+      }
+    }
+    // 贝斯：四分音符
+    if (step % 4 === 0) {
+      this._note(NOTE[bar.bass], when, stepDur * 3.2, tr.bassWave, 0.11, musicGain);
+    }
+    // 旋律
+    var m = tr.mel[step];
+    if (m) {
+      var swing = (step % 2 === 1) ? stepDur * 0.18 : 0;
+      this._note(NOTE[m], when + swing, stepDur * 2.2, 'triangle', tr.melVol, musicGain);
+    }
+    // 打击（闭镲感）
+    if (tr.hat > 0 && step % 2 === 1) {
+      this._noise(when, 0.035, tr.hat * 0.12, 6800, musicGain);
+    }
+  },
+
+  _note: function (freq, when, dur, type, vol, dest) {
+    if (!freq || !audioCtx) return;
+    try {
+      var osc = audioCtx.createOscillator();
+      var g = audioCtx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, when);
+      g.gain.linearRampToValueAtTime(vol, when + Math.min(0.03, dur * 0.2));
+      g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+      osc.connect(g); g.connect(dest || musicGain);
+      osc.start(when); osc.stop(when + dur + 0.02);
+    } catch (e) {}
+  },
+
+  _noise: function (when, dur, vol, hz, dest) {
+    if (!audioCtx) return;
+    try {
+      var len = Math.max(1, Math.floor(audioCtx.sampleRate * dur));
+      var buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+      var d = buf.getChannelData(0);
+      for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+      var src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      var hp = audioCtx.createBiquadFilter();
+      hp.type = 'highpass';
+      hp.frequency.value = hz || 6000;
+      var g = audioCtx.createGain();
+      g.gain.setValueAtTime(vol, when);
+      g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+      src.connect(hp); hp.connect(g); g.connect(dest || musicGain);
+      src.start(when); src.stop(when + dur);
+    } catch (e) {}
+  }
+};
+
+/* 当前应播放的牌桌曲目 */
+function tableTrackName() {
+  var map = { easy: 'easy', normal: 'normal', hard: 'hard', champion: 'champion' };
+  return map[App.difficulty] || 'easy';
+}
+
+/* 首次用户手势后启动音频（绕过浏览器自动播放限制） */
+var audioUnlocked = false;
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  initAudio();
+  applyVolumes();
+  if (player && player.musicOn) {
+    Music.play(App.screen === 'game' ? tableTrackName() : 'lobby');
   }
 }
 
@@ -1526,6 +2155,12 @@ function showScreen(name) {
   document.querySelectorAll('.overlay').forEach(function(o){ o.classList.remove('show'); });
   $('toast').classList.remove('show');
   Timer.stop();
+  // 场景音乐切换
+  try {
+    if (player && player.musicOn) {
+      Music.play(name === 'game' ? tableTrackName() : 'lobby');
+    }
+  } catch (e) {}
 }
 
 /* 难度卡片 */
@@ -1599,13 +2234,22 @@ function renderLobby() {
   $('lbExp').style.width = pct + '%';
   $('lbBtnSound').textContent = player.soundOn ? '🔊' : '🔇';
 
+  // 段位徽章 + 头像框
+  var ri = rankInfo();
+  $('lbRank').textContent = ri.icon + ' ' + ri.name;
+  $('lbAvatar').className = 'lobby-avatar' + frameClass();
+
   ensureDailyTasks();
+  ensureCheckin();
 
   // 检查红点
   var nbDone = checkNewbieHasClaimable();
   var dailyDone = checkDailyHasClaimable();
   $('lbTaskBadge').style.display = (nbDone || dailyDone) ? 'block' : 'none';
   $('lbQTaskBadge').style.display = (nbDone || dailyDone) ? 'block' : 'none';
+  var ciDone = hasCheckinClaimable();
+  var wkDone = checkWeeklyHasClaimable();
+  $('lbQCheckinBadge').style.display = (ciDone || wkDone) ? 'block' : 'none';
 
   updateSaveIndicator('saved');
 }
@@ -1613,7 +2257,7 @@ function renderLobby() {
 function renderTopbar() {
   if (!player) return;
   $('pLevel').textContent = 'Lv.' + player.level;
-  $('pName').textContent = player.name || '玩家';
+  $('pName').textContent = (player.name || '玩家') + (titleText() ? ' · ' + titleText() : '');
   $('pCoins').textContent = fmt(player.coins);
   var need = player.level * 100;
   var pct = Math.min(100, (player.exp / need) * 100);
@@ -1624,7 +2268,7 @@ function renderTopbar() {
 
 function cardHTML(c, hidden, small, anim) {
   var cls = 'card' + (small ? ' small' : '') + (anim ? ' deal' : '');
-  if (hidden) return '<div class="' + cls + ' back"></div>';
+  if (hidden) return '<div class="' + cls + ' ' + cardBackClass() + '"></div>';
   var red = (c.s === 1 || c.s === 2) ? ' red' : '';
   return '<div class="' + cls + red + '"><span class="r">' + rankName(c.r) +
          '</span><span class="s">' + SUITS[c.s] + '</span></div>';
@@ -1655,7 +2299,8 @@ function seatHTML(p, i) {
   if (!p.human && p.styleName) {
     html += '<span class="style-tag">' + p.styleName + '</span>';
   }
-  html += dealerBtn + '</div>';
+  html += dealerBtn + (p.human && titleText() ? '<span class="title-tag">' + titleText() + '</span>' : '')
+       +  '</div>';
   html += '<div class="chips">$' + fmt(p.chips) + '</div>';
   html += '<div class="action">' + (p.lastAction || '') + '</div>';
   if (resText) html += '<div class="res">' + resText + '</div>';
@@ -1690,6 +2335,7 @@ function renderTable() {
     }
     if (p.folded) cls += ' folded';
     if (p.winner) cls += ' winner';
+    if (p.human) cls += frameClass();
     el.className = cls;
     el.innerHTML = seatHTML(p, k);
   }
@@ -1828,6 +2474,18 @@ function putIn(p, amt) {
 
 function applyAction(p, act) {
   var toCall = G.currentBet - p.bet;
+  /* VPIP：面临下注时主动入池（跟注 / 加注） */
+  if (p.human && toCall > 0) {
+    bumpStat('vpipTotal', 1);
+    if (act.type === 'call' || act.type === 'raise') bumpStat('vpip', 1);
+  }
+  /* 诈唬尝试：公共牌≥3 张时以弱牌（高牌 / 一对）发起加注 */
+  if (p.human && act.type === 'raise' && G.community.length >= 3) {
+    try {
+      var bv = bestHand(p.hole.concat(G.community));
+      if (bv && bv[0] <= 1) { bumpStat('bluffTotal', 1); G.bluffAttempt = true; }
+    } catch (e) {}
+  }
   if (act.type === 'fold') {
     p.folded = true; p.acted = true; p.lastAction = '弃牌';
     sfx('fold');
@@ -1879,6 +2537,14 @@ function applyAction(p, act) {
       }
     }
     sfx('chip');
+  }
+
+  /* 全下统计与音效（每手只记一次） */
+  if (p.human && p.allIn && !p._allInCounted) {
+    p._allInCounted = true;
+    bumpStat('allIns', 1);
+    bumpWeeklyProgress('w_allin_3', 1);
+    sfx('allin');
   }
 }
 
@@ -2198,6 +2864,7 @@ async function playHand() {
   if (!G.active) return;
   G.handOver = false;
   G.skipFlag = false;
+  G.bluffAttempt = false;
   G.handNo++;
   player.totalHands++;
   bumpNewbieProgress('nb_play_1', 1);
@@ -2206,7 +2873,9 @@ async function playHand() {
   bumpNewbieProgress('nb_play_30', 1);
   bumpDailyProgress('play_3', 1);
   bumpDailyProgress('play_5', 1);
+  bumpWeeklyProgress('w_play_30', 1);
 
+  sfx('shuffle');
   G.deck = shuffle(makeDeck());
   G.community = [];
   G.pot = 0;
@@ -2267,6 +2936,7 @@ async function playHand() {
       await sleep((fastMode || G.skipFlag) ? 20 : 180);
     }
     G.stage++;
+    if (G.stage === 1) maybeApplyPeek();   // 翻牌后若持透视卡则公开一位对手底牌
     G.currentBet = 0;
     G.minRaise = G.bb;
     for (var ri = 0; ri < G.players.length; ri++) {
@@ -2516,6 +3186,284 @@ function claimDaily(id) {
 }
 
 /* ============================================================
+   日期 / 周次 工具
+   ============================================================ */
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+function dateStrOf(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function yesterdayOf(dateStr) {
+  var p = String(dateStr).split('-');
+  var d = new Date(+p[0], +p[1] - 1, +p[2]);
+  d.setDate(d.getDate() - 1);
+  return dateStrOf(d);
+}
+/* 返回所在周的周一日期串，作为周唯一键 */
+function weekKeyOf(dateStr) {
+  var p = String(dateStr).split('-');
+  var d = new Date(+p[0], +p[1] - 1, +p[2]);
+  var day = d.getDay();                      // 0=周日
+  var diff = day === 0 ? -6 : WEEK_START_DAY - day;
+  d.setDate(d.getDate() + diff);
+  return dateStrOf(d);
+}
+
+/* ============================================================
+   金币支出（与 addCoins 对称，同时扣减牌桌筹码）
+   ============================================================ */
+function spendCoins(n) {
+  if (!player || player.coins < n) return false;
+  player.coins -= n;
+  if (player.coins < 0) player.coins = 0;
+  if (G.active && G.players[0]) G.players[0].chips = player.coins;
+  return true;
+}
+
+/* ============================================================
+   段位系统
+   ============================================================ */
+function rankTierFor(points) {
+  var t = 0;
+  for (var i = RANKS.length - 1; i >= 0; i--) {
+    if (points >= RANKS[i].min) { t = i; break; }
+  }
+  return t;
+}
+function rankInfo() { return RANKS[rankTierFor(player ? player.rankPoints : 0)] || RANKS[0]; }
+function rankProgress() {
+  var pts = player ? player.rankPoints : 0;
+  var t = rankTierFor(pts);
+  var cur = RANKS[t], next = RANKS[t + 1];
+  if (!next) return { tier: t, pct: 100, need: 0, got: pts - cur.min, span: 1, next: null };
+  var span = next.min - cur.min;
+  var got = pts - cur.min;
+  return { tier: t, pct: Math.max(0, Math.min(100, got / span * 100)),
+           need: next.min - pts, got: got, span: span, next: next };
+}
+function addRankPoints(delta) {
+  if (!player) return;
+  var before = rankTierFor(player.rankPoints);
+  player.rankPoints = Math.max(0, player.rankPoints + delta);
+  var after = rankTierFor(player.rankPoints);
+  if (after > (player.rankPeak || 0)) player.rankPeak = after;
+  player.rankTier = after;
+  if (after !== before) {
+    if (after > before) {
+      var rw = RANKS[after].reward || 0;
+      if (rw > 0) addCoins(rw);
+      sfx('rankup');
+      showToast('🏅 晋升 ' + RANKS[after].name + (rw > 0 ? '  +' + fmt(rw) + '🪙' : '！'),
+                2800, false, 'success');
+    } else {
+      showToast('📉 降至 ' + RANKS[after].name + '（' + fmt(player.rankPoints) + ' 分）', 2200, true);
+    }
+    saveAllSaves(true);
+  }
+}
+
+/* ============================================================
+   每日签到
+   ============================================================ */
+function ensureCheckin() {
+  if (!player) return null;
+  var today = todayStr();
+  if (!player.checkin || player.checkin.date !== today) {
+    var st = 1;
+    if (player.checkin && player.checkin.date === yesterdayOf(today)) {
+      st = (player.checkin.streak || 0) + 1;
+    }
+    player.checkin = { date: today, streak: st, claimed: false };
+    saveAllSaves(true);
+  }
+  return player.checkin;
+}
+function checkinRewardOf(streak) {
+  var i = (Math.max(1, streak) - 1) % CHECKIN_REWARDS.length;
+  return CHECKIN_REWARDS[i];
+}
+function hasCheckinClaimable() {
+  if (!player) return false;
+  ensureCheckin();
+  return !!(player.checkin && !player.checkin.claimed);
+}
+function claimCheckin() {
+  if (!player) return false;
+  ensureCheckin();
+  var c = player.checkin;
+  if (!c || c.claimed) return false;
+  var rw = checkinRewardOf(c.streak);
+  c.claimed = true;
+  addCoins(rw);
+  saveAllSaves();
+  sfx('coin');
+  showToast('📅 签到成功  +' + fmt(rw) + '🪙（连续 ' + c.streak + ' 天）', 2300, false, 'success');
+  return true;
+}
+
+/* ============================================================
+   周常挑战
+   ============================================================ */
+function ensureWeekly() {
+  if (!player) return null;
+  var wk = weekKeyOf(todayStr());
+  if (!player.weekly || player.weekly.week !== wk) {
+    player.weekly = { week: wk, progress: {}, claimed: {} };
+    saveAllSaves(true);
+  }
+  if (!player.weekly.progress) player.weekly.progress = {};
+  if (!player.weekly.claimed) player.weekly.claimed = {};
+  return player.weekly;
+}
+function getWeeklyTaskById(id) {
+  for (var i = 0; i < WEEKLY_TASKS.length; i++) {
+    if (WEEKLY_TASKS[i].id === id) return WEEKLY_TASKS[i];
+  }
+  return null;
+}
+function bumpWeeklyProgress(id, n) {
+  if (!player) return;
+  ensureWeekly();
+  if (player.weekly.claimed[id]) return;
+  if (!getWeeklyTaskById(id)) return;
+  var cur = player.weekly.progress[id] || 0;
+  player.weekly.progress[id] = cur + (n || 1);
+}
+function setWeeklyProgressIfHigher(id, v) {
+  if (!player) return;
+  ensureWeekly();
+  if (player.weekly.claimed[id]) return;
+  if ((player.weekly.progress[id] || 0) < v) player.weekly.progress[id] = v;
+}
+function checkWeeklyHasClaimable() {
+  if (!player) return false;
+  ensureWeekly();
+  for (var i = 0; i < WEEKLY_TASKS.length; i++) {
+    var t = WEEKLY_TASKS[i];
+    if (player.weekly.claimed[t.id]) continue;
+    if ((player.weekly.progress[t.id] || 0) >= t.target) return true;
+  }
+  return false;
+}
+function claimWeekly(id) {
+  if (!player) return false;
+  var t = getWeeklyTaskById(id);
+  if (!t || player.weekly.claimed[id]) return false;
+  if ((player.weekly.progress[id] || 0) < t.target) return false;
+  player.weekly.claimed[id] = true;
+  addCoins(t.reward);
+  saveAllSaves();
+  sfx('achievement');
+  showToast('🎖️ 周常完成  +' + fmt(t.reward) + '🪙', 2200, false, 'success');
+  return true;
+}
+
+/* ============================================================
+   商城 / 道具
+   ============================================================ */
+function shopItemById(id) {
+  for (var i = 0; i < SHOP_ITEMS.length; i++) {
+    if (SHOP_ITEMS[i].id === id) return SHOP_ITEMS[i];
+  }
+  return null;
+}
+function hasItem(id) { return player && (player.inventory[id] || 0) > 0; }
+function buyItem(id) {
+  var it = shopItemById(id);
+  if (!it) return { ok: false, msg: '道具不存在' };
+  if (it.type === 'skin' && hasItem(id)) return { ok: false, msg: '已经拥有' };
+  if (!spendCoins(it.price)) return { ok: false, msg: '金币不足（需 ' + fmt(it.price) + '🪙）' };
+  player.inventory[id] = (player.inventory[id] || 0) + 1;
+  saveAllSaves();
+  sfx('buy');
+  return { ok: true, msg: '购买成功' };
+}
+function equipItem(id) {
+  var it = shopItemById(id);
+  if (!it || it.type !== 'skin' || !hasItem(id)) return false;
+  var off = it.slot === 'cardBack' ? 'classic' : (it.slot === 'frame' ? 'none' : '');
+  if (player.equipped[it.slot] === id) player.equipped[it.slot] = off;
+  else player.equipped[it.slot] = id;
+  saveAllSaves();
+  sfx('click');
+  return player.equipped[it.slot] === id;
+}
+function isEquipped(id) {
+  var it = shopItemById(id);
+  return !!(it && it.type === 'skin' && player.equipped[it.slot] === id);
+}
+function useItem(id) {
+  var it = shopItemById(id);
+  if (!it) return { ok: false, msg: '道具不存在' };
+  if (!hasItem(id)) return { ok: false, msg: '库存不足' };
+  if (it.type !== 'consume') return { ok: false, msg: '该道具需装备而非使用' };
+  if (id === 'revive') return { ok: false, msg: '复活券在破产时自动生效' };
+  if (id === 'exp2x' && player.buffs.exp2x > 0) return { ok: false, msg: '双倍经验生效中' };
+  if (id === 'exp2x') player.buffs.exp2x = 10;
+  if (id === 'peek3') player.buffs.peek += 3;
+  player.inventory[id]--;
+  if (player.inventory[id] <= 0) delete player.inventory[id];
+  saveAllSaves();
+  sfx('buy');
+  return { ok: true, msg: '使用成功' };
+}
+/* 外观 → CSS class */
+function cardBackClass() {
+  var id = player && player.equipped ? player.equipped.cardBack : 'classic';
+  if (!id || id === 'classic') return 'back';
+  var it = shopItemById(id);
+  return 'back back-' + (it ? it.css : 'gold');
+}
+function frameClass() {
+  var id = player && player.equipped ? player.equipped.frame : 'none';
+  if (!id || id === 'none') return '';
+  var it = shopItemById(id);
+  return ' frame-' + (it ? it.css : 'gold');
+}
+function titleText() {
+  var id = player && player.equipped ? player.equipped.title : '';
+  if (!id) return '';
+  var it = shopItemById(id);
+  return it ? it.css : '';
+}
+/* 透视卡：翻牌后公开一位对手底牌 */
+function maybeApplyPeek() {
+  if (!player || !player.buffs || player.buffs.peek <= 0) return;
+  if (!G.players || !G.players.length) return;
+  var cands = [];
+  for (var i = 1; i < G.players.length; i++) {
+    var p = G.players[i];
+    if (p && !p.folded && !p.reveal) cands.push(p);
+  }
+  if (!cands.length) return;
+  var t = cands[Math.floor(Math.random() * cands.length)];
+  t.reveal = true;
+  player.buffs.peek--;
+  saveAllSaves(true);
+  showToast('👁️ 透视：' + t.name + ' 的底牌已公开（剩 ' + player.buffs.peek + ' 次）', 2600);
+}
+
+/* ============================================================
+   统计与牌型图鉴
+   ============================================================ */
+function bumpStat(k, n) {
+  if (!player || !player.stats) return;
+  player.stats[k] = (player.stats[k] || 0) + (n || 1);
+}
+function recordDex(cat) {
+  if (!player || cat == null) return;
+  if (!player.handDex) player.handDex = {};
+  player.handDex[cat] = (player.handDex[cat] || 0) + 1;
+}
+function dexUnlocked() {
+  if (!player || !player.handDex) return 0;
+  var n = 0;
+  for (var k in player.handDex) { if (player.handDex[k] > 0) n++; }
+  return n;
+}
+function statPct(a, b) {
+  if (!b) return '0%';
+  return Math.round(a / b * 100) + '%';
+}
+
+/* ============================================================
    结算
    ============================================================ */
 async function finishHand() {
@@ -2650,7 +3598,43 @@ async function finishHand() {
     player.streak = 0;
   }
 
-  addExp(10 + (humanWon ? 25 : 0) + Math.min(60, Math.floor(humanWinAmount / 100)));
+  /* ---- 详细统计 ---- */
+  bumpStat('totalWagered', human.totalBet || 0);
+  bumpStat('totalNet', humanWinAmount - (human.totalBet || 0));
+  if (contenders.length > 1) bumpStat('showdowns', 1);
+  if (humanWinAmount > (player.stats.biggestPot || 0)) player.stats.biggestPot = humanWinAmount;
+  if (G.pot + humanWinAmount > (player.stats.biggestPot || 0)) {
+    player.stats.biggestPot = G.pot + humanWinAmount;
+  }
+  if (humanWon && humanAllIn) bumpStat('allInWins', 1);
+  if (G.bluffAttempt) {
+    if (humanWon) bumpStat('bluffWins', 1);
+    G.bluffAttempt = false;
+  }
+  if (humanWon && hv && hv[0] <= 1) bumpWeeklyProgress('w_bluff_3', 1);
+  if (humanWon) bumpWeeklyProgress('w_win_10', 1);
+  if (player.streak >= 3) setWeeklyProgressIfHigher('w_streak_3', 1);
+
+  /* ---- 牌型图鉴 ---- */
+  var hv = human._v || (G.community.length >= 3 ? bestHand(human.hole.concat(G.community)) : null);
+  if (hv) {
+    recordDex(hv[0]);
+    if (hv[0] >= 5) bumpWeeklyProgress('w_big_3', 1);   // 同花及以上
+  }
+
+  /* ---- 段位积分 ---- */
+  var rpDelta;
+  if (humanWon) rpDelta = 12 + Math.min(14, Math.floor(humanWinAmount / (G.bb * 15)));
+  else if (human.folded) rpDelta = -5;
+  else rpDelta = -10;
+  addRankPoints(rpDelta);
+
+  /* ---- 经验（双倍卡生效） ---- */
+  var expGain = 10 + (humanWon ? 25 : 0) + Math.min(60, Math.floor(humanWinAmount / 100));
+  var dbl = false;
+  if (player.buffs && player.buffs.exp2x > 0) { expGain *= 2; dbl = true; player.buffs.exp2x--; }
+  addExp(expGain);
+  if (dbl) showToast('📜 双倍经验生效（剩余 ' + player.buffs.exp2x + ' 手）', 1500);
 
   // 同步筹码回存档
   player.coins = G.players[0].chips;
@@ -2703,11 +3687,18 @@ function showGameOver() {
 }
 
 function claimRelief() {
-  addCoins(1000);
+  var amount = 1000;
+  if (hasItem('revive')) {
+    amount = 2000;
+    player.inventory['revive']--;
+    if (player.inventory['revive'] <= 0) delete player.inventory['revive'];
+    showToast('💊 复活券已消耗 · 补充金翻倍', 2400, false, 'success');
+  }
+  addCoins(amount);
   saveAllSaves();
   $('ovGameOver').classList.remove('show');
-  sfx('win');
-  showToast('💰 领取补充金 $1,000', 2000, false, 'success');
+  sfx('coin');
+  showToast('💰 领取补充金 $' + fmt(amount), 2000, false, 'success');
   renderLobby();
   showScreen('lobby');
 }
@@ -2894,8 +3885,294 @@ var pendingNewSlot = 0;
 var pendingDeleteSlot = 0;
 
 /* ============================================================
+   商城面板
+   ============================================================ */
+function renderShop() {
+  if (!player) return;
+  $('shopCoins').textContent = fmt(player.coins);
+  var html = '';
+  SHOP_ITEMS.forEach(function (it) {
+    var owned = hasItem(it.id);
+    var eq = isEquipped(it.id);
+    html += '<div class="shop-item' + (owned ? ' owned' : '') + (eq ? ' eq' : '') + '">';
+    html += '<div class="ic">' + it.icon + '</div>';
+    html += '<div class="info"><div class="t">' + it.name + '</div>';
+    html += '<div class="d">' + it.desc + '</div>';
+    if (it.type === 'consume' && owned) {
+      html += '<div class="own">库存 ×' + player.inventory[it.id] + '</div>';
+    }
+    html += '</div><div class="act">';
+    if (it.type === 'skin') {
+      if (!owned) {
+        html += '<div class="shop-price">' + fmt(it.price) + ' 🪙</div>';
+        html += '<button class="shop-btn" data-buy="' + it.id + '">购买</button>';
+      } else {
+        html += '<button class="shop-btn ' + (eq ? 'ghost' : 'green') + '" data-equip="' + it.id + '">'
+             + (eq ? '卸下' : '装备') + '</button>';
+      }
+    } else {
+      if (owned) html += '<button class="shop-btn green" data-use="' + it.id + '">使用</button>';
+      html += '<div class="shop-price">' + fmt(it.price) + ' 🪙</div>';
+      html += '<button class="shop-btn" data-buy="' + it.id + '">购买</button>';
+    }
+    html += '</div></div>';
+  });
+  $('shopList').innerHTML = html;
+
+  function bindAll(sel, fn) {
+    var ns = document.querySelectorAll(sel);
+    for (var i = 0; i < ns.length; i++) {
+      ns[i].addEventListener('click', function () {
+        sfx('click');
+        fn(this.getAttribute(sel.slice(6, -2)) || this.getAttribute('data-buy')
+           || this.getAttribute('data-equip') || this.getAttribute('data-use'));
+      });
+    }
+  }
+  var buys = document.querySelectorAll('[data-buy]');
+  for (var b = 0; b < buys.length; b++) {
+    buys[b].addEventListener('click', function () {
+      sfx('click');
+      var r = buyItem(this.getAttribute('data-buy'));
+      showToast(r.ok ? '✅ ' + r.msg : '⚠️ ' + r.msg, 1800, !r.ok, r.ok ? 'success' : undefined);
+      renderShop(); renderLobby();
+    });
+  }
+  var eqs = document.querySelectorAll('[data-equip]');
+  for (var e = 0; e < eqs.length; e++) {
+    eqs[e].addEventListener('click', function () {
+      sfx('click');
+      var on = equipItem(this.getAttribute('data-equip'));
+      showToast(on ? '✅ 已装备' : '已卸下', 1400);
+      renderShop(); renderLobby();
+    });
+  }
+  var uses = document.querySelectorAll('[data-use]');
+  for (var u = 0; u < uses.length; u++) {
+    uses[u].addEventListener('click', function () {
+      sfx('click');
+      var r = useItem(this.getAttribute('data-use'));
+      showToast(r.ok ? '✅ ' + r.msg : '⚠️ ' + r.msg, 1900, !r.ok, r.ok ? 'success' : undefined);
+      renderShop(); renderLobby();
+    });
+  }
+}
+
+/* ============================================================
+   档案：数据面板 / 牌型图鉴 / 段位
+   ============================================================ */
+var DEX_NAMES = ['高牌', '一对', '两对', '三条', '顺子', '同花', '葫芦', '四条', '同花顺'];
+
+function renderStats() {
+  if (!player) return;
+  var s = player.stats || {};
+  var hands = player.totalHands || 1;
+  var cells = [
+    ['入池率 VPIP', statPct(s.vpip || 0, s.vpipTotal || 0)],
+    ['胜率', statPct(player.totalWins || 0, hands)],
+    ['摊牌次数', fmt(s.showdowns || 0)],
+    ['全下次数', fmt(s.allIns || 0)],
+    ['全下胜率', statPct(s.allInWins || 0, s.allIns || 0)],
+    ['诈唬成功率', statPct(s.bluffWins || 0, s.bluffTotal || 0)],
+    ['最大底池', '$' + fmt(s.biggestPot || 0)],
+    ['累计投入', '$' + fmt(s.totalWagered || 0)],
+    ['累计净盈亏', ((s.totalNet || 0) >= 0 ? '+' : '-') + '$' + fmt(Math.abs(s.totalNet || 0))]
+  ];
+  var html = '<div class="stat-grid">';
+  for (var i = 0; i < cells.length; i++) {
+    var isNet = i === 8;
+    var pos = (s.totalNet || 0) >= 0;
+    html += '<div class="stat-box' + (isNet && pos ? ' gold' : '') + '">'
+         +  '<div class="v">' + cells[i][1] + '</div><div class="l">' + cells[i][0] + '</div></div>';
+  }
+  html += '</div>';
+  html += '<div style="margin-top:13px;font-size:11px;color:#566c82;line-height:1.8;">';
+  html += 'VPIP = 面临下注时主动跟注 / 加注的比例，用来衡量打法松紧。<br>';
+  html += '总手数 ' + fmt(player.totalHands) + ' · 胜局 ' + fmt(player.totalWins)
+       +  ' · 最高连胜 ' + fmt(player.maxStreak) + ' · 最大单局赢取 $' + fmt(player.maxWin);
+  html += '</div>';
+  $('statPanel').innerHTML = html;
+}
+
+function renderDex() {
+  if (!player) return;
+  var html = '<div class="dex-grid">';
+  for (var i = 0; i < 9; i++) {
+    var n = (player.handDex && player.handDex[i]) || 0;
+    html += '<div class="dex-cell' + (n ? ' got' : '') + '">';
+    html += '<div class="nm">' + DEX_NAMES[i] + '</div>';
+    html += '<div class="ct">' + (n ? '×' + fmt(n) : '未解锁') + '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  html += '<div style="margin-top:13px;font-size:11.5px;color:#8fa0b4;line-height:1.8;">';
+  html += '已收集 <b style="color:#f2c14e;">' + dexUnlocked() + ' / 9</b> 种牌型。牌型在每局摊牌时自动记录。';
+  html += '</div>';
+  $('dexPanel').innerHTML = html;
+}
+
+function renderRank() {
+  if (!player) return;
+  var rp = rankProgress();
+  var cur = RANKS[rp.tier];
+  var html = '<div class="rank-row"><div class="ic">' + cur.icon + '</div><div class="mid">';
+  html += '<div class="nm">' + cur.name + '</div>';
+  html += '<div class="pt">' + fmt(player.rankPoints) + ' 分'
+       +  (rp.next ? ' · 距 ' + rp.next.name + ' 还需 ' + fmt(rp.need) + ' 分' : ' · 已达最高段位')
+       +  '</div>';
+  html += '<div class="rank-bar"><div class="rank-fill" style="width:' + rp.pct + '%"></div></div>';
+  html += '</div></div>';
+  var peak = RANKS[player.rankPeak || 0] || RANKS[0];
+  html += '<div class="stat-grid">';
+  html += '<div class="stat-box"><div class="v">' + peak.name + '</div><div class="l">历史最高</div></div>';
+  html += '<div class="stat-box"><div class="v">' + fmt(player.rankPoints) + '</div><div class="l">当前积分</div></div>';
+  html += '<div class="stat-box gold"><div class="v">' + fmt(player.totalWins || 0) + '</div><div class="l">总胜局</div></div>';
+  html += '</div>';
+  html += '<div style="margin-top:15px;font-size:11.5px;color:#8fa0b4;line-height:1.9;">';
+  html += '<b style="color:#f2c14e;">积分规则</b><br>';
+  html += '· 赢下一局：+12 起，赢额越大加成越高（上限 +26）<br>';
+  html += '· 中途弃牌失利：-5 分<br>';
+  html += '· 打到摊牌失利：-10 分<br>';
+  html += '· 积分跌破当前段位线会降段，最低为 0 分';
+  html += '</div><div style="margin-top:12px;">';
+  RANKS.forEach(function (r) {
+    var reached = (player.rankPeak || 0) >= r.id;
+    html += '<div class="task-item' + (reached ? ' done' : '') + '" style="margin-bottom:6px;">';
+    html += '<div class="info"><div class="t">' + r.icon + ' ' + r.name + '</div>';
+    html += '<div class="pg">' + (r.min === 0 ? '起始段位' : fmt(r.min) + ' 分')
+         +  (r.reward ? ' · 首次晋升奖励 ' + fmt(r.reward) + '🪙' : '') + '</div></div>';
+    if (r.id === rp.tier) html += '<div class="claimed">当前</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  $('rankPanel').innerHTML = html;
+}
+
+/* ============================================================
+   签到 / 周常
+   ============================================================ */
+function renderCheckin() {
+  if (!player) return;
+  ensureCheckin();
+  var c = player.checkin;
+  var dayIdx = (Math.max(1, c.streak) - 1) % 7;
+  var html = '<div style="font-size:12px;color:#8fa0b4;margin-bottom:12px;">';
+  html += '已连续签到 <b style="color:#f2c14e;">' + c.streak + '</b> 天 · 7 天一轮，断签重新从第 1 天开始';
+  html += '</div><div class="checkin-grid">';
+  for (var i = 0; i < 7; i++) {
+    var cls = 'ci-cell';
+    if (i < dayIdx) cls += ' done';
+    else if (i === dayIdx) cls += c.claimed ? ' done' : ' today';
+    html += '<div class="' + cls + '"><div class="d">第 ' + (i + 1) + ' 天</div>';
+    html += '<div class="v">' + (i < dayIdx || (i === dayIdx && c.claimed) ? '✓ ' : '') + fmt(CHECKIN_REWARDS[i]) + '</div></div>';
+  }
+  html += '</div><div style="text-align:center;">';
+  if (c.claimed) {
+    html += '<button class="shop-btn ghost" disabled style="padding:10px 30px;font-size:13px;">今日已签到</button>';
+  } else {
+    html += '<button class="shop-btn" id="btnClaimCheckin" style="padding:10px 30px;font-size:13px;">'
+         +  '领取 ' + fmt(checkinRewardOf(c.streak)) + ' 🪙</button>';
+  }
+  html += '</div>';
+  html += '<div style="margin-top:13px;font-size:11px;color:#566c82;line-height:1.7;">'
+       +  '连续签到奖励逐日递增，第 7 天可得 ' + fmt(CHECKIN_REWARDS[6]) + ' 🪙，之后开启新一轮。</div>';
+  $('ciPanel').innerHTML = html;
+  var b = $('btnClaimCheckin');
+  if (b) {
+    b.addEventListener('click', function () {
+      sfx('click');
+      claimCheckin();
+      renderCheckin();
+      renderLobby();
+    });
+  }
+}
+
+function renderWeekly() {
+  if (!player) return;
+  ensureWeekly();
+  var wk = player.weekly;
+  var html = '<div style="font-size:12px;color:#8fa0b4;margin-bottom:12px;">';
+  html += '本周周期自 <b style="color:#f2c14e;">' + wk.week + '</b> 起 · 每周一 0 点刷新';
+  html += '</div>';
+  for (var i = 0; i < WEEKLY_TASKS.length; i++) {
+    var t = WEEKLY_TASKS[i];
+    var cur = Math.min(wk.progress[t.id] || 0, t.target);
+    var done = !!wk.claimed[t.id];
+    var can = !done && (wk.progress[t.id] || 0) >= t.target;
+    html += '<div class="task-item' + (done ? ' done' : '') + '">';
+    html += '<div class="info"><div class="t">' + t.name + '</div>';
+    html += '<div class="pg">进度 ' + cur + ' / ' + t.target + '</div></div>';
+    html += '<div class="rw">+' + fmt(t.reward) + '🪙</div>';
+    if (done) html += '<div class="claimed">已领取</div>';
+    else if (can) html += '<button class="claim" data-wclaim="' + t.id + '">领取</button>';
+    else html += '<button class="claim" disabled>未完成</button>';
+    html += '</div>';
+  }
+  $('wkPanel').innerHTML = html;
+  var bs = document.querySelectorAll('[data-wclaim]');
+  for (var k = 0; k < bs.length; k++) {
+    bs[k].addEventListener('click', function () {
+      sfx('click');
+      claimWeekly(this.getAttribute('data-wclaim'));
+      renderWeekly();
+      renderLobby();
+    });
+  }
+}
+
+/* ============================================================
    面板开关
    ============================================================ */
+function openShop() {
+  renderShop();
+  $('ovShop').classList.add('show');
+}
+function openStats(tab) {
+  renderStats(); renderDex(); renderRank();
+  switchStatsTab(tab || 'sdata');
+  $('ovStats').classList.add('show');
+}
+function switchStatsTab(tab) {
+  $('tabSData').classList.toggle('active', tab === 'sdata');
+  $('tabSDex').classList.toggle('active', tab === 'sdex');
+  $('tabSRank').classList.toggle('active', tab === 'srank');
+  $('statPanel').style.display = tab === 'sdata' ? 'block' : 'none';
+  $('dexPanel').style.display = tab === 'sdex' ? 'block' : 'none';
+  $('rankPanel').style.display = tab === 'srank' ? 'block' : 'none';
+}
+function openCheckin(tab) {
+  ensureWeekly();
+  renderCheckin(); renderWeekly();
+  switchCheckinTab(tab || (hasCheckinClaimable() ? 'ci' : (checkWeeklyHasClaimable() ? 'wk' : 'ci')));
+  $('ovCheckin').classList.add('show');
+}
+function switchCheckinTab(tab) {
+  $('tabCi').classList.toggle('active', tab === 'ci');
+  $('tabWk').classList.toggle('active', tab === 'wk');
+  $('ciPanel').style.display = tab === 'ci' ? 'block' : 'none';
+  $('wkPanel').style.display = tab === 'wk' ? 'block' : 'none';
+}
+function openSettings() {
+  if (!player) return;
+  $('volMaster').value = Math.round(player.volMaster * 100);
+  $('volSfx').value = Math.round(player.volSfx * 100);
+  $('volMusic').value = Math.round(player.volMusic * 100);
+  $('volMasterV').textContent = Math.round(player.volMaster * 100) + '%';
+  $('volSfxV').textContent = Math.round(player.volSfx * 100) + '%';
+  $('volMusicV').textContent = Math.round(player.volMusic * 100) + '%';
+  $('setSfxToggle').textContent = player.soundOn ? '🔊 音效 开' : '🔇 音效 关';
+  $('setMusicToggle').textContent = player.musicOn ? '🎵 音乐 开' : '🎵 音乐 关';
+  $('ovSettings').classList.add('show');
+}
+function toggleMusic() {
+  var on = Music.toggle();
+  applyVolumes();
+  showToast(on ? '🎵 音乐已开启' : '🎵 音乐已关闭', 1400);
+  renderLobby();
+  if (App.screen === 'game') renderTopbar();
+}
+
 function openAchieve() {
   renderAchList();
   $('ovAchieve').classList.add('show');
@@ -2998,6 +4275,28 @@ function bindEvents() {
   $('lbQHelp').addEventListener('click', function(){ initAudio(); sfx('click'); openHelp(); });
   $('lbBtnSound').addEventListener('click', function(){ initAudio(); toggleSound(); });
 
+  // 商城 / 签到 / 档案 / 设置
+  $('lbBtnShop').addEventListener('click', function(){ initAudio(); sfx('click'); openShop(); });
+  $('lbQShop').addEventListener('click', function(){ initAudio(); sfx('click'); openShop(); });
+  $('lbQCheckin').addEventListener('click', function(){ initAudio(); sfx('click'); openCheckin(); });
+  $('lbQStats').addEventListener('click', function(){ initAudio(); sfx('click'); openStats(); });
+  $('lbBtnSettings').addEventListener('click', function(){ initAudio(); sfx('click'); openSettings(); });
+  $('btnSettings').addEventListener('click', function(){ initAudio(); sfx('click'); openSettings(); });
+
+  $('setSfxToggle').addEventListener('click', function(){ initAudio(); toggleSound(); openSettings(); });
+  $('setMusicToggle').addEventListener('click', function(){ initAudio(); toggleMusic(); openSettings(); });
+  ['volMaster', 'volSfx', 'volMusic'].forEach(function (k) {
+    var el = $(k);
+    if (!el) return;
+    el.addEventListener('input', function () {
+      var v = parseInt(this.value, 10) / 100;
+      player[k === 'volMaster' ? 'volMaster' : (k === 'volSfx' ? 'volSfx' : 'volMusic')] = v;
+      $(k + 'V').textContent = Math.round(v * 100) + '%';
+      applyVolumes();
+    });
+    el.addEventListener('change', function () { saveAllSaves(true); });
+  });
+
   // 游戏内
   $('btnAchieve').addEventListener('click', function(){ sfx('click'); openAchieve(); });
   $('btnTasks').addEventListener('click', function(){ sfx('click'); openTasks(); });
@@ -3018,6 +4317,13 @@ function bindEvents() {
   // 任务 Tab
   $('tabNewbie').addEventListener('click', function(){ sfx('click'); switchTaskTab('newbie'); });
   $('tabDaily').addEventListener('click', function(){ sfx('click'); switchTaskTab('daily'); });
+
+  // 档案 / 签到 Tab
+  $('tabSData').addEventListener('click', function(){ sfx('click'); switchStatsTab('sdata'); });
+  $('tabSDex').addEventListener('click', function(){ sfx('click'); switchStatsTab('sdex'); });
+  $('tabSRank').addEventListener('click', function(){ sfx('click'); switchStatsTab('srank'); });
+  $('tabCi').addEventListener('click', function(){ sfx('click'); switchCheckinTab('ci'); });
+  $('tabWk').addEventListener('click', function(){ sfx('click'); switchCheckinTab('wk'); });
 
   // 游戏结束
   $('goAgain').addEventListener('click', function(){ sfx('click'); claimRelief(); });
@@ -3051,6 +4357,11 @@ function bindEvents() {
   // 窗口尺寸
   window.addEventListener('resize', checkOrientation);
   window.addEventListener('orientationchange', function(){ setTimeout(checkOrientation, 200); });
+
+  // 首次手势解锁音频（浏览器自动播放策略）
+  ['pointerdown', 'touchstart', 'keydown'].forEach(function (ev) {
+    document.addEventListener(ev, unlockAudio);
+  });
 
   // 键盘快捷键（桌面端）
   document.addEventListener('keydown', function(e){

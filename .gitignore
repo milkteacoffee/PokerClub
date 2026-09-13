@@ -1,6 +1,7 @@
 # 测试生成物
 tests/game.extracted.js
 tests/shots/
+tests/tmp/
 
 # 工具/项目本地数据
 .workbuddy/
