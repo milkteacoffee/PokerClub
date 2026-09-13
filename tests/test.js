@@ -523,10 +523,28 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   ok(ctx.player.stats.vpipTotal === 4, '统计字段累加');
 
   /* ---- 程序化 BGM ---- */
-  ok(!!ctx.TRACKS.lobby && ctx.TRACKS.lobby.bars.length === 4, '大厅曲目含 4 小节和声进行');
+  ok(!!ctx.TRACKS.lobby && ctx.TRACKS.lobby.bars.length === 8, '大厅曲目含 8 小节和声进行（A/B 段）');
   ['easy', 'normal', 'hard', 'champion'].forEach(function (k) {
     ok(!!ctx.TRACKS[k], '存在 ' + k + ' 场次曲目');
+    ok(ctx.TRACKS[k].bars.length === 8, k + ' 场次为 8 小节');
+    ok(ctx.TRACKS[k].melA.length === 16 && ctx.TRACKS[k].melB.length === 16,
+       k + ' 场次 A/B 段旋律各 16 格');
+    ok(!!ctx.DRUMS[ctx.TRACKS[k].drums], k + ' 场次鼓组型存在：' + ctx.TRACKS[k].drums);
   });
+  ok(!!ctx.DRUMS.brush && ctx.DRUMS.brush.ride.length === 16, '爵士鼓组含 16 步叮叮镲型');
+  ok(ctx.TRACKS.lobby.swing > 0 && ctx.TRACKS.champion.swing === 0,
+     '大厅有摇摆律动、冠军场为直拍');
+  ok(ctx.TRACKS.lobby.keys === 'rhodes', '大厅使用电钢音色');
+
+  /* ---- 外置音频接管层 ---- */
+  ok(typeof ctx.bgmPlay === 'function' && typeof ctx.bgmStop === 'function',
+     'BGM 门面函数 bgmPlay / bgmStop 存在');
+  ok(typeof ctx.bgmSourceLabel() === 'string', 'bgmSourceLabel 返回来源说明：' + ctx.bgmSourceLabel());
+  ok(!!ctx.BGM_FILES.lobby && ctx.BGM_FILES.lobby[0] === 'bgm-lobby.mp3',
+     '大厅外置音频文件名约定为 bgm-lobby.mp3');
+  ok(ctx.BGM_FILES.lobby[0] !== ctx.BGM_FILES.table[0],
+     '主界面与牌桌使用不同的外置音频文件');
+  // 无 assets 文件时的回落行为在装配假 AudioContext 之后单独验证（见下）
   ok(ctx.TRACKS.champion.tempo > ctx.TRACKS.easy.tempo,
      '冠军场节奏快于简单场（' + ctx.TRACKS.champion.tempo + ' > ' + ctx.TRACKS.easy.tempo + '）');
   ok(Math.abs(ctx.NOTE['A4'] - 440) < 0.01, '音名表 A4 = 440Hz');
@@ -556,7 +574,8 @@ const sleepTick = () => new Promise(r => setImmediate(r));
     this.started = 0; this.buffers = 0;
     var self = this;
     this.destination = new FakeNode(this);
-    ['createGain', 'createOscillator', 'createBiquadFilter', 'createBufferSource'].forEach(function (m) {
+    ['createGain', 'createOscillator', 'createBiquadFilter', 'createBufferSource',
+     'createConvolver'].forEach(function (m) {
       self[m] = function () { var n = new FakeNode(self); n._ctx = self; return n; };
     });
   }
@@ -598,7 +617,7 @@ const sleepTick = () => new Promise(r => setImmediate(r));
     ok(fake.started > 0, '振荡器实际启动 ' + fake.started + ' 次');
     ok(fake.buffers > 0, '噪声缓冲区创建 ' + fake.buffers + ' 次');
     ok(ctx.Music.step >= 0 && ctx.Music.step < 16, '步进指针在 0..15 内循环（当前 ' + ctx.Music.step + '）');
-    ok(ctx.Music.bar >= 0 && ctx.Music.bar < 4, '小节指针在 0..3 内循环（当前 ' + ctx.Music.bar + '）');
+    ok(ctx.Music.bar >= 0 && ctx.Music.bar < 8, '小节指针在 0..7 内循环（当前 ' + ctx.Music.bar + '）');
 
     // 时钟跳变保护：一次性跳 30 秒，不应补发海量音符
     var beforeJump = notes;
@@ -611,6 +630,22 @@ const sleepTick = () => new Promise(r => setImmediate(r));
     ctx.Music._note = origNote; ctx.Music._noise = origNoise;
   } catch (e) {
     ok(false, 'BGM 调度器测试异常：' + e.message);
+  }
+
+  /* ---- 外置音频缺失时应回落内置合成 ---- */
+  try {
+    // vm 环境没有 Audio 构造器，bgmFileEl 必须判空并回落
+    ok(ctx.bgmFileEl('lobby') === null, '无 Audio 构造器时外置音频判为不可用');
+    ok(ctx.bgmFailed.lobby === true, '失败一次后不再重复探测');
+    ctx.bgmPlay('lobby');
+    ok(ctx.Music.playing === true, '无外置音频时 bgmPlay 回落到内置合成引擎');
+    ok(ctx.bgmSourceLabel().indexOf('合成') >= 0, '来源标注为合成：' + ctx.bgmSourceLabel());
+    ok(ctx.bgmSourceLabel().indexOf('外置') < 0, '无文件时不得谎报为外置音频');
+    ok(ctx.fileBgm.ok === false, 'fileBgm.ok 保持 false，不做乐观判断');
+    ctx.bgmStop();
+    ok(ctx.Music.playing === false, 'bgmStop 停止播放');
+  } catch (e) {
+    ok(false, 'bgmPlay 回落异常：' + e.message);
   }
   ctx.setTimeout = savedST;
   ctx.audioCtx = null;   // 复位，避免影响后续用例

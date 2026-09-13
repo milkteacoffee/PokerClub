@@ -957,7 +957,11 @@
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">📊 档案</p>
         <p>记录入池率 VPIP、胜率、全下胜率、诈唬成功率、最大底池、累计盈亏，以及 9 类牌型图鉴。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎵 音乐与音效</p>
-        <p>背景音乐为 WebAudio 实时合成，无音频文件，离线可播。设置面板可分别调节主音量 / 音效 / 音乐。</p>
+        <p>主界面与牌桌是<b style="color:#f2c14e;">两套不同的 BGM</b>，进游戏会自动切换；四个场次还各有一套。</p>
+        <p>默认用 WebAudio 实时合成（鼓组 + 贝斯 + 电钢 + 铺底 + 混响），无音频文件、离线可播。<br>
+           想换真实音乐：把 mp3/ogg 放进 <b style="color:#8fa0b4;">assets/</b> 目录即可自动接管
+           （<b>bgm-lobby</b> 主界面 / <b>bgm-table</b> 牌桌 / bgm-easy·normal·hard·champion 各场次）。<br>
+           设置面板可分别调节主音量 / 音效 / 音乐，并会显示当前 BGM 来源。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🧠 AI 心理博弈</p>
         <p>AI 会观察你的下注风格，如果你经常弃牌它们会更频繁诈唬；如果你爱跟注它们会收紧范围。</p>
       </div>
@@ -1120,8 +1124,12 @@
         <input type="range" id="volMusic" min="0" max="100" step="1">
         <span class="vv" id="volMusicV">50%</span>
       </div>
-      <div style="font-size:11px;color:#566c82;line-height:1.7;margin-top:10px;">
-        音乐为程序化实时合成（WebAudio），不依赖任何音频文件，因此离线也能播放。<br>
+      <div style="font-size:11px;color:#8fa0b4;line-height:1.7;margin-top:10px;">
+        当前 BGM 来源：<b style="color:#f2c14e;" id="bgmSrcLabel">—</b>
+      </div>
+      <div style="font-size:11px;color:#566c82;line-height:1.7;margin-top:8px;">
+        想换成真实音乐：把文件放到 <b style="color:#8fa0b4;">assets/</b> 目录下即可自动接管，
+        支持 mp3 / ogg / m4a（命名见 assets/README.md）。文件缺失会自动回落到内置合成引擎。<br>
         浏览器策略要求先有一次点击才会解锁声音。
       </div>
     </div>
@@ -1615,6 +1623,7 @@ function createPsychology(style) {
    音频图：osc → [sfxGain / musicGain] → masterGain → destination
    ============================================================ */
 var audioCtx = null, masterGain = null, sfxGain = null, musicGain = null;
+var reverbNode = null, reverbGain = null, musicSend = null, sfxSend = null;
 
 /* 音名 → 频率（A4 = 440Hz） */
 var NOTE = {};
@@ -1627,6 +1636,25 @@ var NOTE = {};
   }
 })();
 
+/* 生成一段衰减噪声作为混响脉冲响应（无需外部 IR 文件） */
+function makeImpulseResponse(seconds, decay) {
+  try {
+    var rate = audioCtx.sampleRate;
+    var len = Math.max(1, Math.floor(rate * seconds));
+    var buf = audioCtx.createBuffer(2, len, rate);
+    for (var ch = 0; ch < 2; ch++) {
+      var d = buf.getChannelData(ch);
+      for (var i = 0; i < len; i++) {
+        var t = i / len;
+        // 前 8ms 留一点预延迟，让直达声更清晰
+        var pre = i < rate * 0.008 ? 0 : 1;
+        d[i] = pre * (Math.random() * 2 - 1) * Math.pow(1 - t, decay);
+      }
+    }
+    return buf;
+  } catch (e) { return null; }
+}
+
 function initAudio() {
   if (!audioCtx) {
     try {
@@ -1636,8 +1664,30 @@ function initAudio() {
       masterGain = audioCtx.createGain();
       sfxGain = audioCtx.createGain();
       musicGain = audioCtx.createGain();
+
+      // 混响支路：音乐与音效各有一路 send，直达声 + 湿声混合
+      reverbNode = audioCtx.createConvolver();
+      var ir = makeImpulseResponse(1.9, 2.6);
+      if (ir) reverbNode.buffer = ir;
+      reverbGain = audioCtx.createGain();
+      reverbGain.gain.value = 0.9;
+      if (reverbNode) {
+        reverbNode.connect(reverbGain);
+        reverbGain.connect(masterGain);
+      }
+      musicSend = audioCtx.createGain();
+      musicSend.gain.value = 0.30;          // 音乐送混响量
+      sfxSend = audioCtx.createGain();
+      sfxSend.gain.value = 0.10;           // 音效少量空间感
+
       sfxGain.connect(masterGain);
       musicGain.connect(masterGain);
+      if (reverbNode) {
+        musicGain.connect(musicSend);
+        musicSend.connect(reverbNode);
+        sfxGain.connect(sfxSend);
+        sfxSend.connect(reverbNode);
+      }
       masterGain.connect(audioCtx.destination);
       applyVolumes();
     } catch (e) { audioCtx = null; }
@@ -1655,13 +1705,83 @@ function applyVolumes() {
   var u = player ? player.volMusic : 0.5;
   try {
     masterGain.gain.value = Math.max(0, Math.min(1, m));
-    sfxGain.gain.value = Math.max(0, Math.min(1, s));
+    sfxGain.gain.value = Math.max(0, Math.min(1, s)) * 0.9;
     musicGain.gain.value = Math.max(0, Math.min(1, u)) * 0.34;  // 音乐整体压低，避免盖过音效
+    var fv = Math.max(0, Math.min(1, m * u * 0.9));
+    Object.keys(bgmEls).forEach(function (k) {
+      if (bgmEls[k]) { try { bgmEls[k].volume = fv; } catch (e) {} }
+    });
   } catch (e) {}
 }
 
+/* ============================================================
+   外置音频文件（可放你自己的音乐，优先于内置合成）
+   ------------------------------------------------------------
+   把文件放到 index.html 同级的 assets/ 目录下即可，无需改代码：
+     assets/bgm-lobby.mp3        主界面 BGM
+     assets/bgm-table.mp3        牌桌默认 BGM
+     assets/bgm-easy.mp3         简单场（可选，缺省回落 table）
+     assets/bgm-normal.mp3       普通场（可选）
+     assets/bgm-hard.mp3         困难场（可选）
+     assets/bgm-champion.mp3     冠军场（可选）
+     assets/sfx-deal.mp3         发牌（可选，缺省用合成音）
+     assets/sfx-chip.mp3         筹码（可选）
+     assets/sfx-win.mp3          胜利（可选）
+     assets/sfx-lose.mp3         失败（可选）
+   支持 mp3 / ogg / m4a。文件缺失或解码失败会自动回落到合成音频。
+   ============================================================ */
+var ASSET_DIR = 'assets/';
+var BGM_FILES = {
+  lobby: ['bgm-lobby.mp3', 'bgm-lobby.ogg', 'bgm-lobby.m4a'],
+  table: ['bgm-table.mp3', 'bgm-table.ogg', 'bgm-table.m4a'],
+  easy: ['bgm-easy.mp3', 'bgm-easy.ogg', 'bgm-table.mp3'],
+  normal: ['bgm-normal.mp3', 'bgm-normal.ogg', 'bgm-table.mp3'],
+  hard: ['bgm-hard.mp3', 'bgm-hard.ogg', 'bgm-table.mp3'],
+  champion: ['bgm-champion.mp3', 'bgm-champion.ogg', 'bgm-table.mp3']
+};
+var SFX_FILES = {
+  deal: 'sfx-deal.mp3', chip: 'sfx-chip.mp3',
+  win: 'sfx-win.mp3', lose: 'sfx-lose.mp3'
+};
+var fileBgm = { audio: null, name: '', ok: false };
+var fileSfx = {};
+var bgmEls = {};
+var bgmFailed = {};
+
+/* 预探测外置音效是否可用：true 可用 / false 不可用 / null 尚未判定 */
+function probeSfx(name) {
+  if (fileSfx[name] !== undefined && fileSfx[name] !== null) return fileSfx[name];
+  var f = SFX_FILES[name];
+  if (!f || typeof Audio === 'undefined') { fileSfx[name] = false; return false; }
+  if (fileSfx[name] === null) return null;      // 已在探测中
+  try {
+    var a = new Audio();
+    a.preload = 'auto';
+    a.addEventListener('canplaythrough', function () { fileSfx[name] = true; });
+    a.addEventListener('error', function () { fileSfx[name] = false; });
+    a.src = ASSET_DIR + f;
+    fileSfx[name] = null;
+    return null;
+  } catch (e) { fileSfx[name] = false; return false; }
+}
+
+/* 播放外置音效（一次性，不循环）；不可用则返回 false 由合成音兜底 */
+function playFileSfx(name) {
+  if (!player || !player.soundOn) return false;
+  if (probeSfx(name) !== true) return false;
+  try {
+    var a = new Audio(ASSET_DIR + SFX_FILES[name]);
+    a.volume = Math.max(0, Math.min(1, (player.volMaster || 0.8) * (player.volSfx || 0.9)));
+    var pr = a.play();
+    if (pr && pr.catch) pr.catch(function () {});
+    return true;
+  } catch (e) { return false; }
+}
+
 function sfx(name) {
-  if (!player || !player.soundOn || !audioCtx || !sfxGain) return;
+  if (!player || !player.soundOn) return;
+  if (playFileSfx(name)) return;            // 外置音效优先
+  if (!audioCtx || !sfxGain) return;
   var t = audioCtx.currentTime;
   function tone(freq, dur, type, vol, delay) {
     try {
@@ -1759,59 +1879,101 @@ function sfx(name) {
 }
 
 /* ============================================================
-   程序化 BGM —— WebAudio 实时合成，零音频文件
-   每首曲子 = 4 小节和声进行 + 16 分音符旋律 + 贝斯 + 打击
+   BGM 引擎
+   ------------------------------------------------------------
+   优先播放 assets/ 下的真实音频文件（存在 → 用它）；
+   文件缺失或解码失败 → 自动回落到下面的实时合成引擎。
+   合成部分：8 小节 A/B 和声进行 + 鼓组 + 贝斯 + 电钢 + 铺底 + 混响
    ============================================================ */
 var TRACKS = {
-  lobby: {              // 大厅：悠闲爵士 ii-V-I-VI
-    tempo: 88, wave: 'triangle', bassWave: 'sine', hat: 0.16, melVol: 0.16,
+  lobby: {              /* 大厅：慢速摇摆爵士 ii-V-I-VI / ii-V-iii-VI */
+    tempo: 84, swing: 0.17, drums: 'brush', keys: 'rhodes', padVol: 0.05,
     bars: [
-      { bass: 'D2',  notes: ['D3', 'F3', 'A3', 'C4'] },
-      { bass: 'G1',  notes: ['G2', 'B2', 'D3', 'F3'] },
-      { bass: 'C2',  notes: ['C3', 'E3', 'G3', 'B3'] },
-      { bass: 'A1',  notes: ['A2', 'C3', 'E3', 'G3'] }
+      { b:'D2', c:['D3','F3','A3','C4'] }, { b:'G1', c:['G2','B2','D3','F3'] },
+      { b:'C2', c:['C3','E3','G3','B3'] }, { b:'A1', c:['A2','C3','E3','G3'] },
+      { b:'D2', c:['D3','F3','A3','C4'] }, { b:'G1', c:['G2','B2','D3','F3'] },
+      { b:'E1', c:['E2','G2','B2','D3'] }, { b:'A1', c:['A2','C#3','E3','G3'] }
     ],
-    mel: ['E4',null,'G4',null,'A4',null,'G4','E4','F4',null,'A4',null,'C5',null,'A4',null]
+    melA: ['E4',null,'G4','A4', null,'G4',null,'E4', 'F4',null,'A4','C5', null,'A4',null,null],
+    melB: ['B4',null,'A4','G4', null,'E4',null,'D4', 'E4',null,'G4','A4', null,null,null,null]
   },
-  easy: {               // 简单场：明亮轻快
-    tempo: 102, wave: 'sine', bassWave: 'triangle', hat: 0.14, melVol: 0.15,
+  easy: {               /* 简单场：明亮轻快 F 大调 */
+    tempo: 102, swing: 0, drums: 'light', keys: 'keys', padVol: 0.05,
     bars: [
-      { bass: 'F1',  notes: ['F3', 'A3', 'C4'] },
-      { bass: 'C2',  notes: ['C3', 'E3', 'G3'] },
-      { bass: 'D2',  notes: ['D3', 'F3', 'A3'] },
-      { bass: 'A#1', notes: ['A#2', 'D3', 'F3'] }
+      { b:'F1', c:['F3','A3','C4'] }, { b:'C2', c:['C3','E3','G3'] },
+      { b:'D2', c:['D3','F3','A3'] }, { b:'A#1',c:['A#2','D3','F3'] },
+      { b:'F1', c:['F3','A3','C4'] }, { b:'C2', c:['C3','E3','G3'] },
+      { b:'G1', c:['G2','A#2','D3'] },{ b:'C2', c:['C3','E3','G3'] }
     ],
-    mel: ['A4',null,'C5','A4',null,'G4',null,null,'F4',null,'A4','C5',null,'G4',null,null]
+    melA: ['A4',null,'C5',null,'A4',null,'G4',null,'F4',null,'A4',null,'C5',null,null,null],
+    melB: ['D5',null,'C5','A4',null,'G4',null,'F4','G4',null,'A4',null,'C5',null,null,null]
   },
-  normal: {             // 普通场：稳定律动
-    tempo: 116, wave: 'triangle', bassWave: 'square', hat: 0.18, melVol: 0.15,
+  normal: {             /* 普通场：C 大调稳定律动 */
+    tempo: 114, swing: 0, drums: 'basic', keys: 'keys', padVol: 0.045,
     bars: [
-      { bass: 'C2', notes: ['C3', 'E3', 'G3'] },
-      { bass: 'G1', notes: ['G2', 'B2', 'D3'] },
-      { bass: 'A1', notes: ['A2', 'C3', 'E3'] },
-      { bass: 'F1', notes: ['F2', 'A2', 'C3'] }
+      { b:'C2', c:['C3','E3','G3'] }, { b:'G1', c:['G2','B2','D3'] },
+      { b:'A1', c:['A2','C3','E3'] }, { b:'F1', c:['F2','A2','C3'] },
+      { b:'C2', c:['C3','E3','G3'] }, { b:'G1', c:['G2','B2','D3'] },
+      { b:'F1', c:['F2','A2','C3'] }, { b:'G1', c:['G2','B2','D3'] }
     ],
-    mel: ['E4','G4',null,'C5',null,'B4',null,'G4','A4',null,'F4','A4',null,'G4',null,null]
+    melA: ['E4','G4',null,'C5',null,'B4',null,'G4','A4',null,'F4','A4',null,'G4',null,null],
+    melB: ['G4',null,'A4','B4',null,'C5',null,'B4','A4',null,'G4',null,'E4',null,null,null]
   },
-  hard: {               // 困难场：小调紧张
-    tempo: 128, wave: 'sawtooth', bassWave: 'square', hat: 0.2, melVol: 0.13,
+  hard: {               /* 困难场：A 小调紧张 */
+    tempo: 126, swing: 0, drums: 'drive', keys: 'keys', padVol: 0.04,
     bars: [
-      { bass: 'A1', notes: ['A2', 'C3', 'E3'] },
-      { bass: 'F1', notes: ['F2', 'A2', 'C3'] },
-      { bass: 'G1', notes: ['G2', 'A#2', 'D3'] },
-      { bass: 'E1', notes: ['E2', 'G2', 'B2'] }
+      { b:'A1', c:['A2','C3','E3'] }, { b:'F1', c:['F2','A2','C3'] },
+      { b:'G1', c:['G2','A#2','D3'] },{ b:'E1', c:['E2','G2','B2'] },
+      { b:'A1', c:['A2','C3','E3'] }, { b:'F1', c:['F2','A2','C3'] },
+      { b:'D2', c:['D3','F3','A3'] }, { b:'E1', c:['E2','G#2','B2'] }
     ],
-    mel: ['A4',null,'C5','B4',null,'A4','G4',null,'F4',null,'A4','C5',null,'B4',null,null]
+    melA: ['A4',null,'C5','B4',null,'A4','G4',null,'F4',null,'A4','C5',null,'B4',null,null],
+    melB: ['E5',null,'D5','C5',null,'B4',null,'A4','G4',null,'E4',null,'A4',null,null,null]
   },
-  champion: {           // 冠军场：压迫感和声小调
-    tempo: 140, wave: 'sawtooth', bassWave: 'sawtooth', hat: 0.22, melVol: 0.13,
+  champion: {           /* 冠军场：D 和声小调压迫感 */
+    tempo: 138, swing: 0, drums: 'heavy', keys: 'keys', padVol: 0.04,
     bars: [
-      { bass: 'D2',  notes: ['D3', 'F3', 'A3'] },
-      { bass: 'A#1', notes: ['A#2', 'D3', 'F3'] },
-      { bass: 'G1',  notes: ['G2', 'A#2', 'D3'] },
-      { bass: 'A1',  notes: ['A2', 'C#3', 'E3'] }
+      { b:'D2', c:['D3','F3','A3'] }, { b:'A#1',c:['A#2','D3','F3'] },
+      { b:'G1', c:['G2','A#2','D3'] },{ b:'A1', c:['A2','C#3','E3'] },
+      { b:'D2', c:['D3','F3','A3'] }, { b:'A#1',c:['A#2','D3','F3'] },
+      { b:'C2', c:['C3','E3','G3'] }, { b:'A1', c:['A2','C#3','E3'] }
     ],
-    mel: ['D4',null,'F4','A4',null,'G4','F4',null,'E4',null,'G4','A#4',null,'A4',null,null]
+    melA: ['D4',null,'F4','A4',null,'G4','F4',null,'E4',null,'G4','A#4',null,'A4',null,null],
+    melB: ['A4',null,'C5','D5',null,'C5','A#4',null,'A4',null,'G4',null,'A4',null,null,null]
+  }
+};
+
+/* 鼓组型（16 分音符 × 1 小节，数值为力度，0 = 不打） */
+var DRUMS = {
+  brush: {                       /* 爵士刷子：叮叮镲打点为主 */
+    kick:  [1,0,0,0, 0,0,0,0, 0.5,0,0,0, 0,0,0,0],
+    snare: [0,0,0,0, 0.55,0,0,0, 0,0,0,0, 0.55,0,0,0],
+    hat:   [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
+    ride:  [1,0,0.45,0, 0.65,0,1,0, 0.55,0,0.45,0, 0.65,0,1,0]
+  },
+  light: {
+    kick:  [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
+    snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+    hat:   [0,0,0.45,0, 0,0,0.45,0, 0,0,0.45,0, 0,0,0.45,0],
+    ride:  [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+  },
+  basic: {
+    kick:  [1,0,0,0, 0,0,0.7,0, 1,0,0,0, 0,0,0,0],
+    snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0.35],
+    hat:   [0.5,0,0.4,0, 0.5,0,0.4,0, 0.5,0,0.4,0, 0.5,0,0.4,0],
+    ride:  [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+  },
+  drive: {
+    kick:  [1,0,0,0.6, 0,0,0.8,0, 1,0,0,0.6, 0,0,0,0],
+    snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0.45],
+    hat:   [0.5,0,0.5,0, 0.5,0,0.5,0, 0.5,0,0.5,0, 0.5,0,0.5,0.3],
+    ride:  [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+  },
+  heavy: {
+    kick:  [1,0,0.7,0, 0.8,0,0,0.6, 1,0,0.7,0, 0,0,0.8,0],
+    snare: [0,0,0,0, 1,0,0,0.3, 0,0,0,0, 1,0,0,0.5],
+    hat:   [0.55,0.3,0.5,0.3, 0.55,0.3,0.5,0.3, 0.55,0.3,0.5,0.3, 0.55,0.3,0.5,0.4],
+    ride:  [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
   }
 };
 
@@ -1848,13 +2010,13 @@ var Music = {
     if (this.timer) { clearTimeout(this.timer); this.timer = null; }
   },
 
-  /* 关闭开关时调用 */
+  /* 音乐开关（由 toggleMusic 调用） */
   toggle: function () {
-    if (!player) return;
+    if (!player) return false;
     player.musicOn = !player.musicOn;
     saveAllSaves(true);
-    if (!player.musicOn) this.stop();
-    else this.play(App.screen === 'game' ? tableTrackName() : 'lobby');
+    if (!player.musicOn) bgmStop();
+    else bgmPlay(App.screen === 'game' ? tableTrackName() : 'lobby');
     return player.musicOn;
   },
 
@@ -1878,68 +2040,237 @@ var Music = {
     this.timer = setTimeout(function () { self._tick(); }, 25);
   },
 
+  /* 人性化：轻微的时值与力度抖动，避免机械感 */
+  _hum: function (amt) { return (Math.random() - 0.5) * amt; },
+
   _schedule: function (step, when) {
     var tr = this.track;
-    var bar = tr.bars[this.bar];
+    var chord = tr.bars[this.bar];
     var stepDur = 60 / tr.tempo / 4;
+    var sw = tr.swing || 0;
+    var t = when + (step % 2 === 1 ? stepDur * sw : 0) + this._hum(0.008);
+    var kit = DRUMS[tr.drums] || DRUMS.basic;
+    var vol = 1 + this._hum(0.12);        // 力度人性化
 
-    // 和弦垫：每小节第 1 步铺一层长音
+    /* --- 铺底 pad：每小节头，缓慢滤波扫动 --- */
     if (step === 0) {
-      for (var i = 0; i < bar.notes.length; i++) {
-        this._note(NOTE[bar.notes[i]], when, stepDur * 15, tr.wave, 0.055, musicGain);
+      for (var pi = 0; pi < chord.c.length; pi++) {
+        this._note(NOTE[chord.c[pi]], t, stepDur * 15, 'sawtooth', tr.padVol,
+          musicGain, { voices: 2, detune: 9, filter: 620, filterTo: 1500, attack: stepDur * 2 });
       }
     }
-    // 贝斯：四分音符
-    if (step % 4 === 0) {
-      this._note(NOTE[bar.bass], when, stepDur * 3.2, tr.bassWave, 0.11, musicGain);
+
+    /* --- 贝斯：走动低音 --- */
+    var root = NOTE[chord.b];
+    if (step === 0)      this._bass(root, t, stepDur * 3.4, 0.16);
+    else if (step === 6) this._bass(root * Math.pow(2, 7 / 12), t, stepDur * 1.6, 0.12);
+    else if (step === 8) this._bass(root, t, stepDur * 2.2, 0.15);
+    else if (step === 14)this._bass(root * Math.pow(2, -2 / 12), t, stepDur * 1.6, 0.12);
+
+    /* --- 旋律：前 4 小节 A 段，后 4 小节 B 段（8 分音符） --- */
+    if (step % 2 === 0) {
+      var slot = step >> 1;                       // 0..7
+      var mel = this.bar < 4 ? tr.melA : tr.melB;
+      var idx = (this.bar % 2) * 8 + slot;        // 两小节一句，共 16 格
+      var mNote = mel[idx];
+      // 每乐句第 2 小节末尾留白，制造呼吸感
+      if (mNote && (this.bar % 2 === 0 || slot < 6)) {
+        this._keys(NOTE[mNote], t, stepDur * 2.6, 0.13 * vol, tr.keys);
+      }
     }
-    // 旋律
-    var m = tr.mel[step];
-    if (m) {
-      var swing = (step % 2 === 1) ? stepDur * 0.18 : 0;
-      this._note(NOTE[m], when + swing, stepDur * 2.2, 'triangle', tr.melVol, musicGain);
-    }
-    // 打击（闭镲感）
-    if (tr.hat > 0 && step % 2 === 1) {
-      this._noise(when, 0.035, tr.hat * 0.12, 6800, musicGain);
-    }
+
+    /* --- 鼓组 --- */
+    if (kit.kick[step]) this._kick(t, 0.5 * kit.kick[step] * vol);
+    if (kit.snare[step]) this._snare(t, 0.34 * kit.snare[step] * vol);
+    if (kit.hat[step]) this._hat(t, 0.10 * kit.hat[step] * vol, step === 14);
+    if (kit.ride[step]) this._ride(t, 0.075 * kit.ride[step] * vol);
   },
 
-  _note: function (freq, when, dur, type, vol, dest) {
+  /* 统一包络 */
+  _env: function (g, when, dur, peak, attack) {
+    var a = Math.max(0.001, attack === undefined ? 0.008 : attack);
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(Math.max(0.0002, peak), when + a);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  },
+
+  /* 有音高音色：支持 多振荡器 detune / FM（电钢）/ 滤波扫动 / 滑音（底鼓） */
+  _note: function (freq, when, dur, type, vol, dest, opts) {
     if (!freq || !audioCtx) return;
+    opts = opts || {};
     try {
-      var osc = audioCtx.createOscillator();
-      var g = audioCtx.createGain();
-      osc.type = type || 'sine';
-      osc.frequency.value = freq;
-      g.gain.setValueAtTime(0.0001, when);
-      g.gain.linearRampToValueAtTime(vol, when + Math.min(0.03, dur * 0.2));
-      g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
-      osc.connect(g); g.connect(dest || musicGain);
-      osc.start(when); osc.stop(when + dur + 0.02);
+      var out = audioCtx.createGain();
+      out.connect(dest || musicGain);
+      this._env(out, when, dur, vol, opts.attack);
+
+      var target = out;
+      if (opts.filter) {
+        var lp = audioCtx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.setValueAtTime(opts.filter, when);
+        if (opts.filterTo) lp.frequency.linearRampToValueAtTime(opts.filterTo, when + dur);
+        lp.Q.value = opts.q || 0.9;
+        lp.connect(out);
+        target = lp;
+      }
+
+      var voices = opts.voices || 1;
+      var det = opts.detune || 0;
+      for (var i = 0; i < voices; i++) {
+        var o = audioCtx.createOscillator();
+        o.type = type || 'sine';
+        var f = voices > 1 ? freq * Math.pow(2, ((i - (voices - 1) / 2) * det) / 1200) : freq;
+        o.frequency.value = f;
+        if (opts.glide) {
+          o.frequency.setValueAtTime(opts.glide, when);
+          o.frequency.exponentialRampToValueAtTime(Math.max(20, f), when + (opts.glideTime || 0.1));
+        }
+        o.connect(target);
+        o.start(when); o.stop(when + dur + 0.03);
+        /* FM：给电钢 / 钟琴那类泛音 */
+        if (opts.fm) {
+          var m = audioCtx.createOscillator();
+          var mg = audioCtx.createGain();
+          m.type = 'sine';
+          m.frequency.value = f * (opts.fmRatio || 2.01);
+          mg.gain.setValueAtTime(f * (opts.fmDepth || 1.5), when);
+          mg.gain.exponentialRampToValueAtTime(Math.max(1, f * 0.06), when + dur * 0.55);
+          m.connect(mg); mg.connect(o.frequency);
+          m.start(when); m.stop(when + dur + 0.03);
+        }
+      }
     } catch (e) {}
   },
 
-  _noise: function (when, dur, vol, hz, dest) {
+  /* 噪声类：带通 / 高通滤波，用于军鼓、踩镲、叮叮镲 */
+  _noise: function (when, dur, vol, hz, dest, ftype) {
     if (!audioCtx) return;
     try {
       var len = Math.max(1, Math.floor(audioCtx.sampleRate * dur));
       var buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
       var d = buf.getChannelData(0);
-      for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+      for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 1.6);
       var src = audioCtx.createBufferSource();
       src.buffer = buf;
-      var hp = audioCtx.createBiquadFilter();
-      hp.type = 'highpass';
-      hp.frequency.value = hz || 6000;
+      var f = audioCtx.createBiquadFilter();
+      f.type = ftype || 'highpass';
+      f.frequency.value = hz || 7000;
+      f.Q.value = ftype === 'bandpass' ? 1.1 : 0.7;
       var g = audioCtx.createGain();
       g.gain.setValueAtTime(vol, when);
       g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
-      src.connect(hp); hp.connect(g); g.connect(dest || musicGain);
+      src.connect(f); f.connect(g); g.connect(dest || musicGain);
       src.start(when); src.stop(when + dur);
     } catch (e) {}
+  },
+
+  /* --- 乐器 --- */
+  _keys: function (f, when, dur, vol, kind) {
+    if (kind === 'rhodes') {
+      this._note(f, when, dur, 'sine', vol, musicGain, { fm: true, fmRatio: 2.01, fmDepth: 1.6, filter: 3200 });
+      this._note(f * 2, when, dur * 0.5, 'sine', vol * 0.22, musicGain, {});
+    } else {
+      this._note(f, when, dur, 'triangle', vol, musicGain, { fm: true, fmRatio: 3.0, fmDepth: 0.7, filter: 3800 });
+      this._note(f * 2, when, dur * 0.35, 'sine', vol * 0.18, musicGain, {});
+    }
+  },
+  _bass: function (f, when, dur, vol) {
+    this._note(f, when, dur, 'triangle', vol, musicGain, { filter: 420, attack: 0.012 });
+    this._note(f, when, dur * 0.8, 'sine', vol * 0.7, musicGain, {});
+  },
+  _kick: function (when, vol) {
+    this._note(52, when, 0.30, 'sine', vol, musicGain, { glide: 150, glideTime: 0.085, filter: 260, attack: 0.002 });
+  },
+  _snare: function (when, vol) {
+    this._noise(when, 0.16, vol, 1900, musicGain, 'bandpass');
+    this._note(195, when, 0.11, 'triangle', vol * 0.5, musicGain, { attack: 0.002 });
+  },
+  _hat: function (when, vol, open) {
+    this._noise(when, open ? 0.20 : 0.045, vol, 8200, musicGain, 'highpass');
+  },
+  _ride: function (when, vol) {
+    this._noise(when, 0.30, vol, 5200, musicGain, 'highpass');
+    this._note(3100, when, 0.22, 'square', vol * 0.18, musicGain, { filter: 6000 });
+    this._note(4600, when, 0.16, 'square', vol * 0.12, musicGain, { filter: 7000 });
   }
 };
+
+/* ------------------------------------------------------------
+   BGM 门面：优先外置音频文件，失败回落到合成引擎
+   ------------------------------------------------------------ */
+function bgmFileEl(track) {
+  if (bgmFailed[track]) return null;
+  if (typeof Audio === 'undefined') { bgmFailed[track] = true; return null; }
+  if (bgmEls[track]) return bgmEls[track];
+  var names = BGM_FILES[track] || BGM_FILES.table;
+  var el = new Audio();
+  el.loop = true;
+  el.preload = 'auto';
+  var i = 0;
+  el.addEventListener('error', function () {
+    fileBgm.ok = false;
+    i++;
+    if (i >= names.length) {
+      bgmFailed[track] = true;
+      bgmEls[track] = null;
+      Music.play(track);          // 全部候选都失败 → 回落合成
+    } else {
+      el.src = ASSET_DIR + names[i];
+    }
+  });
+  el.src = ASSET_DIR + names[0];
+  bgmEls[track] = el;
+  return el;
+}
+
+/* 播放 BGM（文件优先） */
+function bgmPlay(name) {
+  if (!player || !player.musicOn) return;
+  var el = bgmFileEl(name);
+  if (el) {
+    Object.keys(bgmEls).forEach(function (k) {
+      if (k !== name && bgmEls[k]) { try { bgmEls[k].pause(); } catch (e) {} }
+    });
+    Music.stop();
+    try {
+      el.volume = Math.max(0, Math.min(1,
+        (player.volMaster || 0.8) * (player.volMusic || 0.5) * 0.9));
+      fileBgm.audio = el;
+      fileBgm.name = name;
+      fileBgm.ok = false;                      // 先置否，确认真能播再置是
+      var settle = function (playing) {
+        var usable = !el.error && el.readyState >= 2;
+        fileBgm.ok = !!(playing && usable);
+        if (!fileBgm.ok) Music.play(name);     // 播不了 → 立即回落合成，避免静音
+      };
+      var pr = el.play();
+      if (pr && pr.then) pr.then(function () { settle(true); })
+                          .catch(function () { settle(false); });
+      else settle(true);
+      return;
+    } catch (e) { /* 落到合成 */ }
+  }
+  Music.play(name);
+}
+
+function bgmStop() {
+  Object.keys(bgmEls).forEach(function (k) {
+    if (bgmEls[k]) { try { bgmEls[k].pause(); } catch (e) {} }
+  });
+  fileBgm.ok = false;
+  fileBgm.name = '';
+  Music.stop();
+}
+
+/* 当前 BGM 来源说明（设置面板展示）——以真实播放状态为准，不做乐观判断 */
+function bgmSourceLabel() {
+  var el = fileBgm.audio;
+  if (fileBgm.ok && el && !el.error && el.readyState >= 2) {
+    return '外置音频文件（assets/' + (fileBgm.name || '') + '.mp3）';
+  }
+  if (Music.playing) return '内置实时合成';
+  return '未播放';
+}
 
 /* 当前应播放的牌桌曲目 */
 function tableTrackName() {
@@ -1955,7 +2286,7 @@ function unlockAudio() {
   initAudio();
   applyVolumes();
   if (player && player.musicOn) {
-    Music.play(App.screen === 'game' ? tableTrackName() : 'lobby');
+    bgmPlay(App.screen === 'game' ? tableTrackName() : 'lobby');
   }
 }
 
@@ -2158,7 +2489,7 @@ function showScreen(name) {
   // 场景音乐切换
   try {
     if (player && player.musicOn) {
-      Music.play(name === 'game' ? tableTrackName() : 'lobby');
+      bgmPlay(name === 'game' ? tableTrackName() : 'lobby');
     }
   } catch (e) {}
 }
@@ -4163,6 +4494,7 @@ function openSettings() {
   $('volMusicV').textContent = Math.round(player.volMusic * 100) + '%';
   $('setSfxToggle').textContent = player.soundOn ? '🔊 音效 开' : '🔇 音效 关';
   $('setMusicToggle').textContent = player.musicOn ? '🎵 音乐 开' : '🎵 音乐 关';
+  $('bgmSrcLabel').textContent = bgmSourceLabel();
   $('ovSettings').classList.add('show');
 }
 function toggleMusic() {
