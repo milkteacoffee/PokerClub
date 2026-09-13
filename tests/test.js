@@ -484,7 +484,7 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   ok(ctx.checkWeeklyHasClaimable() === true, '达标后出现可领取项');
   var cWeekly = ctx.player.coins;
   ctx.claimWeekly('w_play_30');
-  ok(ctx.player.coins === cWeekly + 2000, '领取周常奖励 2000');
+  ok(ctx.player.coins === cWeekly + 20, '领取周常首阶段奖励 20');
   ok(ctx.claimWeekly('w_play_30') === false, '周常不可重复领取');
 
   /* ---- 商城与道具 ---- */
