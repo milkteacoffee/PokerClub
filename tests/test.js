@@ -434,6 +434,8 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   ctx.createNewSaveAt(1);
   ok(ctx.player.rankPoints === 0 && ctx.player.rankTier === 0, '新档段位从青铜 0 分开始');
   ok(ctx.player.rankedPoints === 100, '新档初始排位积分为 100');
+  ctx.player.name = '自定义牌手';
+  ok(ctx.player.name === '自定义牌手', '用户名称可自定义并写入玩家存档');
   var rankCoins = ctx.player.coins;
   ok(ctx.spendCoins(100) === true, '100 金币可兑换排位积分的金币扣除接口可用');
   ctx.player.rankedPoints++;
