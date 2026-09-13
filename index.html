@@ -1049,7 +1049,7 @@
         <p style="color:#f2c14e;font-weight:800;margin-bottom:6px;">🎴 基本玩法</p>
         <p>每人获得 2 张底牌，桌面依次发出 5 张公共牌。从 7 张牌中选最佳 5 张与对手比大小，最大者赢取底池。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">💰 场次门槛</p>
-        <p>🌱 简单：200🪙 入场 · 免费 · 盲注10/20 · 加注 ≥20<br>
+        <p>🌱 简单：500🪙 入场 · 免费 · 盲注10/20 · 加注 ≥20<br>
            🎯 普通：5,000🪙 入场 · 入场费 200 · 加注 ≥100<br>
            🔥 困难：20,000🪙 入场 · 入场费 1,000 · 加注 ≥500<br>
            👑 冠军：100,000🪙 入场 · 入场费 5,000 · 加注 ≥1,000</p>
@@ -1059,6 +1059,8 @@
         <p>共 3 个存档槽，每个独立记录金币、等级、成就与任务。金币用完后可以开新档重玩新手场。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎁 任务与成就</p>
         <p>每日5项，每项400金币，合计2000；每周一刷新25项，每项2000金币，合计50000。成就共1000项，按进阶目标解锁，单项10至2000金币，需在成就页领取。日周刷新以北京时间为准。</p>
+        <p>新手场每手开局至少500金币。电脑对手低于500时在下一手前离桌，由新昵称对手带入500补位；玩家不足500会保留余额返回大厅。对手昵称随机生成，仍全部为本地电脑AI，不是真人联机。</p>
+        <p>每手使用全新52张牌，安全随机洗牌，不按输赢安排牌型；正常随机可能连续出现相同点数或弱牌。</p>
         <p>纯单机，无登录、无后端、不收集IP。每个浏览器独立保存，新档直接获得500金币；同Wi-Fi不同设备互不影响。旧版存档保留只读导出。清除网站数据会丢失存档，换浏览器或新建存档可重新开始。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🏅 段位排位</p>
         <p>本游戏为单机电脑对战，无真人匹配。快速模式不影响段位；排位入场前需资产至少 10,000 金币，每次入场消耗 1 排位积分（初始 100，可在模式页用 100 金币购买 1 分），继续下一手不重复收门票。</p>
@@ -1310,9 +1312,9 @@ var MODE_CONFIG = {
 var DIFFICULTY_CONFIG = {
   easy: {
     key:'easy', name:'简单', tag:'新手', icon:'🌱',
-    sb:10, bb:20, buyIn:500, minCoins:200, entryFee:0,
+    sb:10, bb:20, buyIn:500, minCoins:500, entryFee:0,
     minRaiseUnit:20, thinkTime:30, aiBonus:-0.18,
-    desc:['盲注 10 / 20','新档初始 $500','入场免费','⏰ 思考 30 秒','加注 ≥20','AI 温和 · 适合练手']
+    desc:['盲注 10 / 20','每手开局至少 $500','入场免费','⏰ 思考 30 秒','加注 ≥20','AI 温和 · 适合练手']
   },
   normal: {
     key:'normal', name:'普通', tag:'标准', icon:'🎯',
@@ -2617,9 +2619,19 @@ function makeDeck() {
   for (var s = 0; s < 4; s++) for (var r = 2; r <= 14; r++) d.push({ r:r, s:s });
   return d;
 }
+// 安全整数随机 + 拒绝采样，避免取模偏差；旧浏览器保留离线兼容回退。
+function randomInt(max) {
+  if (!Number.isSafeInteger(max) || max < 1 || max > 4294967296) throw new RangeError('Invalid random range');
+  if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+    var word = new Uint32Array(1), limit = 4294967296 - (4294967296 % max);
+    do { window.crypto.getRandomValues(word); } while (word[0] >= limit);
+    return word[0] % max;
+  }
+  return Math.floor(Math.random() * max);
+}
 function shuffle(arr) {
   for (var i = arr.length - 1; i > 0; i--) {
-    var j = Math.floor(Math.random() * (i + 1));
+    var j = randomInt(i + 1);
     var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
   }
   return arr;
@@ -3619,7 +3631,7 @@ function nextHand() {
 function pickOpponents() {
   var unlocked = OPPONENTS.filter(function(o){ return o.unlockLv <= player.level; });
   if (unlocked.length === 0) unlocked = [OPPONENTS[0]];
-  var pool = unlocked.slice().sort(function(){ return Math.random() - 0.5; });
+  var pool = shuffle(unlocked.slice());
   var result = [];
   var used = {};
   for (var i = 0; i < pool.length && result.length < 3; i++) {
@@ -3646,15 +3658,49 @@ function makePlayer(id, name, avatar, human, style, chips, styleName) {
   };
 }
 
+var AI_NICK_PREFIX = ['半糖','晚风','月下','南城','北岛','山间','云端','清晨','听雨','追光','慢热','橘子','海盐','乌龙','青柠','落日','小巷','路过','一杯','不加糖','周末','凌晨','春日','长街'];
+var AI_NICK_SUFFIX = ['拿铁','旅人','听海','微醺','小鱼','等风','看客','小满','可乐','拾光','闲人','入梦','汽水','星辰','散步','茶客','归舟','来信','放空','有晴','松果','山海','失眠','奶盖'];
+var aiNicknameHistory = new Set();
+function randomAIName(excluded) {
+  var used = new Set(excluded || []), name = '';
+  for (var attempt = 0; attempt < 40; attempt++) {
+    name = AI_NICK_PREFIX[randomInt(AI_NICK_PREFIX.length)] + AI_NICK_SUFFIX[randomInt(AI_NICK_SUFFIX.length)];
+    if (randomInt(4) === 0) name += String(10 + randomInt(90));
+    if (!used.has(name) && !aiNicknameHistory.has(name)) break;
+  }
+  // 即使随机源连续返回相同值，也不重名或无限循环。
+  var base = name, suffix = 2;
+  while (used.has(name) || aiNicknameHistory.has(name)) name = base + suffix++;
+  aiNicknameHistory.add(name);
+  if (aiNicknameHistory.size > 200) aiNicknameHistory.delete(aiNicknameHistory.values().next().value);
+  return name;
+}
+function newAIOpponent(id, profile, excluded) {
+  return makePlayer(id, randomAIName(excluded), profile.avatar, false, profile.style,
+    DIFFICULTY_CONFIG[App.difficulty].buyIn, profile.styleName);
+}
+function refreshLowStackOpponents() {
+  var cfg = DIFFICULTY_CONFIG[App.difficulty], replaced = [];
+  // 只在下一手发牌前调用；其它场次仅补足无法支付大盲的座位。
+  var threshold = App.difficulty === 'easy' ? 500 : cfg.bb;
+  var excluded = G.players.map(function(p){ return p.name; });
+  for (var i = 0; i < G.players.length; i++) {
+    var old = G.players[i];
+    if (old.human || old.chips >= threshold) continue;
+    var profile = pickOpponents()[0];
+    var fresh = newAIOpponent(old.id, profile, excluded);
+    G.players[i] = fresh;
+    excluded.push(fresh.name);
+    replaced.push({seat:old.id, oldName:old.name, newName:fresh.name});
+  }
+  return replaced;
+}
 function initPlayers() {
-  var cfg = DIFFICULTY_CONFIG[App.difficulty];
   var opps = pickOpponents();
-  G.players = [
-    makePlayer(0, player.name || '玩家', '🧑', true, 'human', player.coins, ''),
-    makePlayer(1, opps[0].name, opps[0].avatar, false, opps[0].style, cfg.buyIn, opps[0].styleName),
-    makePlayer(2, opps[1].name, opps[1].avatar, false, opps[1].style, cfg.buyIn, opps[1].styleName),
-    makePlayer(3, opps[2].name, opps[2].avatar, false, opps[2].style, cfg.buyIn, opps[2].styleName)
-  ];
+  G.players = [makePlayer(0, player.name || '玩家', '🧑', true, 'human', player.coins, '')];
+  for (var i = 0; i < 3; i++) {
+    G.players.push(newAIOpponent(i + 1, opps[i], G.players.map(function(p){ return p.name; })));
+  }
   G.dealer = -1;
 }
 
@@ -3676,6 +3722,8 @@ async function playHand() {
   bumpDailyProgress('play_5', 1);
   bumpWeeklyProgress('w_play_30', 1);
 
+  var replacements = refreshLowStackOpponents();
+  if (replacements.length) showToast(replacements.map(function(r){ return r.oldName + ' 离桌，' + r.newName + ' 入座'; }).join('；'), 2600);
   sfx('shuffle');
   G.deck = shuffle(makeDeck());
   G.community = [];
@@ -3686,7 +3734,6 @@ async function playHand() {
   G.stage = 0;
   for (var i = 0; i < G.players.length; i++) {
     var p = G.players[i];
-    if (!p.human && p.chips <= 0) { p.chips = G.buyIn; }   // AI 自动重买
     p.hole = []; p.bet = 0; p.totalBet = 0;
     p.folded = false; p.allIn = p.chips <= 0; p.acted = false;
     p.reveal = false; p.lastAction = ''; p.resultText = '';
@@ -4511,6 +4558,11 @@ async function runGameLoop() {
       Timer.stop();
       saveAllSaves(true);
       showGameOver();
+      return;
+    }
+    if (App.difficulty === 'easy' && G.players[0].chips < 500) {
+      exitGame();
+      showToast('新手场开局需500金币，余额已保留；可领取任务奖励后再入场。', 3000);
       return;
     }
     await playHand();
