@@ -350,10 +350,11 @@
   .card.small { width:31px; height:43px; border-radius:5px; }
   .card.small .r { font-size:11px; }
   .card.small .s { font-size:13px; }
-  .card.deal { animation:cardDeal .32s ease-out; }
+  .card.deal { animation:cardDeal .34s cubic-bezier(.18,.9,.32,1.05) both; }
   @keyframes cardDeal {
-    from { transform:translateY(-40px) scale(.5) rotate(-8deg); opacity:0; }
-    to { transform:translateY(0) scale(1) rotate(0); opacity:1; }
+    from { transform:translateY(-52px) scale(.62) rotate(-9deg); opacity:0; }
+    55%  { opacity:1; }
+    to   { transform:translateY(0) scale(1) rotate(0); opacity:1; }
   }
 
   #bottomBar { position:absolute; left:0; right:0; bottom:0; height:94px;
@@ -2618,8 +2619,10 @@ function seatHTML(p, i) {
   var showCards = p.human || p.reveal;
   var cards = '';
   if (p.hole && p.hole.length) {
-    cards = p.hole.map(function(c, idx){
-      return cardHTML(c, !showCards, true, idx === 0);
+    /* 手牌永不播放入场动画：座位每次 render 都会重建 innerHTML，
+       若带动画会反复重播，看起来像「所有人的牌都在动」 */
+    cards = p.hole.map(function(c){
+      return cardHTML(c, !showCards, true, false);
     }).join('');
   }
   var dealerBtn = (i === G.dealer) ? '<span class="dealer">D</span>' : '';
@@ -2658,7 +2661,15 @@ function renderTable() {
   if (boardEl) {
     var bh = '';
     for (var i = 0; i < 5; i++) {
-      bh += G.community[i] ? cardHTML(G.community[i], false, false, true) : '<div class="card empty"></div>';
+      var bc = G.community[i];
+      if (bc) {
+        /* 只有「首次亮出」的桌面牌才播放发牌动画（牌对象每手都是新的） */
+        var anim = !bc._shown;
+        bc._shown = true;
+        bh += cardHTML(bc, false, false, anim);
+      } else {
+        bh += '<div class="card empty"></div>';
+      }
     }
     boardEl.innerHTML = bh;
   }
@@ -3272,7 +3283,8 @@ async function playHand() {
     for (var ci = 0; ci < st.count; ci++) {
       G.community.push(G.deck.pop());
       if (!fastMode && !G.skipFlag) sfx('deal');
-      await sleep((fastMode || G.skipFlag) ? 20 : 180);
+      render();                                   // 逐张亮出，而不是三张一起 pop
+      await sleep((fastMode || G.skipFlag) ? 20 : 240);
     }
     G.stage++;
     if (G.stage === 1) maybeApplyPeek();   // 翻牌后若持透视卡则公开一位对手底牌

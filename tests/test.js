@@ -718,6 +718,47 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   ctx.navigator.maxTouchPoints = savedTouch;
   ctx.checkOrientation();
 
+  /* ---- 发牌动画：只有桌面牌动，手牌静止 ---- */
+  console.log('【测试 6】发牌动画作用域');
+  var RE_DEAL = /card[^"]*deal/;
+  function mkSeat(id, human) {
+    return { id: id, name: human ? '你' : 'AI' + id, avatar: '🙂', human: !!human,
+             style: 'balanced', styleName: '平衡型', chips: 1000,
+             hole: [{ r: 14, s: 0 }, { r: 13, s: 1 }], bet: 0, totalBet: 0,
+             folded: false, allIn: false, acted: false, reveal: false,
+             lastAction: '', resultText: '', winner: false, _v: null, psych: null };
+  }
+  var prevPlayers = ctx.G.players, prevCommunity = ctx.G.community, prevActive = ctx.G.active;
+  ctx.G.players = [mkSeat(0, true), mkSeat(1), mkSeat(2), mkSeat(3)];
+  ctx.G.community = [{ r: 2, s: 0 }, { r: 5, s: 1 }, { r: 9, s: 2 }];
+  ctx.G.dealer = 1; ctx.G.actor = -1; ctx.G.pot = 30; ctx.G.handOver = false;
+
+  var boardEl = ctx.document.getElementById('boardArea');
+  var seatEl = ctx.document.getElementById('seat0');
+
+  ctx.renderTable();
+  ok(RE_DEAL.test(boardEl.innerHTML), '首次亮出的桌面牌带发牌动画');
+  ok(RE_DEAL.test(ctx.document.getElementById('seat0').innerHTML) === false,
+     '座位手牌不含发牌动画（手牌静止）');
+
+  ctx.renderTable();
+  ok(RE_DEAL.test(boardEl.innerHTML) === false, '重复 render 时桌面牌不重播动画');
+
+  // 转牌：只应该有新亮出的那一张带动画
+  ctx.G.community.push({ r: 13, s: 3 });
+  ctx.renderTable();
+  var dealCount = (boardEl.innerHTML.match(/card[^"]*deal/g) || []).length;
+  ok(dealCount === 1, '转牌只有新亮出的 1 张带动画（实际 ' + dealCount + ' 张）');
+
+  // 河牌后再次渲染，全部静止
+  ctx.G.community.push({ r: 7, s: 2 });
+  ctx.renderTable();
+  ctx.renderTable();
+  ok(RE_DEAL.test(boardEl.innerHTML) === false, '河牌后重复渲染全部静止');
+  ok(RE_DEAL.test(seatEl.innerHTML) === false, '手牌自始至终保持静止');
+
+  ctx.G.players = prevPlayers; ctx.G.community = prevCommunity; ctx.G.active = prevActive;
+
   /* ---- 老存档迁移 v10 → v11 ---- */
   var legacy = {
     name: '老玩家', version: 10, level: 7, coins: 4242, totalHands: 88,
