@@ -791,8 +791,16 @@
 <div id="rotateHint">
   <div style="font-size:64px">📱</div>
   <div>请横屏体验游戏</div>
-  <div style="font-size:14px;color:#566c82;font-weight:400;letter-spacing:1px;margin-top:-8px;">若手机锁定了竖屏，请点击下方按钮</div>
+  <div style="font-size:14px;color:#566c82;font-weight:400;letter-spacing:1px;margin-top:-8px;">
+    若手机锁定了竖屏，或转不过来，点下面的按钮
+  </div>
   <button id="btnForceRotate">🔄 强制横屏</button>
+  <div style="font-size:12px;color:#4a5c6e;line-height:1.8;margin-top:6px;padding:0 20px;">
+    会先尝试全屏并锁定横屏；<br>
+    若系统不支持（如 iPhone），会自动把画面转成横向，<br>
+    这时把手机<b style="color:#8fd6b0;">横过来拿（顶部朝左）</b>就能正常玩。<br>
+    选择会被记住，下次打开自动生效。
+  </div>
 </div>
 
 <div id="stage">
@@ -4543,38 +4551,99 @@ function toggleSound() {
 /* ============================================================
    自适应与横屏
    ============================================================ */
+var LS_LANDSCAPE = 'texas_poker_force_landscape_v1';
+
+function isTouchDevice() {
+  return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+}
+/* 竖屏窄屏（手机竖握） */
+function isPortraitNarrow() {
+  return window.innerHeight > window.innerWidth &&
+         Math.min(window.innerWidth, window.innerHeight) < 700 &&
+         isTouchDevice();
+}
+/* 是否处于「伪横屏」：设备仍是竖屏，但靠 CSS 旋转把舞台摆横 */
+function isFakeLandscape() {
+  return App.forceLandscape && isPortraitNarrow();
+}
+
 function fitStage() {
   var stage = $('stage');
   if (!stage) return;
   var w = window.innerWidth, h = window.innerHeight;
-  var scale = Math.min(w / 960, h / 540);
-  stage.style.transform = 'translate(-50%,-50%) scale(' + scale + ')';
+  if (isFakeLandscape()) {
+    /* 旋转 90° 后：舞台的 960 宽占据屏幕高度，540 高占据屏幕宽度 */
+    var s = Math.min(h / 960, w / 540);
+    stage.style.transform = 'translate(-50%,-50%) rotate(90deg) scale(' + s + ')';
+  } else {
+    var scale = Math.min(w / 960, h / 540);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + scale + ')';
+  }
 }
 
 function checkOrientation() {
   var hint = $('rotateHint');
   if (!hint) return;
-  var portrait = window.innerHeight > window.innerWidth;
-  var smallest = Math.min(window.innerWidth, window.innerHeight);
-  var touch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-  var show = portrait && smallest < 700 && touch && !App.forceLandscape;
-  hint.style.display = show ? 'flex' : 'none';
+  hint.style.display = (isPortraitNarrow() && !App.forceLandscape) ? 'flex' : 'none';
   fitStage();
 }
 
+/* 强制横屏：全屏 → 锁定方向 → 都不行则用 CSS 旋转兜底 */
 function forceLandscape() {
   App.forceLandscape = true;
+  try { localStorage.setItem(LS_LANDSCAPE, '1'); } catch (e) {}
+
   var el = document.documentElement;
-  try {
-    if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(function(){});
-    }
-  } catch (e) {}
-  try {
-    if (el.requestFullscreen) el.requestFullscreen().catch(function(){});
-  } catch (e) {}
+  var reqFs = el.requestFullscreen || el.webkitRequestFullscreen ||
+              el.mozRequestFullScreen || el.msRequestFullscreen;
+
+  var goFullscreen = function () {
+    if (!reqFs) return Promise.reject(new Error('no-fullscreen'));
+    try {
+      var p = reqFs.call(el, { navigationUI: 'hide' });
+      return (p && p.then) ? p : Promise.resolve();
+    } catch (e) { return Promise.reject(e); }
+  };
+  /* Android 必须先全屏，锁定才会被接受 */
+  var lockOrientation = function () {
+    try {
+      var so = screen.orientation || screen.mozOrientation || screen.msOrientation;
+      if (!so || !so.lock) return Promise.reject(new Error('no-lock'));
+      return so.lock('landscape').catch(function () {
+        return so.lock('landscape-primary');
+      });
+    } catch (e) { return Promise.reject(e); }
+  };
+
+  goFullscreen()
+    .catch(function () { /* 全屏被拒也要尝试锁定 */ })
+    .then(lockOrientation)
+    .catch(function () { /* 锁定失败 → 交给 CSS 旋转兜底 */ })
+    .then(function () {
+      $('rotateHint').style.display = 'none';
+      fitStage();
+      // 方向切换有动画延迟，稍后再校正一次
+      setTimeout(checkOrientation, 400);
+      setTimeout(checkOrientation, 1200);
+    });
+
+  /* 立刻应用，避免中间出现「小小的竖屏舞台」 */
   $('rotateHint').style.display = 'none';
   fitStage();
+}
+
+/* 恢复自动（清除强制横屏记忆） */
+function resetLandscape() {
+  App.forceLandscape = false;
+  try { localStorage.removeItem(LS_LANDSCAPE); } catch (e) {}
+  try {
+    var so = screen.orientation || screen.mozOrientation || screen.msOrientation;
+    if (so && so.unlock) so.unlock();
+  } catch (e) {}
+  try {
+    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
+  } catch (e) {}
+  checkOrientation();
 }
 
 /* ============================================================
@@ -4686,9 +4755,15 @@ function bindEvents() {
   // 横屏
   $('btnForceRotate').addEventListener('click', forceLandscape);
 
-  // 窗口尺寸
+  // 窗口尺寸与方向
   window.addEventListener('resize', checkOrientation);
-  window.addEventListener('orientationchange', function(){ setTimeout(checkOrientation, 200); });
+  window.addEventListener('orientationchange', function () {
+    setTimeout(checkOrientation, 200);
+    setTimeout(checkOrientation, 600);
+  });
+  ['fullscreenchange', 'webkitfullscreenchange', 'msfullscreenchange'].forEach(function (ev) {
+    document.addEventListener(ev, function () { setTimeout(checkOrientation, 120); });
+  });
 
   // 首次手势解锁音频（浏览器自动播放策略）
   ['pointerdown', 'touchstart', 'keydown'].forEach(function (ev) {
@@ -4721,6 +4796,7 @@ function bindEvents() {
 function init() {
   loadAllSaves();
   ensureDailyTasks();
+  try { if (localStorage.getItem(LS_LANDSCAPE) === '1') App.forceLandscape = true; } catch (e) {}
   bindEvents();
   checkOrientation();
   renderLobby();

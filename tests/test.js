@@ -650,6 +650,74 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   ctx.setTimeout = savedST;
   ctx.audioCtx = null;   // 复位，避免影响后续用例
 
+  /* ---- 横屏 / 伪横屏（手机竖屏适配） ---- */
+  console.log('【测试 5】横屏与竖屏适配');
+  var savedW = ctx.window.innerWidth, savedH = ctx.window.innerHeight;
+  var savedTouch = ctx.navigator.maxTouchPoints;
+  var stageEl = ctx.document.getElementById('stage');
+  var hintEl = ctx.document.getElementById('rotateHint');
+
+  ok(ctx.isTouchDevice() === false, '桌面环境识别为非触摸设备');
+  ok(ctx.isPortraitNarrow() === false, '桌面横屏不触发竖屏提示');
+
+  // 模拟手机竖屏
+  ctx.window.innerWidth = 390; ctx.window.innerHeight = 844;
+  ctx.navigator.maxTouchPoints = 5;
+  ok(ctx.isTouchDevice() === true, '识别为触摸设备');
+  ok(ctx.isPortraitNarrow() === true, '识别为手机竖屏');
+
+  ctx.checkOrientation();
+  ok(hintEl.style.display === 'flex', '竖屏时弹出「请横屏」提示层');
+  ok(ctx.isFakeLandscape() === false, '未开启强制横屏时不做 CSS 旋转');
+  ok(String(stageEl.style.transform).indexOf('rotate') < 0,
+     '未开启时舞台按普通方式缩放：' + stageEl.style.transform);
+
+  // 点击「强制横屏」：本环境无 fullscreen / orientation.lock，应走 CSS 旋转兜底
+  ctx.forceLandscape();
+  ok(ctx.App.forceLandscape === true, '强制横屏状态已开启');
+  ok(ctx.isFakeLandscape() === true, '识别为「伪横屏」状态');
+  ok(String(stageEl.style.transform).indexOf('rotate(90deg)') >= 0,
+     '舞台被 CSS 旋转 90° 填满竖屏：' + stageEl.style.transform);
+  ok(hintEl.style.display === 'none', '开启后隐藏提示层');
+
+  // 旋转后的缩放应显著大于竖屏直排（避免画面变得极小）
+  var mRot = String(stageEl.style.transform).match(/scale\(([\d.]+)\)/);
+  var rotScale = mRot ? parseFloat(mRot[1]) : 0;
+  var plainScale = Math.min(390 / 960, 844 / 540);
+  ok(rotScale > plainScale * 1.5,
+     '伪横屏缩放 ' + rotScale.toFixed(3) + ' 明显大于竖屏直排 ' + plainScale.toFixed(3));
+
+  // 设备真的转成横屏 → 自动取消 CSS 旋转
+  ctx.window.innerWidth = 844; ctx.window.innerHeight = 390;
+  ctx.checkOrientation();
+  ok(ctx.isFakeLandscape() === false, '设备转横后不再需要伪横屏');
+  ok(String(stageEl.style.transform).indexOf('rotate') < 0,
+     '转横后移除 CSS 旋转：' + stageEl.style.transform);
+
+  // 再转回竖屏（系统锁定竖屏的情况）→ 自动恢复伪横屏
+  ctx.window.innerWidth = 390; ctx.window.innerHeight = 844;
+  ctx.checkOrientation();
+  ok(ctx.isFakeLandscape() === true, '系统锁竖屏时自动恢复伪横屏');
+
+  // 记忆
+  ok(ctx.localStorage.getItem('texas_poker_force_landscape_v1') === '1',
+     '强制横屏选择已写入 localStorage');
+  ctx.App.forceLandscape = false;
+  if (ctx.localStorage.getItem('texas_poker_force_landscape_v1') === '1') ctx.App.forceLandscape = true;
+  ctx.checkOrientation();
+  ok(ctx.App.forceLandscape === true, '重新打开后能记住横屏选择');
+
+  // 恢复正常
+  ctx.resetLandscape();
+  ok(ctx.App.forceLandscape === false, 'resetLandscape 恢复正常');
+  ok(ctx.localStorage.getItem('texas_poker_force_landscape_v1') === null, '记忆被清除');
+  ctx.checkOrientation();
+  ok(hintEl.style.display === 'flex', '恢复后重新出现横屏提示');
+
+  ctx.window.innerWidth = savedW; ctx.window.innerHeight = savedH;
+  ctx.navigator.maxTouchPoints = savedTouch;
+  ctx.checkOrientation();
+
   /* ---- 老存档迁移 v10 → v11 ---- */
   var legacy = {
     name: '老玩家', version: 10, level: 7, coins: 4242, totalHands: 88,

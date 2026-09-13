@@ -192,6 +192,20 @@ function click(el) {
 
   ok($('lbRank').textContent.indexOf('青铜') >= 0, '大厅显示段位徽章（' + $('lbRank').textContent + '）');
 
+  console.log('【横屏提示层】');
+  ok(!!$('rotateHint').querySelector('#btnForceRotate'), '横屏提示层含「强制横屏」按钮');
+  ok($('rotateHint').textContent.indexOf('顶部朝左') >= 0, '说明文字写明了横拿方向');
+  ok($('rotateHint').textContent.indexOf('会被记住') >= 0, '说明文字提示选择会被记住');
+  // 桌面环境不应自动弹出提示
+  ok($('rotateHint').style.display !== 'flex', '桌面横屏环境不弹出竖屏提示');
+  // 点击「强制横屏」在全屏/方向锁缺失时应静默降级，不抛异常
+  var beforeRotateErr = errors.length;
+  click($('btnForceRotate'));
+  await tick(80);
+  ok(errors.length === beforeRotateErr, '点击强制横屏不产生未捕获错误'
+     + (errors.length > beforeRotateErr ? '：' + errors[errors.length - 1] : ''));
+  ok($('rotateHint').style.display === 'none', '点击后提示层被隐藏');
+
   console.log('【进入牌桌】');
   click($('lbStartBtn'));
   await tick(30);
