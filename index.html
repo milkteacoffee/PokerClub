@@ -313,7 +313,7 @@
     height:44px; align-items:center; margin-bottom:1px; }
   .seat .info { display:flex; align-items:center;
     justify-content:center; gap:4px; line-height:1; }
-  .seat .avatar { font-size:14px; }
+  .seat .avatar { display:none; }   /* 单机版：不显示人物头像 */
   .seat .nm { font-size:11.5px; font-weight:700; color:#cfdae5; }
   .seat .style-tag { font-size:9px; color:#8fa0b4;
     background:rgba(255,255,255,.06); padding:0 4px; border-radius:4px; }
@@ -786,6 +786,67 @@
     background: linear-gradient(180deg,#ffd97a,#d29a3a); cursor: pointer; }
   .vol-row .vv { width: 46px; text-align: right; font-size: 12px;
     color: #f2c14e; font-weight: 800; }
+
+  /* ============================================================
+     v12：模式选择 / 结算界面
+     ============================================================ */
+  #modeScreen { position:absolute; inset:0;
+    background:linear-gradient(180deg,#0d1520 0%,#070a10 100%);
+    display:none; flex-direction:column; overflow:hidden; }
+  #modeScreen.active { display:flex; }
+  .mode-card { width:300px; height:364px;
+    background:linear-gradient(180deg,rgba(28,40,55,.9),rgba(15,22,32,.95));
+    border:2px solid rgba(255,255,255,.08); border-radius:16px;
+    display:flex; flex-direction:column; align-items:center;
+    justify-content:center; padding:18px 20px; gap:8px; cursor:pointer;
+    transition:all .2s; position:relative; overflow:hidden;
+    font-family:inherit; color:inherit; }
+  .mode-card:active { transform:scale(.96); }
+  .mode-card:hover { border-color:rgba(242,193,78,.4); }
+  .mode-card.ranked { border-color:rgba(242,193,78,.28); }
+  .mode-icon { font-size:52px; filter:drop-shadow(0 4px 10px rgba(0,0,0,.5)); }
+  .mode-name { font-size:22px; font-weight:900; letter-spacing:5px;
+    padding-left:5px; color:#cfdae5; }
+  .mode-card.ranked .mode-name { color:#f2c14e; }
+  .mode-note { color:#8fa0b4; font-size:11px; margin-top:5px; }
+  .mode-tag2 { position:absolute; top:0; right:0; padding:3px 10px;
+    font-size:10px; font-weight:900; letter-spacing:1px;
+    border-radius:0 14px 0 10px; z-index:3;
+    background:rgba(255,255,255,.1); color:#cfdae5; }
+  .mode-card.ranked .mode-tag2 {
+    background:linear-gradient(135deg,#7c2d12,#b45309,#f59e0b); color:#fef3c7; }
+  .mode-info { display:flex; flex-direction:column; gap:4px; align-items:center;
+    font-size:11.5px; color:#8fa0b4; line-height:1.6; text-align:center; }
+  .mode-info .hi { color:#f2c14e; font-weight:800; }
+
+  .mode-tag { font-size:10px; font-weight:800; padding:2px 8px; border-radius:8px;
+    background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
+    color:#cfdae5; white-space:nowrap; flex-shrink:0; }
+  .mode-tag.ranked { background:rgba(242,193,78,.14);
+    border-color:rgba(242,193,78,.42); color:#f2c14e; }
+
+  /* 结算界面 */
+  .settle-board { display:flex; gap:5px; justify-content:center; margin-bottom:12px; }
+  .settle-row { display:flex; align-items:center; gap:9px; padding:8px 10px;
+    border-radius:10px; background:rgba(255,255,255,.035);
+    border:1px solid rgba(255,255,255,.06); margin-bottom:6px; }
+  .settle-row.win  { background:rgba(74,222,128,.09);  border-color:rgba(74,222,128,.32); }
+  .settle-row.lose { background:rgba(248,113,113,.05); }
+  .settle-row .who { width:72px; font-size:12px; font-weight:800;
+    color:#cfdae5; flex-shrink:0; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap; }
+  .settle-row.human .who { color:#f2c14e; }
+  .settle-row .hand { display:flex; gap:3px; flex-shrink:0; }
+  .settle-row .ht { flex:1; font-size:11px; color:#7dd3fc; text-align:right;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .settle-row .nums { width:106px; text-align:right; font-size:10.5px;
+    color:#8fa0b4; flex-shrink:0; line-height:1.5; }
+  .settle-row .nums .net { font-weight:900; font-size:13px; display:block; }
+  .pos { color:#4ade80; } .neg { color:#f87171; } .zero { color:#8fa0b4; }
+  #settleFoot { margin-top:10px; padding:10px 12px; border-radius:10px;
+    background:rgba(242,193,78,.07); border:1px solid rgba(242,193,78,.22);
+    font-size:12px; color:#cfdae5; line-height:1.9; }
+  #settleFoot b { color:#f2c14e; }
 </style>
 </head>
 <body>
@@ -808,7 +869,7 @@
 
   <div id="lobbyScreen">
     <div class="lobby-top">
-      <div class="lobby-avatar" id="lbAvatar">🧑</div>
+      <div class="lobby-avatar" id="lbAvatar">🃏</div>
       <div class="lobby-pinfo">
         <div class="lobby-name-row">
           <span class="lobby-lvl" id="lbLevel">Lv.1</span>
@@ -856,6 +917,15 @@
     </div>
   </div>
 
+  <div id="modeScreen">
+    <div class="diff-header">
+      <button class="diff-back" id="modeBack">←</button>
+      <div class="diff-title">选择模式</div>
+      <div class="diff-hint" id="modeHint">排位赛的胜负会影响段位积分</div>
+    </div>
+    <div class="diff-body" id="modeBody"></div>
+  </div>
+
   <div id="difficultyScreen">
     <div class="diff-header">
       <button class="diff-back" id="diffBack">←</button>
@@ -868,7 +938,7 @@
   <div id="gameScreen">
     <div id="topbar">
       <div class="pinfo">
-        <div class="pavatar" id="pAvatar">🧑</div>
+        <div class="pavatar" id="pAvatar">🃏</div>
         <div class="pmeta">
           <div class="row1">
             <span class="lvl" id="pLevel">Lv.1</span>
@@ -881,6 +951,7 @@
         <span class="icon">🪙</span>
         <span id="pCoins">1,000</span>
       </div>
+      <div class="mode-tag" id="pMode">⚡ 快速</div>
       <div class="topbtns">
         <button class="iconbtn" id="btnAchieve" title="成就">🏆</button>
         <button class="iconbtn" id="btnTasks" title="任务">📋</button>
@@ -1062,6 +1133,20 @@
     </div>
   </div>
 
+  <!-- 本局结算 -->
+  <div class="overlay" id="ovSettle">
+    <div class="panel" style="max-width:580px;">
+      <h2>📋 本局结算 <button class="closebtn" data-close="ovSettle">✕</button></h2>
+      <div id="settleBoard"></div>
+      <div id="settleList"></div>
+      <div id="settleFoot"></div>
+      <div class="go-btns" style="margin-top:14px;">
+        <button class="again" id="settleNext">下一手 ▶</button>
+        <button class="back" id="settleLeave">离开牌桌</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 商城 -->
   <div class="overlay" id="ovShop">
     <div class="panel">
@@ -1114,9 +1199,13 @@
   <div class="overlay" id="ovSettings">
     <div class="panel" style="max-width:420px;">
       <h2>⚙️ 设置 <button class="closebtn" data-close="ovSettings">✕</button></h2>
-      <div style="display:flex;gap:10px;margin-bottom:14px;">
+      <div style="display:flex;gap:10px;margin-bottom:8px;">
         <button class="shop-btn ghost" id="setSfxToggle" style="flex:1;padding:10px;font-size:13px;">🔊 音效</button>
         <button class="shop-btn ghost" id="setMusicToggle" style="flex:1;padding:10px;font-size:13px;">🎵 音乐</button>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;">
+        <button class="shop-btn ghost" id="setSettleToggle" style="flex:1;padding:10px;font-size:13px;">📋 每手结算</button>
+        <button class="shop-btn ghost" id="setResetLandscape" style="flex:1;padding:10px;font-size:13px;">📱 重置横屏</button>
       </div>
       <div class="vol-row">
         <span class="lb">主音量</span>
@@ -1162,7 +1251,16 @@ var SEAT_POS = ['pos-0','pos-1','pos-2','pos-3'];
 var App = {
   screen: 'lobby',
   forceLandscape: false,
-  difficulty: 'easy'
+  difficulty: 'easy',
+  mode: 'quick'          /* quick = 快速对局 / ranked = 排位赛 */
+};
+
+/* 模式配置 */
+var MODE_CONFIG = {
+  quick: { key:'quick', name:'快速对局', icon:'⚡', tag:'休闲',
+           ranked:false, desc:['不影响段位积分','金币与经验照常结算','适合练手与做任务'] },
+  ranked: { key:'ranked', name:'排位赛', icon:'🏅', tag:'竞技',
+            ranked:true, desc:['资产达到 10,000 🪙 才能进入','每场消耗 1 排位积分（100 🪙 可购买）','胜负影响段位，连胜有额外加成'] }
 };
 
 /* ========== 场次配置 ========== */
@@ -1206,7 +1304,7 @@ var activeSlot = 1;
 var allSaves = null;
 
 /* 存档结构版本：11 = 加入音乐 / 段位 / 商城 / 签到 / 周常 / 统计 / 图鉴 */
-var SAVE_VERSION = 11;
+var SAVE_VERSION = 12;
 var WEEK_START_DAY = 1;   // 0=周日, 1=周一
 
 /* 创建新玩家默认状态 */
@@ -1224,6 +1322,7 @@ function createNewPlayer(name) {
     dailyProgress: {},
     dailyClaimed: {},
     soundOn: true,
+    settlePanel: true,      /* 每手结束后是否弹出汇总结算界面 */
 
     /* ---- v11 新增 ---- */
     musicOn: true,
@@ -1231,10 +1330,13 @@ function createNewPlayer(name) {
     volSfx: 0.9,
     volMusic: 0.5,
 
-    rankPoints: 0,          // 段位积分
-    rankTier: 0,            // 当前段位序号
-    rankPeak: 0,            // 历史最高段位
+    rankPoints: 0,            // 段位积分
+    rankTier: 0,              // 当前段位序号
+    rankPeak: 0,               // 历史最高段位
     rankUpAt: 0,
+    rankedPoints: 100,         // 排位入场积分（100金币=1积分）
+    rankedMatches: 0,          // 排位场次
+    rankedWins: 0,              // 排位胜场
 
     inventory: {},          // 道具库存 { itemId: 数量 }
     equipped: {             // 已装备外观
@@ -1293,6 +1395,7 @@ function migratePlayer(p) {
   if (!p.handDex) { p.handDex = {}; changed = true; }
   if (!p.inventory) { p.inventory = {}; changed = true; }
   [['rankPoints', 0], ['rankTier', 0], ['rankPeak', p.rankTier || 0],
+   ['rankedPoints', 100], ['rankedMatches', 0], ['rankedWins', 0],
    ['volMaster', 0.8], ['volSfx', 0.9], ['volMusic', 0.5]].forEach(function (pair) {
     if (typeof p[pair[0]] !== 'number') { p[pair[0]] = pair[1]; changed = true; }
   });
@@ -1319,7 +1422,7 @@ function loadAllSaves() {
     console.warn('读取存档失败', e);
   }
 
-  // 老存档字段迁移（v10 → v11）
+  // 老存档字段迁移（v11 → v12）
   if (allSaves && allSaves.slots) {
     for (var si = 1; si <= MAX_SLOTS; si++) {
       if (allSaves.slots[si] && allSaves.slots[si].player) {
@@ -2490,6 +2593,7 @@ var Timer = {
 function showScreen(name) {
   App.screen = name;
   $('lobbyScreen').style.display = name === 'lobby' ? 'flex' : 'none';
+  $('modeScreen').classList.toggle('active', name === 'mode');
   $('difficultyScreen').classList.toggle('active', name === 'difficulty');
   $('gameScreen').classList.toggle('active', name === 'game');
   document.querySelectorAll('.overlay').forEach(function(o){ o.classList.remove('show'); });
@@ -2501,6 +2605,151 @@ function showScreen(name) {
       bgmPlay(name === 'game' ? tableTrackName() : 'lobby');
     }
   } catch (e) {}
+}
+
+/* ============================================================
+   模式选择
+   ============================================================ */
+function renderModeCards() {
+  var body = $('modeBody');
+  if (!body || !player) return;
+  body.innerHTML = '';
+  var ri = rankInfo();
+  var rp = rankProgress();
+
+  ['quick', 'ranked'].forEach(function (key) {
+    var m = MODE_CONFIG[key];
+    var card = document.createElement('button');
+    card.className = 'mode-card ' + key;
+    var html = '<div class="mode-tag2">' + m.tag + '</div>';
+    html += '<div class="mode-icon">' + m.icon + '</div>';
+    html += '<div class="mode-name">' + m.name + '</div>';
+    html += '<div class="mode-info">';
+    if (key === 'ranked') {
+      html += '<div>当前段位 <span class="hi">' + ri.icon + ' ' + ri.name + '</span></div>';
+      html += '<div>排位积分 <span class="hi">' + fmt(player.rankedPoints) + '</span>'
+           + ' · 已赛 ' + fmt(player.rankedMatches || 0) + ' 场</div>';
+      html += '<div class="mode-note">100 🪙 = 1 积分 · 每场入场消耗 1 积分</div>';
+      html += '<div>段位积分 <span class="hi">' + fmt(player.rankPoints) + '</span>'
+           +  (rp.next ? '（距 ' + rp.next.name + ' 还差 ' + fmt(rp.need) + '）' : '（已达最高）') + '</div>';
+      html += '<div>连胜 <span class="hi">' + (player.streak || 0) + '</span> 局</div>';
+    } else {
+      m.desc.forEach(function (line) { html += '<div>' + line + '</div>'; });
+    }
+    html += '</div>';
+    card.innerHTML = html;
+    card.addEventListener('click', function () {
+      sfx('click');
+      App.mode = key;
+      renderDifficultyCards();
+      showScreen('difficulty');
+    });
+    body.appendChild(card);
+  });
+}
+
+/* ============================================================
+   本局汇总结算
+   ============================================================ */
+var lastSettle = null;
+
+/* winnings: { 座位下标 -> 分得的筹码 } */
+function buildSettleData(winnings, potTotal, rpDelta) {
+  var rows = [];
+  for (var i = 0; i < G.players.length; i++) {
+    var p = G.players[i];
+    var won = winnings[i] || 0;
+    var bet = p.totalBet || 0;
+    var hv = null;
+    if (!p.folded && p.hole && p.hole.length >= 2 && G.community.length >= 3) {
+      try { hv = bestHand(p.hole.concat(G.community)); } catch (e) {}
+    }
+    rows.push({
+      name: p.name || ('座位' + i),
+      human: !!p.human,
+      folded: !!p.folded,
+      hole: (p.hole || []).slice(),
+      bet: bet, won: won, net: won - bet,
+      hand: hv,
+      handText: hv ? describeHand(hv) : (p.folded ? '已弃牌' : '')
+    });
+  }
+  return {
+    community: G.community.slice(),
+    pot: potTotal,
+    rows: rows,
+    rpDelta: typeof rpDelta === 'number' ? rpDelta : 0,
+    rankEntryCost: App.mode === 'ranked' ? 1 : 0,
+    rankedPointsLeft: player ? (player.rankedPoints || 0) : 0,
+    ranked: App.mode === 'ranked'
+  };
+}
+
+function renderSettle(data) {
+  var bh = '';
+  for (var i = 0; i < 5; i++) {
+    bh += data.community[i]
+      ? cardHTML(data.community[i], false, true, false)
+      : '<div class="card small empty"></div>';
+  }
+  $('settleBoard').innerHTML = '<div class="settle-board">' + bh + '</div>';
+
+  var html = '';
+  for (var r = 0; r < data.rows.length; r++) {
+    var row = data.rows[r];
+    var cls = 'settle-row' + (row.net > 0 ? ' win' : (row.net < 0 ? ' lose' : ''))
+            + (row.human ? ' human' : '');
+    html += '<div class="' + cls + '">';
+    html += '<div class="who">' + row.name + '</div>';
+    html += '<div class="hand">';
+    if (row.hole.length) {
+      for (var c = 0; c < row.hole.length; c++) {
+        html += cardHTML(row.hole[c], false, true, false);
+      }
+    }
+    html += '</div>';
+    html += '<div class="ht">' + row.handText + '</div>';
+    html += '<div class="nums">';
+    html += '<div>投入 ' + fmt(row.bet) + (row.won > 0 ? ' · 赢得 ' + fmt(row.won) : '') + '</div>';
+    var nCls = row.net > 0 ? 'pos' : (row.net < 0 ? 'neg' : 'zero');
+    html += '<span class="net ' + nCls + '">'
+         +  (row.net > 0 ? '+' : (row.net < 0 ? '-' : '')) + '$' + fmt(Math.abs(row.net))
+         +  '</span>';
+    html += '</div></div>';
+  }
+  $('settleList').innerHTML = html;
+
+  var mine = null;
+  for (var m = 0; m < data.rows.length; m++) {
+    if (data.rows[m].human) { mine = data.rows[m]; break; }
+  }
+  var foot = '';
+  if (mine) {
+    foot += '本局底池 <b>$' + fmt(data.pot) + '</b> · 你的投入 <b>$' + fmt(mine.bet) + '</b> · '
+         +  '净盈亏 <b class="' + (mine.net > 0 ? 'pos' : (mine.net < 0 ? 'neg' : 'zero')) + '">'
+         +  (mine.net > 0 ? '+' : (mine.net < 0 ? '-' : '')) + '$' + fmt(Math.abs(mine.net)) + '</b>';
+    if (mine.handText && mine.handText !== '已弃牌') foot += ' · 牌型 <b>' + mine.handText + '</b>';
+  }
+  if (data.ranked) {
+    var d = data.rpDelta;
+    foot += '<br>入场消耗 <b>1 排位积分</b> · 剩余 <b>' + fmt(data.rankedPointsLeft) + '</b> 积分';
+    foot += '<br>排位赛段位积分 <b class="' + (d > 0 ? 'pos' : (d < 0 ? 'neg' : 'zero')) + '">'
+         +  (d > 0 ? '+' : '') + d + '</b>'
+         +  ' · 当前 <b>' + fmt(player.rankPoints) + '</b> 分（'
+         +  rankInfo().icon + ' ' + rankInfo().name + '）';
+  } else {
+    foot += '<br>快速对局：不影响段位积分';
+  }
+  $('settleFoot').innerHTML = foot;
+}
+
+function showSettle(data) {
+  lastSettle = data;
+  renderSettle(data);
+  $('ovSettle').classList.add('show');
+}
+function hideSettle() {
+  $('ovSettle').classList.remove('show');
 }
 
 /* 难度卡片 */
@@ -2550,6 +2799,25 @@ function renderDifficultyCards() {
 
 function tryEnterGame(diffKey) {
   var cfg = DIFFICULTY_CONFIG[diffKey];
+  if (App.mode === 'ranked') {
+    if (player.coins < 10000) {
+      showToast('🔒 当前资产不足 10,000 🪙，暂不能进入排位', 2400, true);
+      return;
+    }
+    if ((player.rankedPoints || 0) < 1) {
+      if (player.coins < 100) {
+        showToast('排位积分不足，且金币不足 100 🪙购买', 2200, true);
+        return;
+      }
+      if (!spendCoins(100)) return;
+      player.rankedPoints = (player.rankedPoints || 0) + 1;
+      saveAllSaves(true);
+      showToast('已用 100 🪙购买 1 排位积分', 1600, false, 'success');
+    }
+    player.rankedPoints--;
+    player.rankedMatches = (player.rankedMatches || 0) + 1;
+    saveAllSaves(true);
+  }
   if (player.coins < cfg.minCoins) {
     showToast('🔒 金币不足，需要 ' + fmt(cfg.minCoins) + ' 🪙', 2000, true);
     return;
@@ -2636,7 +2904,7 @@ function seatHTML(p, i) {
   var html = '';
   html += thinking;
   html += '<div class="cards">' + cards + '</div>';
-  html += '<div class="info"><span class="avatar">' + p.avatar + '</span>';
+  html += '<div class="info">';
   html += '<span class="nm">' + p.name + '</span>';
   if (!p.human && p.styleName) {
     html += '<span class="style-tag">' + p.styleName + '</span>';
@@ -3827,6 +4095,8 @@ async function finishHand() {
   var humanWinAmount = 0;
   var humanAllIn = G.players[0].allIn;
   var human = G.players[0];
+  var potTotal = G.pot;          /* 分池前的底池总额，用于结算界面 */
+  var winnings = {};             /* 座位下标 -> 分得筹码 */
 
   if (contenders.length === 1) {
     var w = contenders[0];
@@ -3834,6 +4104,7 @@ async function finishHand() {
     w.chips += amount;
     w.winner = true;
     w.lastAction = '+$' + fmt(amount);
+    winnings[G.players.indexOf(w)] = amount;
     if (w.human) { humanWon = true; humanWinAmount = amount; }
     G.pot = 0;
     render();
@@ -3869,6 +4140,8 @@ async function finishHand() {
       }
     }
     for (var k = 0; k < pots.length; k++) {
+      var widx = G.players.indexOf(pots[k].player);
+      if (widx >= 0) winnings[widx] = (winnings[widx] || 0) + pots[k].amount;
       pots[k].player.lastAction = '+$' + fmt(pots[k].amount);
       if (pots[k].player.human) {
         humanWon = true;
@@ -3916,8 +4189,9 @@ async function finishHand() {
   }
 
   /* ---- 统计与奖励 ---- */
-  if (humanWon) {
-    player.totalWins++;
+    if (humanWon) {
+      if (App.mode === 'ranked') player.rankedWins = (player.rankedWins || 0) + 1;
+      player.totalWins++;
     player.streak = (player.streak || 0) + 1;
     if (player.streak > (player.maxStreak || 0)) player.maxStreak = player.streak;
     if (humanWinAmount > (player.maxWin || 0)) player.maxWin = humanWinAmount;
@@ -3973,12 +4247,19 @@ async function finishHand() {
     if (hv[0] >= 5) bumpWeeklyProgress('w_big_3', 1);   // 同花及以上
   }
 
-  /* ---- 段位积分 ---- */
-  var rpDelta;
-  if (humanWon) rpDelta = 12 + Math.min(14, Math.floor(humanWinAmount / (G.bb * 15)));
-  else if (human.folded) rpDelta = -5;
-  else rpDelta = -10;
-  addRankPoints(rpDelta);
+  /* ---- 段位积分（仅排位赛生效） ---- */
+  var rpDelta = 0;
+  if (App.mode === 'ranked') {
+    if (humanWon) {
+      rpDelta = 12 + Math.min(14, Math.floor(humanWinAmount / (G.bb * 15)));
+      if ((player.streak || 0) >= 3) rpDelta += 2;      // 连胜加成
+    } else if (human.folded) {
+      rpDelta = -5;
+    } else {
+      rpDelta = -10;
+    }
+    addRankPoints(rpDelta);
+  }
 
   /* ---- 经验（双倍卡生效） ---- */
   var expGain = 10 + (humanWon ? 25 : 0) + Math.min(60, Math.floor(humanWinAmount / 100));
@@ -3993,6 +4274,13 @@ async function finishHand() {
   saveAllSaves(true);
   renderTopbar();
   updateTasksBadges();
+
+  /* ---- 汇总结算界面 ---- */
+  G.lastSettleData = buildSettleData(winnings, potTotal, rpDelta);
+  if (player.settlePanel !== false && G.active) {
+    await sleep(fast ? 80 : 300);
+    if (G.active) showSettle(G.lastSettleData);
+  }
 
   if (!fast) await sleep(400);
 }
@@ -4514,6 +4802,7 @@ function openSettings() {
   $('volMusicV').textContent = Math.round(player.volMusic * 100) + '%';
   $('setSfxToggle').textContent = player.soundOn ? '🔊 音效 开' : '🔇 音效 关';
   $('setMusicToggle').textContent = player.musicOn ? '🎵 音乐 开' : '🎵 音乐 关';
+  $('setSettleToggle').textContent = (player.settlePanel === false) ? '📋 每手结算 关' : '📋 每手结算 开';
   $('bgmSrcLabel').textContent = bgmSourceLabel();
   $('ovSettings').classList.add('show');
 }
@@ -4665,13 +4954,18 @@ function bindEvents() {
   // 大厅
   $('lbStartBtn').addEventListener('click', function(){
     initAudio(); sfx('click');
-    renderDifficultyCards();
-    showScreen('difficulty');
+    renderModeCards();
+    showScreen('mode');
   });
-  $('diffBack').addEventListener('click', function(){
+  $('modeBack').addEventListener('click', function(){
     sfx('click');
     renderLobby();
     showScreen('lobby');
+  });
+  $('diffBack').addEventListener('click', function(){
+    sfx('click');
+    renderModeCards();
+    showScreen('mode');
   });
   $('lbBtnTasks').addEventListener('click', function(){
     initAudio(); sfx('click');
@@ -4698,6 +4992,24 @@ function bindEvents() {
 
   $('setSfxToggle').addEventListener('click', function(){ initAudio(); toggleSound(); openSettings(); });
   $('setMusicToggle').addEventListener('click', function(){ initAudio(); toggleMusic(); openSettings(); });
+  $('setSettleToggle').addEventListener('click', function(){
+    sfx('click');
+    player.settlePanel = (player.settlePanel === false);
+    saveAllSaves(true);
+    showToast(player.settlePanel ? '📋 每手结算已开启' : '📋 每手结算已关闭', 1500);
+    openSettings();
+  });
+  $('setResetLandscape').addEventListener('click', function(){
+    sfx('click');
+    resetLandscape();
+    showToast('📱 已恢复自动横屏（下次竖屏会重新提示）', 1800);
+    openSettings();
+  });
+
+  // 结算面板
+  $('settleNext').addEventListener('click', function(){ sfx('click'); hideSettle(); nextHand(); });
+  $('settleLeave').addEventListener('click', function(){ sfx('click'); hideSettle(); requestExit(); });
+  $('ovSettle').addEventListener('click', function (e) { if (e.target === this) hideSettle(); });
   ['volMaster', 'volSfx', 'volMusic'].forEach(function (k) {
     var el = $(k);
     if (!el) return;

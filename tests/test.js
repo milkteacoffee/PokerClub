@@ -427,12 +427,17 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   /* ============================================================
      测试 4：v11 生态新系统（段位 / 签到 / 周常 / 商城 / 图鉴 / BGM）
      ============================================================ */
-  console.log('【测试 4】v11 生态新系统');
+  console.log('【测试 4】v12 生态新系统（含结算与排位入场）');
   ctx.G.active = false;   // 停掉上一轮对局，避免干扰
 
   /* ---- 段位 ---- */
   ctx.createNewSaveAt(1);
   ok(ctx.player.rankPoints === 0 && ctx.player.rankTier === 0, '新档段位从青铜 0 分开始');
+  ok(ctx.player.rankedPoints === 100, '新档初始排位积分为 100');
+  var rankCoins = ctx.player.coins;
+  ok(ctx.spendCoins(100) === true, '100 金币可兑换排位积分的金币扣除接口可用');
+  ctx.player.rankedPoints++;
+  ok(ctx.player.coins === rankCoins - 100, '兑换 1 排位积分消耗 100 金币');
   ctx.addRankPoints(120);
   ok(ctx.rankTierFor(ctx.player.rankPoints) === 1, '积分 120 晋升白银');
   ok(ctx.rankInfo().name === '白银', 'rankInfo 返回白银');
@@ -765,7 +770,7 @@ const sleepTick = () => new Promise(r => setImmediate(r));
     achievements: {}, newbieTasks: {}, newbieProgress: {}
   };
   var mg = ctx.migratePlayer(legacy);
-  ok(mg.version === 11, '迁移后版本号升级到 11');
+  ok(mg.version === 12, '迁移后版本号升级到 12');
   ok(mg.coins === 4242 && mg.level === 7, '迁移保留原有金币与等级');
   ok(mg.rankPoints === 0 && typeof mg.musicOn === 'boolean', '迁移补齐段位与音乐字段');
   ok(!!mg.stats && mg.stats.vpip === 0, '迁移补齐统计结构');
