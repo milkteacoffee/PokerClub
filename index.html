@@ -63,7 +63,9 @@
     color:#2a1a0a; font-weight:900; font-size:10px;
     padding:2px 7px; border-radius:7px;
     border:1px solid rgba(255,255,255,.3); }
-  .lobby-name { font-size:13px; font-weight:800; color:#e8eef5; }
+  .lobby-name { font-size:13px; font-weight:800; color:#e8eef5; cursor:pointer; transition:color .15s; }
+  .lobby-name:hover { color:#f2c14e; }
+  .lobby-name:focus-visible { outline:1px solid rgba(242,193,78,.6); outline-offset:3px; border-radius:3px; }
   .lobby-expbar { width:100%; height:5px; background:rgba(255,255,255,.08);
     border-radius:3px; overflow:hidden;
     border:1px solid rgba(255,255,255,.06); }
@@ -71,15 +73,15 @@
     background:linear-gradient(90deg,#f2c14e,#c8932a); transition:width .4s; }
   .lobby-coins { display:flex; align-items:center; gap:5px;
     background:linear-gradient(180deg,rgba(242,193,78,.15),rgba(242,193,78,.06));
-    border:1.5px solid rgba(242,193,78,.4);
+    border:none;
     padding:6px 13px; border-radius:20px;
     font-size:14px; font-weight:900; color:#f2c14e;
     text-shadow:0 2px 4px rgba(0,0,0,.4); }
   .lobby-coins .icon { font-size:15px; }
   .lobby-topbtns { margin-left:auto; display:flex; gap:7px; }
   .lobby-iconbtn { width:40px; height:40px; border-radius:11px;
-    border:1.5px solid rgba(255,255,255,.12);
-    background:rgba(255,255,255,.05); font-size:18px;
+    border:1px solid rgba(255,255,255,.06);
+    background:rgba(255,255,255,.025); font-size:18px;
     cursor:pointer; display:flex; align-items:center;
     justify-content:center; position:relative;
     transition:all .15s; color:#e8eef5; }
@@ -809,8 +811,33 @@
     padding-left:5px; color:#cfdae5; }
   .mode-card.ranked .mode-name { color:#f2c14e; }
   .mode-note { color:#8fa0b4; font-size:11px; margin-top:5px; }
-  .name-edit-btn { margin-left:8px; padding:3px 8px; border:1px solid rgba(242,193,78,.35); border-radius:5px; background:rgba(242,193,78,.1); color:#f2c14e; font-size:10px; cursor:pointer; }
-  .name-edit-btn:hover { background:rgba(242,193,78,.2); }
+  /* 大厅：用留白与文字层级代替常驻按钮框 */
+  .lobby-top { padding:18px 24px 10px; gap:24px; }
+  .lobby-pinfo { gap:8px; }
+  .lobby-name-row { gap:9px; }
+  .lobby-lvl { background:none; border:0; padding:0; color:#d6b568; font-weight:600; }
+  .lobby-name { border:0; background:none; padding:2px 0; font-family:inherit; text-align:left;
+    max-width:156px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .lobby-name-row .rank-badge { border:0; background:none; padding:0; font-weight:600; color:#bca97a; }
+  .lobby-expbar { height:2px; border:0; background:rgba(255,255,255,.055); }
+  .lobby-coins { background:none; border:0; padding:0; gap:8px; font-size:17px; font-weight:700; }
+  .lobby-topbtns { gap:10px; }
+  .lobby-iconbtn { border:0; background:none; border-radius:8px; opacity:.7; }
+  .lobby-iconbtn:hover { background:rgba(255,255,255,.045); opacity:1; }
+  .lobby-iconbtn:active { background:rgba(255,255,255,.07); }
+  .lobby-quickbtns { gap:17px; margin-bottom:12px; }
+  .lobby-quickbtn { border:0; background:none; padding:8px 12px; gap:7px; color:#99a8b2; }
+  .lobby-quickbtn:hover { color:#ead7a3; background:rgba(255,255,255,.025); transform:translateY(-2px); }
+  .lobby-quickbtn:active { transform:scale(.96); background:rgba(255,255,255,.04); }
+  .lobby-start-btn { border:0; border-radius:10px; animation:none;
+    background:linear-gradient(115deg,#f5d276,#d5a53e); box-shadow:0 8px 28px rgba(189,137,34,.13); }
+  .lobby-start-btn:hover { filter:brightness(1.06); }
+  .lobby-start-btn:active { transform:translateY(2px); box-shadow:0 3px 12px rgba(189,137,34,.1); }
+  .save-status { padding:0 24px; opacity:.7; }
+  .name-input { width:156px; min-width:0; border:0; border-bottom:1px solid #d6b568;
+    border-radius:0; background:rgba(255,255,255,.035); padding:2px 0; outline:none;
+    font-size:13px; font-weight:800; font-family:inherit; color:#f2dbab; }
+  .name-input[hidden], .lobby-name[hidden] { display:none; }
   .mode-tag2 { position:absolute; top:0; right:0; padding:3px 10px;
     font-size:10px; font-weight:900; letter-spacing:1px;
     border-radius:0 14px 0 10px; z-index:3;
@@ -872,10 +899,10 @@
   <div id="lobbyScreen">
     <div class="lobby-top">
       <div class="lobby-pinfo">
-        <button class="name-edit-btn" id="lbNameEdit" title="修改用户名">修改名称</button>
         <div class="lobby-name-row">
           <span class="lobby-lvl" id="lbLevel">Lv.1</span>
-          <span class="lobby-name" id="lbName">玩家</span>
+          <button type="button" class="lobby-name" id="lbName" title="点击名称即可修改" aria-label="修改用户名">玩家</button>
+          <input class="name-input" id="lbNameInput" aria-label="用户名称，1至12个字符" maxlength="24" autocomplete="off" spellcheck="false" hidden>
           <span class="rank-badge" id="lbRank">🥉 青铜</span>
         </div>
         <div class="lobby-expbar"><div class="lobby-expfill" id="lbExp"></div></div>
@@ -940,7 +967,6 @@
   <div id="gameScreen">
     <div id="topbar">
       <div class="pinfo">
-        <div class="pavatar" id="pAvatar">🃏</div>
         <div class="pmeta">
           <div class="row1">
             <span class="lvl" id="pLevel">Lv.1</span>
@@ -1031,11 +1057,13 @@
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎁 任务与成就</p>
         <p>新手任务 21 关（全清约 8,250🪙）、每日任务每天刷新、周常挑战每周一刷新 6 项，另有 16 项成就。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🏅 段位排位</p>
-        <p>青铜 → 白银 → 黄金 → 铂金 → 钻石 → 大师 → 传奇。赢一局 +12 起（赢额越大加成越高，上限 +26），弃牌失利 -5，摊牌失利 -10，积分跌破段位线会降段。</p>
+        <p>本游戏为单机电脑对战，无真人匹配。快速模式不影响段位；排位入场前需资产至少 10,000 金币，每次入场消耗 1 排位积分（初始 100，可在模式页用 100 金币购买 1 分），继续下一手不重复收门票。</p>
+        <p>段位积分与入场积分独立：青铜 → 白银 → 黄金 → 铂金 → 钻石 → 大师 → 传奇。胜手 +12 至 +26，三连胜起额外 +2；弃牌失利 -5，摊牌失利 -10，最低 0 分，可降段。各段位金币奖励仅首次到达发放。</p>
+        <p>大厅直接点击用户名改名，回车或点击别处保存，Esc 取消。每手结算可在桌底回看；中途离桌保留剩余筹码、放弃本手已投入筹码，排位另扣最多 5 段位分。离桌汇总区分牌局盈亏、入场费和奖励收入。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">📅 每日签到</p>
         <p>7 天一轮，奖励逐日递增（60 → 888🪙），断签重新从第 1 天开始。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🛒 商城与道具</p>
-        <p>金币的消费出口。牌背 / 头像框 / 称号为买断外观，可随时装备；复活券、双倍经验卡、透视卡为消耗品，能在牌局里提供真实优势（透视卡可在翻牌后公开一位对手底牌）。</p>
+        <p>金币的消费出口。牌背 / 座位边框 / 称号为买断外观，可随时装备；复活券、双倍经验卡、透视卡为消耗品，能在牌局里提供真实优势（透视卡可在翻牌后公开一位对手底牌）。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">📊 档案</p>
         <p>记录入池率 VPIP、胜率、全下胜率、诈唬成功率、最大底池、累计盈亏，以及 9 类牌型图鉴。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎵 音乐与音效</p>
@@ -1132,6 +1160,14 @@
         <button class="no" data-close="ovDeleteConfirm">取消</button>
         <button class="yes" id="deleteConfirmYes">确认删除</button>
       </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="ovSession">
+    <div class="panel" style="max-width:520px;">
+      <h2>本次离桌汇总 <button class="closebtn" data-close="ovSession">✕</button></h2>
+      <p id="sessionSummary" style="line-height:2;color:#cfdae5;"></p>
+      <div class="go-btns"><button class="again" data-close="ovSession">返回大厅</button></div>
     </div>
   </div>
 
@@ -1670,9 +1706,9 @@ var SHOP_ITEMS = [
     desc:'青玉渐变牌背', css:'jade' },
   { id:'cb_crimson',type:'skin', slot:'cardBack', name:'朱砂牌背', icon:'🔴', price:2600,
     desc:'朱砂云纹牌背', css:'crimson' },
-  { id:'fr_gold',   type:'skin', slot:'frame', name:'鎏金头像框', icon:'🖼️', price:3000,
+  { id:'fr_gold',   type:'skin', slot:'frame', name:'鎏金座位边框', icon:'🖼️', price:3000,
     desc:'座位与头像加鎏金边框', css:'gold' },
-  { id:'fr_neon',   type:'skin', slot:'frame', name:'霓虹头像框', icon:'💫', price:3600,
+  { id:'fr_neon',   type:'skin', slot:'frame', name:'霓虹座位边框', icon:'💫', price:3600,
     desc:'青色霓虹呼吸边框', css:'neon' },
   { id:'t_pro',     type:'skin', slot:'title', name:'称号 · 老练牌手', icon:'🎩', price:4000,
     desc:'名字后显示「老练牌手」', css:'老练牌手' },
@@ -1770,6 +1806,11 @@ function makeImpulseResponse(seconds, decay) {
 }
 
 function initAudio() {
+  if (audioCtx && audioCtx.state === 'closed') {
+    if (Music) Music.stop();
+    audioCtx = null; masterGain = null; sfxGain = null; musicGain = null;
+    reverbNode = null; reverbGain = null; musicSend = null; sfxSend = null;
+  }
   if (!audioCtx) {
     try {
       var AC = window.AudioContext || window.webkitAudioContext;
@@ -1806,8 +1847,15 @@ function initAudio() {
       applyVolumes();
     } catch (e) { audioCtx = null; }
   }
-  if (audioCtx && audioCtx.state === 'suspended') {
-    try { audioCtx.resume(); } catch (e) {}
+  if (audioCtx && (audioCtx.state === 'suspended' || audioCtx.state === 'interrupted')) {
+    try {
+      var resumePromise = audioCtx.resume();
+      if (resumePromise && resumePromise.then) resumePromise.then(function(){
+        audioUnlocked = audioCtx && audioCtx.state === 'running';
+        if (audioUnlocked && desiredBgm && player && player.musicOn && !document.hidden && !fileBgm.ok) Music.play(desiredBgm);
+        updateAudioStatus();
+      }, function(){ audioUnlocked = false; updateAudioStatus(); });
+    } catch (e) { audioUnlocked = false; }
   }
 }
 
@@ -1820,7 +1868,8 @@ function applyVolumes() {
   try {
     masterGain.gain.value = Math.max(0, Math.min(1, m));
     sfxGain.gain.value = Math.max(0, Math.min(1, s)) * 0.9;
-    musicGain.gain.value = Math.max(0, Math.min(1, u)) * 0.34;  // 音乐整体压低，避免盖过音效
+    musicGain.gain.value = player && player.musicOn && !(fileBgm && fileBgm.ok)
+      ? Math.max(0, Math.min(1, u)) * 0.34 : 0; // 关闭/文件接管立即静音已调度音符
     var fv = Math.max(0, Math.min(1, m * u * 0.9));
     Object.keys(bgmEls).forEach(function (k) {
       if (bgmEls[k]) { try { bgmEls[k].volume = fv; } catch (e) {} }
@@ -1858,6 +1907,8 @@ var SFX_FILES = {
   win: 'sfx-win.mp3', lose: 'sfx-lose.mp3'
 };
 var fileBgm = { audio: null, name: '', ok: false };
+var bgmRequestId = 0;
+var desiredBgm = '';
 var fileSfx = {};
 var bgmEls = {};
 var bgmFailed = {};
@@ -2104,6 +2155,7 @@ var Music = {
   play: function (name) {
     if (!player || !player.musicOn) return;
     if (this.playing && this.name === name) return;
+    this.stop(); // 换曲先清理旧调度器，禁止叠加多个25ms循环
     this.name = name;
     this.track = TRACKS[name] || null;
     if (!this.track) { this.stop(); return; }
@@ -2317,73 +2369,105 @@ function bgmFileEl(track) {
   if (typeof Audio === 'undefined') { bgmFailed[track] = true; return null; }
   if (bgmEls[track]) return bgmEls[track];
   var names = BGM_FILES[track] || BGM_FILES.table;
-  var el = new Audio();
+  var el = new Audio(), i = 0;
   el.loop = true;
   el.preload = 'auto';
-  var i = 0;
-  el.addEventListener('error', function () {
+  function fallback() {
+    if (desiredBgm !== track || fileBgm.audio !== el) return;
     fileBgm.ok = false;
+    Music.play(track);
+    applyVolumes();
+    updateAudioStatus();
+  }
+  el.addEventListener('waiting', fallback);
+  el.addEventListener('stalled', fallback);
+  el.addEventListener('error', function () {
+    fallback();
     i++;
     if (i >= names.length) {
       bgmFailed[track] = true;
       bgmEls[track] = null;
-      Music.play(track);          // 全部候选都失败 → 回落合成
     } else {
       el.src = ASSET_DIR + names[i];
+      el._fileName = names[i];
     }
   });
+  el.addEventListener('canplay', function () {
+    if (desiredBgm === track && player && player.musicOn && !document.hidden) bgmPlay(track);
+  });
   el.src = ASSET_DIR + names[0];
+  el._fileName = names[0];
   bgmEls[track] = el;
   return el;
 }
 
-/* 播放 BGM（文件优先） */
+/* 合成音乐立即兜底；文件真正开始播放后才接管，不等待404造成静音。 */
 function bgmPlay(name) {
-  if (!player || !player.musicOn) return;
-  var el = bgmFileEl(name);
-  if (el) {
-    Object.keys(bgmEls).forEach(function (k) {
-      if (k !== name && bgmEls[k]) { try { bgmEls[k].pause(); } catch (e) {} }
-    });
-    Music.stop();
-    try {
-      el.volume = Math.max(0, Math.min(1,
-        (player.volMaster || 0.8) * (player.volMusic || 0.5) * 0.9));
-      fileBgm.audio = el;
-      fileBgm.name = name;
-      fileBgm.ok = false;                      // 先置否，确认真能播再置是
-      var settle = function (playing) {
-        var usable = !el.error && el.readyState >= 2;
-        fileBgm.ok = !!(playing && usable);
-        if (!fileBgm.ok) Music.play(name);     // 播不了 → 立即回落合成，避免静音
-      };
-      var pr = el.play();
-      if (pr && pr.then) pr.then(function () { settle(true); })
-                          .catch(function () { settle(false); });
-      else settle(true);
-      return;
-    } catch (e) { /* 落到合成 */ }
+  if (!player || !player.musicOn || document.hidden) return;
+  initAudio();
+  if (desiredBgm === name && fileBgm.ok && fileBgm.audio && !fileBgm.audio.paused && !fileBgm.audio.error) {
+    applyVolumes(); return;
   }
+  desiredBgm = name;
+  var requestId = ++bgmRequestId;
+  Object.keys(bgmEls).forEach(function (k) {
+    if (k !== name && bgmEls[k]) { try { bgmEls[k].pause(); } catch (e) {} }
+  });
+  fileBgm.ok = false;
   Music.play(name);
+  applyVolumes();
+  var el = bgmFileEl(name);
+  fileBgm.audio = el;
+  fileBgm.name = name;
+  if (!el) { updateAudioStatus(); return; }
+  function settle(playing) {
+    if (requestId !== bgmRequestId || desiredBgm !== name || !player || !player.musicOn || document.hidden) return;
+    fileBgm.ok = !!(playing && !el.error && el.readyState >= 2 && !el.paused);
+    if (fileBgm.ok) Music.stop();
+    else Music.play(name);
+    applyVolumes();
+    updateAudioStatus();
+  }
+  try {
+    el.volume = Math.max(0, Math.min(1, player.volMaster * player.volMusic * 0.9));
+    var pr = el.play();
+    if (pr && pr.then) pr.then(function(){ settle(true); }, function(){ settle(false); });
+    else settle(true);
+  } catch (e) { settle(false); }
+  updateAudioStatus();
 }
 
 function bgmStop() {
+  bgmRequestId++;
+  desiredBgm = '';
   Object.keys(bgmEls).forEach(function (k) {
     if (bgmEls[k]) { try { bgmEls[k].pause(); } catch (e) {} }
   });
   fileBgm.ok = false;
   fileBgm.name = '';
+  fileBgm.audio = null;
   Music.stop();
+  if (musicGain) musicGain.gain.value = 0;
+  updateAudioStatus();
+}
+
+function updateAudioStatus() {
+  var el = $('bgmSrcLabel');
+  if (el) el.textContent = bgmSourceLabel();
 }
 
 /* 当前 BGM 来源说明（设置面板展示）——以真实播放状态为准，不做乐观判断 */
 function bgmSourceLabel() {
   var el = fileBgm.audio;
   if (fileBgm.ok && el && !el.error && el.readyState >= 2) {
-    return '外置音频文件（assets/' + (fileBgm.name || '') + '.mp3）';
+    return '外置音频文件（' + (el._fileName || fileBgm.name) + '）';
   }
-  if (Music.playing) return '内置实时合成';
-  return '未播放';
+  if (!player || !player.musicOn) return '音乐已关闭';
+  if (player.volMaster === 0 || player.volMusic === 0) return '音量为零';
+  if (document.hidden) return '后台暂停 · 返回后恢复';
+  if (!audioCtx || audioCtx.state !== 'running') return '等待点击恢复声音';
+  if (Music.playing) return '内置实时合成 · ' + Music.name;
+  return '未播放 · 点击恢复音乐';
 }
 
 /* 当前应播放的牌桌曲目 */
@@ -2395,9 +2479,10 @@ function tableTrackName() {
 /* 首次用户手势后启动音频（绕过浏览器自动播放限制） */
 var audioUnlocked = false;
 function unlockAudio() {
-  if (audioUnlocked) return;
-  audioUnlocked = true;
+  if (audioUnlocked && audioCtx && audioCtx.state === 'running' && (!player.musicOn || desiredBgm)) return;
   initAudio();
+  if (!audioCtx || audioCtx.state === 'closed') return;
+  audioUnlocked = audioCtx.state === 'running';
   applyVolumes();
   if (player && player.musicOn) {
     bgmPlay(App.screen === 'game' ? tableTrackName() : 'lobby');
@@ -2630,7 +2715,7 @@ function renderModeCards() {
     if (key === 'ranked') {
       html += '<div>当前段位 <span class="hi">' + ri.icon + ' ' + ri.name + '</span></div>';
       html += '<div>排位积分 <span class="hi">' + fmt(player.rankedPoints) + '</span>'
-           + ' · 已赛 ' + fmt(player.rankedMatches || 0) + ' 场</div>';
+           + ' · 入场 ' + fmt(player.rankedMatches || 0) + ' 次 · 胜手 ' + fmt(player.rankedWins || 0) + '</div>';
       html += '<div class="mode-note">100 🪙 = 1 积分 · 每场入场消耗 1 积分</div>';
       html += '<div>段位积分 <span class="hi">' + fmt(player.rankPoints) + '</span>'
            +  (rp.next ? '（距 ' + rp.next.name + ' 还差 ' + fmt(rp.need) + '）' : '（已达最高）') + '</div>';
@@ -2648,12 +2733,31 @@ function renderModeCards() {
     });
     body.appendChild(card);
   });
+  var buy = document.createElement('button');
+  buy.type = 'button';
+  buy.textContent = '购买排位积分  ·  100 🪙 = 1 积分  ·  当前 ' + fmt(player.rankedPoints || 0) + ' 分';
+  buy.style.cssText = 'display:block;margin:14px auto 0;padding:8px 14px;border:0;background:transparent;color:#f2c14e;cursor:pointer;font:inherit;';
+  buy.addEventListener('click', function(e){
+    e.stopPropagation();
+    buyRankedPoints(1);
+  });
+  body.appendChild(buy);
 }
 
 /* ============================================================
    本局汇总结算
    ============================================================ */
 var lastSettle = null;
+
+function buyRankedPoints(n) {
+  if (!player || G.active || !Number.isSafeInteger(n) || n <= 0 || !Number.isSafeInteger(n * 100)) return false;
+  if (!spendCoins(n * 100)) { showToast('金币不足，需要 ' + fmt(n * 100) + ' 金币', 1600, true); return false; }
+  player.rankedPoints = (player.rankedPoints || 0) + n;
+  saveAllSaves(true);
+  renderLobby(); renderModeCards();
+  showToast('已购买 ' + n + ' 排位积分', 1400, false, 'success');
+  return true;
+}
 
 /* winnings: { 座位下标 -> 分得的筹码 } */
 function buildSettleData(winnings, potTotal, rpDelta) {
@@ -2687,6 +2791,12 @@ function buildSettleData(winnings, potTotal, rpDelta) {
   };
 }
 
+function escapeHTML(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
 function renderSettle(data) {
   var bh = '';
   for (var i = 0; i < 5; i++) {
@@ -2702,7 +2812,7 @@ function renderSettle(data) {
     var cls = 'settle-row' + (row.net > 0 ? ' win' : (row.net < 0 ? ' lose' : ''))
             + (row.human ? ' human' : '');
     html += '<div class="' + cls + '">';
-    html += '<div class="who">' + row.name + '</div>';
+    html += '<div class="who">' + escapeHTML(row.name) + '</div>';
     html += '<div class="hand">';
     if (row.hole.length) {
       for (var c = 0; c < row.hole.length; c++) {
@@ -2801,36 +2911,36 @@ function renderDifficultyCards() {
 
 function tryEnterGame(diffKey) {
   var cfg = DIFFICULTY_CONFIG[diffKey];
+  if (!cfg || G.active) return false;
+  if (player.coins < cfg.minCoins) {
+    showToast('🔒 金币不足，需要 ' + fmt(cfg.minCoins) + ' 🪙', 2000, true);
+    return false;
+  }
+  if (cfg.entryFee > 0 && player.coins < cfg.entryFee) {
+    showToast('🔒 金币不足以支付入场费', 2000, true);
+    return false;
+  }
   if (App.mode === 'ranked') {
     if (player.coins < 10000) {
       showToast('🔒 当前资产不足 10,000 🪙，暂不能进入排位', 2400, true);
-      return;
+      return false;
     }
     if ((player.rankedPoints || 0) < 1) {
-      if (player.coins < 100) {
-        showToast('排位积分不足，且金币不足 100 🪙购买', 2200, true);
-        return;
-      }
-      if (!spendCoins(100)) return;
-      player.rankedPoints = (player.rankedPoints || 0) + 1;
-      saveAllSaves(true);
-      showToast('已用 100 🪙购买 1 排位积分', 1600, false, 'success');
+      showToast('排位积分不足，请先购买入场积分', 2200, true);
+      return false;
     }
     player.rankedPoints--;
     player.rankedMatches = (player.rankedMatches || 0) + 1;
     saveAllSaves(true);
   }
-  if (player.coins < cfg.minCoins) {
-    showToast('🔒 金币不足，需要 ' + fmt(cfg.minCoins) + ' 🪙', 2000, true);
-    return;
-  }
   if (cfg.entryFee > 0) {
-    player.coins -= cfg.entryFee;
+    spendCoins(cfg.entryFee);
     saveAllSaves(true);
     showToast('💸 扣除入场费 $' + fmt(cfg.entryFee), 1600);
   }
   if (diffKey === 'champion') checkAchievement('enter_champion');
   startGame(diffKey);
+  return true;
 }
 
 /* 大厅 */
@@ -2866,6 +2976,7 @@ function renderLobby() {
 function renderTopbar() {
   if (!player) return;
   $('pLevel').textContent = 'Lv.' + player.level;
+  $('pMode').textContent = App.mode === 'ranked' ? '排位' : '快速';
   $('pName').textContent = (player.name || '玩家') + (titleText() ? ' · ' + titleText() : '');
   $('pCoins').textContent = fmt(player.coins);
   var need = player.level * 100;
@@ -2906,7 +3017,7 @@ function seatHTML(p, i) {
   html += thinking;
   html += '<div class="cards">' + cards + '</div>';
   html += '<div class="info">';
-  html += '<span class="nm">' + p.name + '</span>';
+  html += '<span class="nm">' + escapeHTML(p.name) + '</span>';
   if (!p.human && p.styleName) {
     html += '<span class="style-tag">' + p.styleName + '</span>';
   }
@@ -2977,6 +3088,12 @@ function renderControls() {
     b2.innerHTML = '🚪 离开牌桌';
     b2.addEventListener('click', function(){ sfx('click'); requestExit(); });
     el.appendChild(b2);
+    if (G.lastSettleData) {
+      var review = document.createElement('button');
+      review.className = 'abtn check'; review.textContent = '回看结算';
+      review.addEventListener('click', function(){ showSettle(G.lastSettleData); });
+      el.appendChild(review);
+    }
     return;
   }
 
@@ -3471,7 +3588,7 @@ function initPlayers() {
   var cfg = DIFFICULTY_CONFIG[App.difficulty];
   var opps = pickOpponents();
   G.players = [
-    makePlayer(0, '你', '🧑', true, 'human', player.coins, ''),
+    makePlayer(0, player.name || '玩家', '🧑', true, 'human', player.coins, ''),
     makePlayer(1, opps[0].name, opps[0].avatar, false, opps[0].style, cfg.buyIn, opps[0].styleName),
     makePlayer(2, opps[1].name, opps[1].avatar, false, opps[1].style, cfg.buyIn, opps[1].styleName),
     makePlayer(3, opps[2].name, opps[2].avatar, false, opps[2].style, cfg.buyIn, opps[2].styleName)
@@ -3482,8 +3599,11 @@ function initPlayers() {
 async function playHand() {
   if (!G.active) return;
   G.handOver = false;
+  G.handSettled = false;
+  G.settling = false;
   G.skipFlag = false;
   G.bluffAttempt = false;
+  hideSettle();
   G.handNo++;
   player.totalHands++;
   bumpNewbieProgress('nb_play_1', 1);
@@ -3861,13 +3981,15 @@ function rankProgress() {
 function addRankPoints(delta) {
   if (!player) return;
   var before = rankTierFor(player.rankPoints);
+  var oldPeak = Math.max(before, player.rankPeak || 0);
   player.rankPoints = Math.max(0, player.rankPoints + delta);
   var after = rankTierFor(player.rankPoints);
   if (after > (player.rankPeak || 0)) player.rankPeak = after;
   player.rankTier = after;
   if (after !== before) {
     if (after > before) {
-      var rw = RANKS[after].reward || 0;
+      var rw = 0;
+      for (var tier = oldPeak + 1; tier <= after; tier++) rw += RANKS[tier].reward || 0;
       if (rw > 0) addCoins(rw);
       sfx('rankup');
       showToast('🏅 晋升 ' + RANKS[after].name + (rw > 0 ? '  +' + fmt(rw) + '🪙' : '！'),
@@ -3964,6 +4086,7 @@ function checkWeeklyHasClaimable() {
 }
 function claimWeekly(id) {
   if (!player) return false;
+  ensureWeekly();
   var t = getWeeklyTaskById(id);
   if (!t || player.weekly.claimed[id]) return false;
   if ((player.weekly.progress[id] || 0) < t.target) return false;
@@ -4089,7 +4212,8 @@ function statPct(a, b) {
 async function finishHand() {
   Timer.stop();
   G.actor = -1;
-  if (!G.active || !G.players.length || !G.players[0]) return;
+  if (!G.active || !G.players.length || !G.players[0] || G.handSettled || G.settling) return;
+  G.settling = true;
   var fast = G.skipFlag;
   var contenders = G.players.filter(function(p){ return !p.folded; });
   var humanWon = false;
@@ -4114,6 +4238,7 @@ async function finishHand() {
       showToast(w.human ? ('🎉 赢得底池 $' + fmt(amount)) : (w.name + ' 赢得底池'),
                 1800, false, w.human ? 'success' : undefined);
       await sleep(900);
+      if (!G.active) return;
     }
     if (w.human) {
       // 其他人都弃牌 → 诈唬成功（若自己手牌确实不强）
@@ -4135,9 +4260,11 @@ async function finishHand() {
     render();
     if (!fast) {
       await sleep(500);
+      if (!G.active) return;
       for (var pi = 0; pi < pots.length; pi++) {
         sfx(pots[pi].player.human ? 'win' : 'chip');
         await sleep(240);
+        if (!G.active) return;
       }
     }
     for (var k = 0; k < pots.length; k++) {
@@ -4161,6 +4288,7 @@ async function finishHand() {
     }
     render();
     await sleep(fast ? 100 : 700);
+    if (!G.active) return;
 
     // 人类牌型任务
     if (human._v) {
@@ -4225,6 +4353,7 @@ async function finishHand() {
   }
 
   /* ---- 详细统计 ---- */
+  var hv = human._v || (G.community.length >= 3 ? bestHand(human.hole.concat(G.community)) : null);
   bumpStat('totalWagered', human.totalBet || 0);
   bumpStat('totalNet', humanWinAmount - (human.totalBet || 0));
   if (contenders.length > 1) bumpStat('showdowns', 1);
@@ -4242,7 +4371,6 @@ async function finishHand() {
   if (player.streak >= 3) setWeeklyProgressIfHigher('w_streak_3', 1);
 
   /* ---- 牌型图鉴 ---- */
-  var hv = human._v || (G.community.length >= 3 ? bestHand(human.hole.concat(G.community)) : null);
   if (hv) {
     recordDex(hv[0]);
     if (hv[0] >= 5) bumpWeeklyProgress('w_big_3', 1);   // 同花及以上
@@ -4259,7 +4387,9 @@ async function finishHand() {
     } else {
       rpDelta = -10;
     }
+    var pointsBefore = player.rankPoints;
     addRankPoints(rpDelta);
+    rpDelta = player.rankPoints - pointsBefore;
   }
 
   /* ---- 经验（双倍卡生效） ---- */
@@ -4278,12 +4408,14 @@ async function finishHand() {
 
   /* ---- 汇总结算界面 ---- */
   G.lastSettleData = buildSettleData(winnings, potTotal, rpDelta);
-  if (player.settlePanel !== false && G.active) {
-    await sleep(fast ? 80 : 300);
-    if (G.active) showSettle(G.lastSettleData);
+  G.handSettled = true;
+  G.settling = false;
+  if (G.session) {
+    G.session.hands++;
+    G.session.wins += humanWon ? 1 : 0;
+    G.session.net += humanWinAmount - (human.totalBet || 0);
   }
-
-  if (!fast) await sleep(400);
+  // 弹窗由主循环建立下一手等待器后打开，避免快速点击丢失。
 }
 
 /* ============================================================
@@ -4297,9 +4429,13 @@ function startGame(diffKey) {
   G.active = true; G.handOver = false; G.handNo = 0; G.skipFlag = false;
   G.pot = 0; G.community = []; G.currentBet = 0; G.actor = -1; G.stage = 0;
   humanResolve = null; nextHandResolve = null;
+  G.lastSettleData = null;
+  G.session = { hands:0, wins:0, net:0, coins:player.coins, rank:player.rankPoints,
+    fee:cfg.entryFee, mode:App.mode };
   initPlayers();
-  showScreen('game');
-  render();
+    showScreen('game');
+    renderTopbar();
+    render();
   renderSlotList();
   runGameLoop();
 }
@@ -4316,7 +4452,10 @@ async function runGameLoop() {
     }
     await playHand();
     if (!G.active) return;
-    await new Promise(function(res){ nextHandResolve = res; });
+    await new Promise(function(res){
+      nextHandResolve = res;
+      if (player.settlePanel !== false && G.lastSettleData) showSettle(G.lastSettleData);
+    });
   }
 }
 
@@ -4352,26 +4491,47 @@ function showLevelUp() {
 }
 
 function requestExit() {
+  if (G.settling && !G.handSettled) { showToast('本手正在结算，请稍候', 1400); return; }
   $('ovExitConfirm').classList.add('show');
 }
 
 function exitGame() {
+  if (G.settling && !G.handSettled) return;
+  var session = G.session;
+  if (G.active && G.players[0] && !G.handOver && !G.handSettled) {
+    var lost = G.players[0].totalBet || 0;
+    bumpStat('totalWagered', lost);
+    player.stats.totalNet -= lost;
+    player.streak = 0;
+    if (App.mode === 'ranked') addRankPoints(-5);
+    if (session) { session.hands++; session.net -= lost; }
+    G.handSettled = true;
+  }
   if (G.active && G.players[0]) {
     player.coins = G.players[0].chips;
     if (player.coins < 0) player.coins = 0;
   }
   G.active = false;
-  humanResolve = null;
+  if (humanResolve) { var finishAction = humanResolve; humanResolve = null; finishAction({type:'fold'}); }
   if (nextHandResolve) { var r = nextHandResolve; nextHandResolve = null; r(); }
   Timer.stop();
   saveAllSaves();
   $('ovExitConfirm').classList.remove('show');
+  hideSettle();
   G.handOver = true;
   G.players = [];
   render();
   renderLobby();
   showScreen('lobby');
   showToast('💾 已保存并离开牌桌', 1600);
+  if (session) {
+    $('sessionSummary').textContent = '本次 ' + session.hands + ' 手 · 胜手 ' + session.wins
+      + ' · 牌局净盈亏 ' + session.net + ' 金币 · 入场费 ' + session.fee
+      + ' 金币 · 奖励及其他收支 ' + (player.coins - session.coins - session.net)
+      + ' 金币 · 段位变化 ' + (player.rankPoints - session.rank) + ' 分';
+    $('ovSession').classList.add('show');
+    G.session = null;
+  }
 }
 
 /* ============================================================
@@ -4479,7 +4639,7 @@ function renderSlotList() {
       var sp = slot.player;
       html += '<div class="slot-item' + (isActive ? ' active' : '') + '">';
       html += '<div class="slot-num">' + i + '</div>';
-      html += '<div class="slot-info"><div class="slot-title">' + (sp.name || ('存档 ' + i));
+      html += '<div class="slot-info"><div class="slot-title">' + escapeHTML(sp.name || ('存档 ' + i));
       if (isActive) html += '<span class="tag">当前</span>';
       html += '</div><div class="slot-meta">';
       html += '<span>Lv.<b>' + sp.level + '</b></span>';
@@ -4953,16 +5113,37 @@ function resetLandscape() {
    ============================================================ */
 function bindEvents() {
   // 大厅
-  $('lbNameEdit').addEventListener('click', function(){
-    initAudio(); sfx('click');
-    var next = window.prompt('请输入新的用户名称（1-12个字符）', player.name || '玩家');
-    if (next === null) return;
-    next = String(next).replace(/[<>]/g, '').trim().slice(0, 12);
-    if (!next) { showToast('名称不能为空', 1600, true); return; }
-    player.name = next;
-    saveAllSaves(true);
-    renderLobby();
-    showToast('名称已更新', 1400, false, 'success');
+  var nameInput = $('lbNameInput');
+  function finishNameEdit(cancel) {
+    if (nameInput.hidden) return;
+    var next = Array.from(nameInput.value.replace(/[<>\u0000-\u001f\u007f]/g, '').trim()).slice(0, 12).join('');
+    nameInput.hidden = true;
+    $('lbName').hidden = false;
+    if (!cancel && next && next !== player.name) {
+      player.name = next;
+      saveAllSaves(true);
+      renderLobby();
+      renderSlotList();
+      showToast('名称已保存', 1400, false, 'success');
+    } else if (!cancel && !next) {
+      showToast('名称不能为空，已保留原名称', 1600, true);
+    }
+  }
+  $('lbName').addEventListener('click', function(){
+    nameInput.value = player.name || '玩家';
+    $('lbName').hidden = true;
+    nameInput.hidden = false;
+    nameInput.focus();
+    nameInput.select();
+  });
+  nameInput.addEventListener('blur', function(){ finishNameEdit(false); });
+  nameInput.addEventListener('keydown', function(e){
+    if (e.isComposing || e.keyCode === 229) return;
+    if (e.key === 'Enter' || e.key === 'Escape') {
+      e.preventDefault();
+      finishNameEdit(e.key === 'Escape');
+      $('lbName').focus();
+    }
   });
   $('lbStartBtn').addEventListener('click', function(){
     initAudio(); sfx('click');
@@ -5093,6 +5274,18 @@ function bindEvents() {
 
   // 窗口尺寸与方向
   window.addEventListener('resize', checkOrientation);
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) bgmStop();
+    else {
+      unlockAudio();
+      if (player && player.musicOn) bgmPlay(App.screen === 'game' ? tableTrackName() : 'lobby');
+    }
+  });
+  window.addEventListener('pagehide', bgmStop);
+  window.addEventListener('pageshow', function () {
+    unlockAudio();
+    if (player && player.musicOn) bgmPlay(App.screen === 'game' ? tableTrackName() : 'lobby');
+  });
   window.addEventListener('orientationchange', function () {
     setTimeout(checkOrientation, 200);
     setTimeout(checkOrientation, 600);

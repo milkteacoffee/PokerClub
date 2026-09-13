@@ -654,6 +654,45 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   } catch (e) {
     ok(false, 'bgmPlay 回落异常：' + e.message);
   }
+  // 文件加载未完成时立即合成兜底，旧场景回调不得抢占当前音乐。
+  try {
+    class FakeAudio {
+      constructor() { this.events = {}; this.paused = true; this.readyState = 0; this.error = null; }
+      addEventListener(k, f) { this.events[k] = f; }
+      pause() { this.paused = true; }
+      play() { return new Promise((resolve, reject) => { this.resolve = resolve; this.reject = reject; }); }
+    }
+    ctx.Audio = FakeAudio; ctx.bgmFailed = {}; ctx.bgmEls = {};
+    ctx.player.musicOn = true;
+    ctx.bgmPlay('lobby');
+    const oldAudio = ctx.fileBgm.audio;
+    ok(ctx.Music.playing && ctx.Music.name === 'lobby', '文件加载中立即合成兜底');
+    ctx.bgmPlay('easy');
+    const currentAudio = ctx.fileBgm.audio;
+    oldAudio.readyState = 4; oldAudio.paused = false; oldAudio.resolve();
+    await Promise.resolve();
+    ok(ctx.Music.name === 'easy' && !ctx.fileBgm.ok, '旧文件成功回调不抢占新场景');
+    currentAudio.readyState = 4; currentAudio.paused = false; currentAudio.resolve();
+    await Promise.resolve();
+    ok(ctx.fileBgm.ok && !ctx.Music.playing && ctx.musicGain.gain.value === 0, '文件真实播放后停止并静音合成');
+    currentAudio.events.waiting();
+    ok(!ctx.fileBgm.ok && ctx.Music.playing, '文件缓冲中断恢复合成');
+    ctx.bgmStop(); oldAudio.events.error();
+    ok(!ctx.Music.playing && ctx.desiredBgm === '', '停止后的旧error不得重启音乐');
+    ctx.document.hidden = true; ctx.bgmPlay('lobby');
+    ok(!ctx.Music.playing, '后台不重启音乐');
+    ctx.document.hidden = false;
+    ctx.bgmFailed = {lobby:true}; ctx.audioCtx.state = 'suspended';
+    ctx.bgmPlay('lobby');
+    ok(ctx.audioCtx.state === 'running' && ctx.Music.playing, '返回后恢复暂停的音频上下文');
+    const oldContext = ctx.audioCtx; oldContext.state = 'closed';
+    ctx.bgmPlay('lobby');
+    ok(ctx.audioCtx !== oldContext && ctx.Music.playing, '已关闭上下文重建并重新调度');
+    ctx.player.volMusic = 0; ctx.applyVolumes();
+    ok(ctx.musicGain.gain.value === 0, '零音量不会被默认值覆盖');
+    ctx.player.volMusic = 0.5; ctx.bgmStop();
+    delete ctx.Audio; ctx.bgmEls = {}; ctx.bgmFailed = {};
+  } catch (e) { ok(false, '音频竞态测试异常：' + e.stack); }
   ctx.setTimeout = savedST;
   ctx.audioCtx = null;   // 复位，避免影响后续用例
 
@@ -780,6 +819,33 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   ok(!!mg.handDex && !!mg.inventory && !!playerBuffsOk(mg), '迁移补齐图鉴 / 背包 / 增益');
   function playerBuffsOk(p) { return p.buffs && typeof p.buffs.exp2x === 'number'; }
 
+  /* ---- 排位资格、兑换与首次升段奖励 ---- */
+  ctx.G.active = false; ctx.G.players = [];
+  ctx.createNewSaveAt(1); ctx.App.mode = 'ranked';
+  ctx.player.coins = 10000; ctx.player.rankedPoints = 3;
+  const realStart = ctx.startGame;
+  let started = 0; ctx.startGame = () => { started++; ctx.G.active = true; };
+  ok(ctx.tryEnterGame('champion') === false && ctx.player.rankedPoints === 3, '不够场次门槛不扣排位积分');
+  ctx.player.rankedPoints = 0;
+  ok(ctx.tryEnterGame('easy') === false && ctx.player.coins === 10000, '门票不足不自动兑换');
+  ok(ctx.buyRankedPoints(1) && ctx.player.coins === 9900 && ctx.player.rankedPoints === 1, '兑换调用真实函数并同步扣金币');
+  ok(!ctx.buyRankedPoints(-1) && !ctx.buyRankedPoints(1.5), '拒绝负数和小数兑换');
+  ok(!ctx.tryEnterGame('easy') && ctx.player.rankedPoints === 1, '兑换后资产不足一万禁止入场且不扣票');
+  ctx.player.coins = 10000;
+  ok(ctx.tryEnterGame('easy') && started === 1 && ctx.player.rankedPoints === 0, '合法入场只扣一次门票');
+  ok(!ctx.tryEnterGame('easy') && !ctx.buyRankedPoints(1), '在牌桌拒绝重复入场及兑换');
+  ctx.startGame = realStart; ctx.G.active = false;
+  ctx.player.rankPoints = 0; ctx.player.rankPeak = 0;
+  const firstThreshold = ctx.RANKS[1].min;
+  ctx.addRankPoints(firstThreshold);
+  const coinsAfterReward = ctx.player.coins;
+  ctx.addRankPoints(-firstThreshold); ctx.addRankPoints(firstThreshold);
+  ok(ctx.player.coins === coinsAfterReward, '跌段后重升不重复发金币');
+  ctx.addRankPoints(-100000);
+  ok(ctx.player.rankPoints === 0, '段位积分最低为零');
+  ok(ctx.escapeHTML('<b>&\"') === '&lt;b&gt;&amp;&quot;', '用户名HTML转义');
+  ctx.App.mode = 'quick';
+
   /* ---- 破产结算流程 ---- */
   async function advanceToHandOver(maxTicks) {
     let g = 0;
@@ -827,6 +893,21 @@ const sleepTick = () => new Promise(r => setImmediate(r));
     ok(ctx.G.handOver === false || ctx.G.handOver === true, '超时后牌局继续推进');
   }
   ctx.G.active = false;
+
+  // 隔离验证离桌：投入计入亏损，结算后退出不重复扣分。
+  ctx.createNewSaveAt(1); ctx.App.mode = 'ranked';
+  ctx.player.rankPoints = 3; ctx.player.coins = 1000;
+  ctx.G.players = [ctx.makePlayer(0, '测试', '', true, 'human', 950, '')];
+  ctx.G.players[0].totalBet = 50;
+  ctx.G.active = true; ctx.G.handOver = false; ctx.G.handSettled = false; ctx.G.settling = false;
+  ctx.G.session = {hands:0,wins:0,net:0,coins:1000,rank:3,fee:0};
+  let actionReleased = false; ctx.humanResolve = () => { actionReleased = true; };
+  ctx.exitGame();
+  ok(actionReleased && !ctx.G.active && ctx.G.players.length === 0, '离桌释放待操作Promise并清空牌桌');
+  ok(ctx.player.coins === 950 && ctx.player.stats.totalNet === -50 && ctx.player.rankPoints === 0, '离桌正确记录投入亏损及实际扣分');
+  ok(doc.getElementById('ovSession').classList.contains('show'), '离桌显示本次汇总');
+  const exitCoins = ctx.player.coins; ctx.exitGame();
+  ok(ctx.player.coins === exitCoins && ctx.player.stats.totalNet === -50, '重复离桌不重复扣款或统计');
 
   // ---- 汇总 ----
   console.log('\n============================');

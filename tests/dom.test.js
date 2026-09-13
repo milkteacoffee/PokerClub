@@ -74,7 +74,10 @@ function click(el) {
   console.log('【进入场次选择】');
   click($('lbStartBtn'));
   await tick(30);
-  ok($('difficultyScreen').classList.contains('active'), '点击「开始游戏」进入场次选择');
+  ok($('modeScreen').classList.contains('active'), '点击「开始游戏」进入模式选择');
+  click($('modeBody').querySelector('.mode-card.quick'));
+  await tick(30);
+  ok($('difficultyScreen').classList.contains('active'), '选择快速对局进入场次选择');
   const cards = $('diffBody').querySelectorAll('.diff-card');
   ok(cards.length === 4, '渲染 4 个难度卡片（实际 ' + cards.length + '）');
   ok(!!$('diffBody').querySelector('.diff-card.easy'), '包含简单场卡片');
@@ -84,6 +87,8 @@ function click(el) {
 
   console.log('【返回大厅 & 面板】');
   click($('diffBack'));
+  await tick(30);
+  click($('modeBack'));
   await tick(30);
   ok($('lobbyScreen').style.display === 'flex', '返回大厅');
 
