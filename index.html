@@ -28,17 +28,24 @@
     transform-origin: center center;
   }
 
+  /* 强制横屏提示层 */
   #rotateHint {
     display: none; position: fixed; inset: 0; z-index: 9999;
-    background: #06090e; color: #8fd6b0; font-size: 22px;
+    background: #06090e; color: #8fd6b0; font-size: 20px;
     align-items: center; justify-content: center;
-    flex-direction: column; gap: 20px; text-align: center; padding: 20px;
+    flex-direction: column; gap: 16px; text-align: center; padding: 20px;
     font-weight: 700; letter-spacing: 2px;
   }
-  @media (orientation: portrait) and (max-width: 900px) {
-    #rotateHint { display: flex; }
-    #stage { display: none; }
+  #rotateHint button {
+    padding: 14px 32px; border-radius: 12px;
+    background: linear-gradient(135deg, #2e9e6b, #1e7a4f);
+    color: #fff; border: none; font-size: 18px; font-weight: 900;
+    letter-spacing: 3px; margin-top: 12px;
+    cursor: pointer; font-family: inherit;
+    box-shadow: 0 8px 24px rgba(46,158,107,0.4);
+    transition: transform 0.15s;
   }
+  #rotateHint button:active { transform: scale(0.95); }
 
   /* 顶栏 */
   #topbar {
@@ -408,6 +415,8 @@
 <div id="rotateHint">
   <div style="font-size:64px">📱</div>
   <div>请横屏体验游戏</div>
+  <div style="font-size:14px;color:#566c82;font-weight:400;letter-spacing:1px;margin-top:-8px;">若手机锁定了竖屏，请点击下方按钮</div>
+  <button id="btnForceRotate">🔄 强制横屏</button>
 </div>
 
 <div id="stage">
@@ -499,6 +508,11 @@
 (function () {
 'use strict';
 
+/* ============ 强制横屏状态 ============ */
+var App = {
+  forceLandscape: false // 是否强制旋转
+};
+
 var SUITS = ['♠','♥','♦','♣'];
 var RANK_STR = {2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'J',12:'Q',13:'K',14:'A'};
 function rankName(r) { return RANK_STR[r] || '?'; }
@@ -556,7 +570,7 @@ var TASK_POOL = [
   { id:'win_allin', name:'全下并获胜 1 次', target:1, reward:250 }
 ];
 
-/* ============ AI 对手（前3个1级解锁，确保开局有3个对手） ============ */
+/* ============ AI 对手 ============ */
 var OPPONENTS = [
   { id:'xiaohong', name:'小红', avatar:'👩‍🦰', style:'aggressive', unlockLv:1 },
   { id:'xiaolan',  name:'小蓝', avatar:'👨‍🦱', style:'tight',      unlockLv:1 },
@@ -1091,9 +1105,7 @@ function nextHand() {
 function pickOpponents() {
   var unlocked = OPPONENTS.filter(function(o){ return o.unlockLv <= player.level; });
   if (unlocked.length === 0) unlocked = [OPPONENTS[0]];
-  // 打乱
   var pool = unlocked.slice().sort(function(){ return Math.random() - 0.5; });
-  // 确保返回恰好3个（不足则循环取用，但优先不重复）
   var result = [];
   var used = {};
   for (var i = 0; i < pool.length && result.length < 3; i++) {
@@ -1102,7 +1114,6 @@ function pickOpponents() {
       result.push(pool[i]);
     }
   }
-  // 还不够3个，允许重复
   var idx = 0;
   while (result.length < 3) {
     result.push(pool[idx % pool.length]);
@@ -1170,7 +1181,6 @@ async function playHand() {
   var sbIdx = (G.dealer + 1) % n;
   var bbIdx = (G.dealer + 2) % n;
 
-  // 发底牌
   var order = [];
   for (var k = 1; k <= n; k++) order.push((G.dealer + k) % n);
   for (var m = 0; m < 2; m++) {
@@ -1181,7 +1191,6 @@ async function playHand() {
     }
   }
 
-  // 盲注
   putIn(G.players[sbIdx], G.sb);
   G.players[sbIdx].lastAction = '小盲 $' + G.players[sbIdx].bet;
   putIn(G.players[bbIdx], G.bb);
@@ -1536,14 +1545,38 @@ function startGame() {
   }, 50);
 }
 
-/* ============ 屏幕适配 ============ */
+/* ============ 核心：横屏/竖屏适配 ============ */
 function fitStage() {
   var stage = $('stage');
+  var hint = $('rotateHint');
   if (!stage) return;
+
   var w = window.innerWidth;
   var h = window.innerHeight;
-  var scale = Math.min(w / 960, h / 540);
-  stage.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
+  var isPortrait = h > w;
+
+  // 如果没有强制横屏，且当前是竖屏，则显示提示层
+  if (isPortrait && !App.forceLandscape) {
+    if (hint) hint.style.display = 'flex';
+    stage.style.display = 'none';
+    return;
+  }
+
+  // 隐藏提示层，显示游戏
+  if (hint) hint.style.display = 'none';
+  stage.style.display = 'block';
+
+  if (App.forceLandscape && isPortrait) {
+    // 强制横屏：将舞台旋转90度
+    // 缩放比例：让旋转后的宽度填满屏幕宽度，高度填满屏幕高度
+    // 旋转后，960变成高度，540变成宽度
+    var scale = Math.min(h / 960, w / 540);
+    stage.style.transform = 'translate(-50%, -50%) rotate(90deg) scale(' + scale + ')';
+  } else {
+    // 正常横屏或用户已物理横屏
+    var scale = Math.min(w / 960, h / 540);
+    stage.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
+  }
 }
 
 /* ============ UI 绑定 ============ */
@@ -1582,6 +1615,24 @@ function bindUI() {
     sfx('click');
     startGame();
   });
+
+  // 强制横屏按钮
+  var btnRotate = $('btnForceRotate');
+  if (btnRotate) {
+    btnRotate.addEventListener('click', function(){
+      sfx('click');
+      App.forceLandscape = true;
+      // 尝试请求全屏
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(function(){});
+      }
+      // 尝试锁定方向（支持的浏览器会生效）
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(function(){});
+      }
+      fitStage();
+    });
+  }
 
   window.addEventListener('resize', fitStage);
   window.addEventListener('orientationchange', function(){ setTimeout(fitStage, 120); });
