@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a0e14">
-<title>德州扑克</title>
+<title>牌友小馆 · 单机四合一</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box;
       -webkit-tap-highlight-color:transparent;
@@ -879,6 +879,20 @@
     background:rgba(242,193,78,.07); border:1px solid rgba(242,193,78,.22);
     font-size:12px; color:#cfdae5; line-height:1.9; }
   #settleFoot b { color:#f2c14e; }
+  .lobby-logo-area {padding-top:12px;justify-content:flex-start;gap:6px;}
+  .lobby-logo {font-size:34px;letter-spacing:8px;}.lobby-subtitle{font-size:11px;letter-spacing:2px;}
+  .game-shelf{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;width:90%;max-width:760px;margin-top:22px;}
+  .game-tile{position:relative;height:170px;border:0;border-radius:16px;background:linear-gradient(150deg,rgba(59,89,94,.35),rgba(12,25,34,.2));color:#d9e3eb;cursor:pointer;transition:transform .18s,background .18s;display:flex;flex-direction:column;align-items:center;gap:10px;padding:15px 8px;}
+  .game-tile:hover{transform:translateY(-4px);background:rgba(100,121,139,.2)}.game-tile:active{transform:scale(.97)}.game-tile.selected{background:linear-gradient(140deg,rgba(180,136,54,.32),rgba(51,72,76,.22));box-shadow:inset 0 -2px #d2b16d;}
+  .tile-art{font:italic 36px Georgia,serif;color:#e4c784;height:55px;}.tile-art span{font-size:25px;margin-left:7px}.game-tile strong{font-size:17px;letter-spacing:2px}.game-tile small{font-size:11px;color:#98a9b6}
+  .lobby-bottom{padding-top:4px}.lobby-quickbtns{margin-bottom:8px}
+  #arcadeScreen{display:none;position:absolute;inset:0;z-index:5;flex-direction:column;padding:16px 24px;gap:10px;color:#dbe6ec;background:radial-gradient(ellipse at 50% 40%,#173b37,#101c27 75%);overflow:auto;}
+  .arc-head{display:flex;align-items:center;gap:18px}.arc-head h2{font-size:21px;margin:0;color:#e6ca90}.arc-head small{color:#9badb9}.arc-head>strong{margin-left:auto;color:#e5c784;font-size:19px}
+  .arc-btn,#arcActions button{border:0;background:rgba(255,255,255,.07);color:#dfdfd6;border-radius:8px;padding:10px 16px;cursor:pointer;font:inherit;font-size:13px;transition:transform .15s,background .15s}.arc-btn:hover,#arcActions button:hover{background:rgba(221,189,118,.18)}.arc-btn:active,#arcActions button:active{transform:scale(.96)}button:disabled{opacity:.35;cursor:not-allowed}
+  .arc-toolbar{display:flex;gap:12px;align-items:center;font-size:12px;color:#9aabb7}.arc-toolbar select{background:#22343d;color:#eadcc2;border:0;padding:7px;border-radius:6px}#arcStats{margin-left:auto}#arcHelp{font-size:12px;line-height:1.8;padding:12px;background:#172933;border-radius:8px}
+  #arcTable{flex:1;min-height:190px;display:flex;align-items:center;justify-content:space-around;gap:10px;flex-wrap:wrap;padding:12px;border-radius:40%;background:radial-gradient(ellipse,rgba(34,105,81,.25),transparent 70%)}.arc-seat{text-align:center;min-width:120px;max-width:210px}.arc-seat h3{font-size:13px;color:#c9d9dc;margin:6px}.arc-seat p{font-size:12px;color:#a1b6b9;margin:6px}.arc-seat.out{opacity:.55}.arc-cards{display:flex;justify-content:center;gap:5px;min-height:68px;align-items:center}.arc-card{display:inline-flex;flex-direction:column;justify-content:space-between;width:42px;height:62px;padding:5px;background:linear-gradient(145deg,#faf7ed,#d7d8cf);color:#1a2934;border-radius:6px;font:bold 20px Georgia;box-shadow:0 4px 8px #0003;}.arc-card.red{color:#af303b}.arc-card.back{background:repeating-linear-gradient(45deg,#253e58,#253e58 4px,#2c4c68 4px,#2c4c68 8px);color:#b7c5d5;justify-content:center}.arc-die{display:inline-flex;align-items:center;justify-content:center;width:68px;height:68px;margin:9px;background:#ece7d7;color:#9f3440;border-radius:14px;font-size:40px;box-shadow:0 5px 0 #a6a99b;}
+  #arcMessage{text-align:center;min-height:22px;color:#ebce91;font-size:14px}#arcActions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}#arcActions button.primary{background:linear-gradient(120deg,#b39151,#e1c184);color:#1b2530}#arcHistory{text-align:center;font-size:11px;color:#91a6b1;min-height:16px}#arcExit{position:absolute;inset:35% 14%;padding:25px;background:#152b35;border:1px solid #a08758;border-radius:12px;z-index:10;text-align:center}#arcExit span{display:block;margin-bottom:18px}
+  @media(max-height:460px){.game-tile{height:135px}.game-shelf{margin-top:10px}.lobby-logo{font-size:27px}}
 </style>
 </head>
 <body>
@@ -928,10 +942,13 @@
       <span id="saveText">存档已就绪 · 自动保存</span>
     </div>
     <div class="lobby-logo-area">
-      <div class="lobby-logo">德州扑克</div>
-      <div class="lobby-subtitle">TEXAS HOLD'EM</div>
-      <div class="lobby-decoration">
-        <span>♠️</span><span>♥️</span><span>♦️</span><span>♣️</span>
+      <div class="lobby-logo">牌友小馆</div>
+      <div class="lobby-subtitle">一张牌桌，四种乐趣 · 纯单机</div>
+      <div class="game-shelf">
+        <button class="game-tile selected" data-game="holdem"><span class="tile-art">A<span>♠</span></span><strong>德州扑克</strong><small>读牌与博弈</small></button>
+        <button class="game-tile" data-game="blackjack"><span class="tile-art">21</span><strong>21点</strong><small>进退之间的判断</small></button>
+        <button class="game-tile" data-game="gold"><span class="tile-art">3<span>♦</span></span><strong>炸金花</strong><small>闷牌与看牌</small></button>
+        <button class="game-tile" data-game="dice"><span class="tile-art">6<span>·</span></span><strong>猜骰子</strong><small>三骰猜大小</small></button>
       </div>
     </div>
     <div class="lobby-bottom">
@@ -945,10 +962,16 @@
         <button class="lobby-quickbtn" id="lbQHelp"><span class="ic">❓</span><span>规则</span></button>
       </div>
       <button class="btn-primary lobby-start-btn" id="lbStartBtn">开始游戏</button>
-      <div class="lobby-hint">选择一个场次，与 AI 牌手对战</div>
+      <div class="lobby-hint" id="hubHint">已选德州扑克 · 所有对手均为本地AI</div>
     </div>
   </div>
 
+  <section id="arcadeScreen" aria-label="单机游戏牌桌">
+    <header class="arc-head"><button id="arcBack" class="arc-btn">返回大厅</button><div><h2 id="arcTitle">21点</h2><small id="arcModeLabel"></small></div><strong id="arcBalance"></strong><button id="arcRules" class="arc-btn">规则</button></header>
+    <div class="arc-toolbar"><label>模式 <select id="arcMode"><option value="coins">金币场</option><option value="practice">免费练习</option></select></label><label>下注 <select id="arcBet"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option></select></label><button id="arcRefill" class="arc-btn">补满练习筹码</button><span id="arcStats"></span></div>
+    <div id="arcHelp" hidden></div><div id="arcTable" aria-live="polite"></div><div id="arcMessage" role="status"></div><div id="arcActions"></div><div id="arcHistory"></div>
+    <div id="arcExit" hidden><span>当前局尚未结束，返回将放弃已投入筹码。</span><button id="arcExitYes" class="arc-btn">确认离桌</button><button id="arcExitNo" class="arc-btn">继续本局</button></div>
+  </section>
   <div id="modeScreen">
     <div class="diff-header">
       <button class="diff-back" id="modeBack">←</button>
@@ -1058,6 +1081,7 @@
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">💾 多存档</p>
         <p>共 3 个存档槽，每个独立记录金币、等级、成就与任务。金币用完后可以开新档重玩新手场。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎁 任务与成就</p>
+        <p>小馆内含德州扑克、21点、炸金花、三骰猜大小。大厅选择游戏再点击开始；新游戏提供金币场与免费练习，练习筹码可补满但不可兑换。任务、成就和排位仍为德州专属，新游戏战绩在各自牌桌查看。新游戏未完局刷新或离桌视为放弃已投入筹码。</p>
         <p>每日5项，每项20金币，每天最多100；每周一刷新25项，按阶段奖励20至60金币，每周最多910。成就共1000项，按进阶目标解锁，单项10至2000金币，需在成就页领取。日周刷新以北京时间为准。</p>
         <p>新手场每手开局至少500金币。电脑对手低于500时在下一手前离桌，由新昵称对手带入500补位；玩家不足500会保留余额返回大厅。对手昵称随机生成，仍全部为本地电脑AI，不是真人联机。</p>
         <p>每手使用全新52张牌，安全随机洗牌，不按输赢安排牌型；正常随机可能连续出现相同点数或弱牌。</p>
@@ -1350,7 +1374,7 @@ var activeSlot = 1;
 var allSaves = null;
 
 /* 存档结构版本：11 = 加入音乐 / 段位 / 商城 / 签到 / 周常 / 统计 / 图鉴 */
-var SAVE_VERSION = 13;
+var SAVE_VERSION = 14;
 var WEEK_START_DAY = 1;   // 0=周日, 1=周一
 
 /* 创建新玩家默认状态 */
@@ -1412,6 +1436,7 @@ function createNewPlayer(name) {
       totalNet: 0
     },
     handDex: {},            // 牌型图鉴 { 0..8: 达成次数 }
+    arcade: {stats:{}, pending:null, history:[]}, // 新游戏独立统计，未完局刷新视为放弃
 
     createdAt: Date.now(),
     lastPlayed: Date.now()
@@ -1558,6 +1583,7 @@ function timeAgo(ts) {
 
 /* 切换到指定槽位 */
 function switchToSlot(slotNum) {
+  if (Arcade && Arcade.round && !Arcade.round.done) return false;
   if (!allSaves.slots[slotNum]) return false;
   // 先保存当前
   saveAllSaves(true);
@@ -1576,7 +1602,7 @@ function switchToSlot(slotNum) {
 
 /* 在指定槽位创建新档 */
 function createNewSaveAt(slotNum) {
-  if (G.active) return false;
+  if (G.active || (Arcade && Arcade.round && !Arcade.round.done)) return false;
   saveAllSaves(true);
   allSaves.slots[slotNum] = {
     player: createNewPlayer('玩家 ' + slotNum),
@@ -1593,7 +1619,7 @@ function createNewSaveAt(slotNum) {
 
 /* 删除槽位 */
 function deleteSlot(slotNum) {
-  if (G.active) return false;
+  if (G.active || (Arcade && Arcade.round && !Arcade.round.done)) return false;
   if (!allSaves.slots[slotNum]) return;
   var isActive = slotNum === activeSlot;
   allSaves.slots[slotNum] = null;
@@ -2757,6 +2783,7 @@ function showScreen(name) {
   $('modeScreen').classList.toggle('active', name === 'mode');
   $('difficultyScreen').classList.toggle('active', name === 'difficulty');
   $('gameScreen').classList.toggle('active', name === 'game');
+  if ($('arcadeScreen')) $('arcadeScreen').style.display = name === 'arcade' ? 'flex' : 'none';
   document.querySelectorAll('.overlay').forEach(function(o){ o.classList.remove('show'); });
   $('toast').classList.remove('show');
   Timer.stop();
@@ -2767,6 +2794,141 @@ function showScreen(name) {
     }
   } catch (e) {}
 }
+
+/* 四游戏共享入口与独立规则；不调用德州任务或段位。 */
+var hubGame = 'holdem';
+var ARCADE_NAMES = {blackjack:'21点', gold:'炸金花', dice:'猜骰子'};
+var Arcade = {game:'blackjack', mode:'coins', practice:500, round:null, message:'选择下注后开始', busy:false};
+var ARCADE_RULES = {
+  blackjack:'一副52张牌，每局重洗。A按1或11；庄家软17停牌。天然21点净赢下注的1.5倍，普通赢净赢1倍，平局退本金。仅首两张允许加倍，加倍后只补一张。首版不含分牌和保险。未完局离开或刷新视为放弃。',
+  gold:'四人三张牌：豹子 > 顺金 > 金花 > 顺子 > 对子 > 单张；A23为最小顺子，QKA最大；不含235特殊规则。看牌后跟注/加注/比牌费用为闷牌的2倍。第三轮起可比牌，每次比牌支付本人的跟注额；同牌比牌发起者输。第十轮剩余玩家摊牌，完全相同则平分，余数按座位顺序分配。每位AI带入500，每轮新对手；只按自己的牌与公开行为决策。',
+  dice:'三颗公平六面骰：4–10为小，11–17为大；任意豹子（包括111和666）大小都输。猜中返还本金并净赢1倍下注，否则失去下注。每次下注确认后即时结算，不自动连投。中奖概率105/216，非稳赚玩法。'
+};
+function arcadeData() {
+  if (!player.arcade || typeof player.arcade !== 'object') player.arcade={stats:{},pending:null,history:[]};
+  var a=player.arcade;if (!a.stats) a.stats={};if (!Array.isArray(a.history)) a.history=[];return a;
+}
+function arcadePersist() {
+  try {localStorage.setItem(SAVE_KEY_ALL,JSON.stringify(allSaves));return true;}
+  catch(e){showToast('保存失败，操作已取消；请释放浏览器存储空间',2600,true);return false;}
+}
+function arcadeRecord(game, stake, payout, label) {
+  var a=arcadeData(),s=a.stats[game]||(a.stats[game]={hands:0,wins:0,net:0});
+  s.hands++;if(payout>stake)s.wins++;s.net+=payout-stake;
+  a.history.unshift({game:game,net:payout-stake,label:label});a.history=a.history.slice(0,12);
+}
+function arcadeRecover() {
+  var a=arcadeData();if(!a.pending)return;
+  if(Arcade.round && Arcade.round.id===a.pending.id && !Arcade.round.done)return;
+  var backup=JSON.stringify(a),p=a.pending;arcadeRecord(p.game,p.stake,0,'未完局离开');a.pending=null;
+  if(!arcadePersist())player.arcade=JSON.parse(backup);
+}
+function arcadeBalance(){return Arcade.mode==='practice'?Arcade.practice:player.coins;}
+function arcadePay(amount) {
+  if(!Number.isSafeInteger(amount)||amount<0||amount>arcadeBalance())return false;
+  if(Arcade.mode==='practice')Arcade.practice-=amount;else if(!spendCoins(amount))return false;
+  return true;
+}
+function arcadeBegin(bet) {
+  if(G.active || (Arcade.round&&!Arcade.round.done) || ![10,20,50,100].includes(bet))return false;
+  arcadeRecover();if(Arcade.mode==='coins'&&arcadeData().pending)return false;
+  var coins=player.coins;if(!arcadePay(bet)){Arcade.message='筹码不足，可切换免费练习或领取已完成任务。';renderArcade();return false;}
+  var r={id:String(Date.now())+'-'+randomInt(1000000000),game:Arcade.game,mode:Arcade.mode,stake:bet,base:bet,done:false};
+  if(r.mode==='coins'){arcadeData().pending={id:r.id,game:r.game,stake:bet};if(!arcadePersist()){player.coins=coins;arcadeData().pending=null;return false;}}
+  Arcade.round=r;return r;
+}
+function arcadeExtra(amount) {
+  var r=Arcade.round;if(!r||r.done)return false;
+  var coins=player.coins;if(!arcadePay(amount))return false;
+  r.stake+=amount;if(r.mode==='coins'){arcadeData().pending.stake=r.stake;if(!arcadePersist()){player.coins=coins;r.stake-=amount;arcadeData().pending.stake=r.stake;return false;}}return true;
+}
+function arcadeSettle(payout,label) {
+  var r=Arcade.round;if(!r||r.done||!Number.isSafeInteger(payout)||payout<0)return false;
+  if(r.mode==='coins'){
+    var backup=JSON.stringify(arcadeData()),coins=player.coins;
+    if(!arcadeData().pending||arcadeData().pending.id!==r.id)return false;
+    addCoins(payout);arcadeRecord(r.game,r.stake,payout,label);arcadeData().pending=null;
+    if(!arcadePersist()){player.coins=coins;player.arcade=JSON.parse(backup);Arcade.message='结算保存失败，请点击重试';r.retry={payout:payout,label:label};renderArcade();return false;}
+  }else Arcade.practice+=payout;
+  r.done=true;r.payout=payout;r.label=label;r.retry=null;
+  Arcade.message=label+' · 本局净变化 '+(payout-r.stake>=0?'+':'')+(payout-r.stake)+(r.mode==='practice'?' 练习筹码':' 金币');
+  sfx(payout>r.stake?'win':'click');renderArcade();return true;
+}
+function openArcade(game) {
+  if(G.active||!ARCADE_NAMES[game]||(Arcade.round&&!Arcade.round.done))return false;
+  arcadeRecover();Arcade.game=game;Arcade.round=null;Arcade.message='金币共用，练习筹码不兑换；新游戏不触发德州任务。';
+  showScreen('arcade');$('arcHelp').hidden=true;renderArcade();return true;
+}
+function blackjackValue(cards) {var total=0,aces=0;cards.forEach(function(c){total+=c.r===14?11:Math.min(10,c.r);if(c.r===14)aces++;});while(total>21&&aces){total-=10;aces--;}return {total:total,soft:aces>0};}
+function blackjackStart(bet){var r=arcadeBegin(bet);if(!r)return;r.deck=shuffle(makeDeck());r.hand=[r.deck.pop(),r.deck.pop()];r.dealer=[r.deck.pop(),r.deck.pop()];
+  var a=blackjackValue(r.hand).total,b=blackjackValue(r.dealer).total;
+  if(a===21||b===21)arcadeSettle(a===21&&b===21?bet:a===21?bet*5/2:0,a===21&&b===21?'双方天然21点，平局':a===21?'天然21点':'庄家天然21点');
+  else{Arcade.message='选择要牌、停牌或加倍';renderArcade();}}
+function blackjackStand(){var r=Arcade.round;if(!r||r.done||r.retry)return;while(blackjackValue(r.dealer).total<17)r.dealer.push(r.deck.pop());var a=blackjackValue(r.hand).total,b=blackjackValue(r.dealer).total;arcadeSettle(b>21||a>b?r.stake*2:a===b?r.stake:0,b>21?'庄家爆牌':a>b?'你赢了':a===b?'平局':'庄家获胜');}
+function blackjackHit(double){var r=Arcade.round;if(!r||r.done||r.retry)return;if(double&&(r.hand.length!==2||!arcadeExtra(r.base)))return;
+  r.hand.push(r.deck.pop());if(blackjackValue(r.hand).total>21)arcadeSettle(0,'超过21点，爆牌');else if(double||blackjackValue(r.hand).total===21)blackjackStand();else renderArcade();}
+function goldValue(cards){var v=cards.map(function(c){return c.r;}).sort(function(a,b){return b-a;}),flush=cards.every(function(c){return c.s===cards[0].s;}),straight=v[0]-v[1]===1&&v[1]-v[2]===1,high=v[0];if(v.join(',')==='14,3,2'){straight=true;high=3;}if(v[0]===v[2])return [5,v[0]];if(flush&&straight)return [4,high];if(flush)return [3].concat(v);if(straight)return [2,high];if(v[0]===v[1])return [1,v[0],v[2]];if(v[1]===v[2])return [1,v[1],v[0]];return [0].concat(v);}
+function goldCompare(a,b){return cmpHand(goldValue(a),goldValue(b));}
+function goldLabel(cards){return ['单张','对子','顺子','金花','顺金','豹子'][goldValue(cards)[0]];}
+function goldStart(bet){var r=arcadeBegin(bet);if(!r)return;r.deck=shuffle(makeDeck());r.unit=bet;r.turn=1;r.pot=bet*4;r.log=[];r.seats=[];
+  for(var i=0;i<4;i++)r.seats.push({name:i===0?player.name:randomAIName(r.seats.map(function(p){return p.name;})),hand:[r.deck.pop(),r.deck.pop(),r.deck.pop()],seen:false,folded:false,stack:i===0?0:500-bet,paid:bet});Arcade.message='第1轮 · 你可以闷牌跟注，或先看牌';renderArcade();}
+function goldResolve(force){var r=Arcade.round,live=r.seats.filter(function(p){return !p.folded;});if(!force&&live.length>1)return false;
+  var winners=[live[0]];live.slice(1).forEach(function(p){var c=goldCompare(p.hand,winners[0].hand);if(c>0)winners=[p];else if(c===0)winners.push(p);});
+  var human=r.seats[0],idx=winners.indexOf(human),share=idx<0?0:Math.floor(r.pot/winners.length)+(idx<r.pot%winners.length?1:0);
+  arcadeSettle(share,winners.map(function(p){return p.name;}).join('、')+' 获胜 · 底池 '+r.pot);return true;}
+function goldAITurns(){var r=Arcade.round;for(var i=1;i<4&&!r.done;i++){var p=r.seats[i];if(p.folded)continue;
+  if(!p.seen&&randomInt(100)<55)p.seen=true;var strength=p.seen?goldValue(p.hand)[0]:-1,cost=r.unit*(p.seen?2:1);
+  if(p.stack<cost||(p.seen&&strength===0&&randomInt(100)<38)){p.folded=true;r.log.push(p.name+' 弃牌');continue;}
+  if(p.seen&&strength>=1&&r.unit<r.base*4&&p.stack>=cost*2&&randomInt(100)<22){r.unit+=r.base;cost=r.unit*2;r.log.push(p.name+' 加注');}
+  p.stack-=cost;p.paid+=cost;r.pot+=cost;
+  if(r.turn>=3&&randomInt(100)<25){var candidates=r.seats.filter(function(q){return q!==p&&!q.folded;});if(candidates.length){var target=candidates[randomInt(candidates.length)];if(p.stack>=cost){p.stack-=cost;p.paid+=cost;r.pot+=cost;var loser=goldCompare(p.hand,target.hand)>0?target:p;loser.folded=true;r.log.push(p.name+' 比牌，'+loser.name+' 出局');}}}
+  if(goldResolve(false))return;
+ }if(r.seats[0].folded){goldResolve(true);return;}if(goldResolve(false))return;r.turn++;if(r.turn>10){goldResolve(true);return;}Arcade.message='第'+r.turn+'轮 · '+r.log.slice(-2).join('；');renderArcade();}
+function goldAction(action,target){var r=Arcade.round;if(!r||r.done||r.retry)return;var p=r.seats[0];if(action==='peek'){p.seen=true;Arcade.message='已看牌：'+goldLabel(p.hand)+' · 跟注费用翻倍';renderArcade();return;}if(action==='fold'){p.folded=true;goldResolve(true);return;}
+  if(action==='compare'&&(r.turn<3||!r.seats[target]||r.seats[target].folded||target===0))return;
+  var unit=r.unit+(action==='raise'?r.base:0);if(unit>r.base*4)return;var cost=unit*(p.seen?2:1);if(!arcadeExtra(cost)){Arcade.message='余额不足，请弃牌或结束后切换练习';renderArcade();return;}
+  r.unit=unit;p.paid+=cost;r.pot+=cost;if(action==='compare'){var other=r.seats[target];(goldCompare(p.hand,other.hand)>0?other:p).folded=true;}
+  if(p.folded){goldResolve(true);return;}if(!goldResolve(false))goldAITurns();}
+function diceResult(values,choice){var sum=values.reduce(function(a,b){return a+b;},0),triple=values[0]===values[1]&&values[1]===values[2];return {sum:sum,triple:triple,win:!triple&&(choice==='small'?sum>=4&&sum<=10:sum>=11&&sum<=17)};}
+function dicePlay(bet,choice){if(!['small','big'].includes(choice))return;var r=arcadeBegin(bet);if(!r)return;r.dice=[1+randomInt(6),1+randomInt(6),1+randomInt(6)];var result=diceResult(r.dice,choice);r.choice=choice;arcadeSettle(result.win?bet*2:0,result.triple?'豹子，大小都输':'总点数 '+result.sum+' · '+(result.win?'猜中了':'未猜中'));}
+function arcCard(c,hidden){return '<span class="arc-card'+(hidden?' back':c.s===1||c.s===2?' red':'')+'">'+(hidden?'?':(RANK_STR[c.r]||c.r)+'<span>'+['♠','♥','♦','♣'][c.s]+'</span>')+'</span>';}
+function arcCards(cards,hidden){return '<div class="arc-cards">'+cards.map(function(c,i){return arcCard(c,typeof hidden==='function'?hidden(i):hidden);}).join('')+'</div>';}
+function arcButton(text,action,disabled,primary){return '<button '+(disabled?'disabled ':'')+'data-arc="'+action+'" class="'+(primary?'primary':'')+'">'+text+'</button>';}
+function diceFace(value){var positions={1:[[30,30]],2:[[15,15],[45,45]],3:[[15,15],[30,30],[45,45]],4:[[15,15],[45,15],[15,45],[45,45]],5:[[15,15],[45,15],[30,30],[15,45],[45,45]],6:[[15,15],[15,30],[15,45],[45,15],[45,30],[45,45]]};return '<svg viewBox="0 0 60 60" width="58" height="58" role="img" aria-label="'+value+'点">'+positions[value].map(function(p){return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="5" fill="'+(value===1||value===4?'#a13239':'#243342')+'"/>';}).join('')+'</svg>';}
+function renderArcade(){if(!$('arcTable')||!player)return;var r=Arcade.round,live=r&&!r.done,a=arcadeData(),s=a.stats[Arcade.game]||{hands:0,wins:0,net:0};
+  $('arcTitle').textContent=ARCADE_NAMES[Arcade.game];$('arcBalance').textContent=fmt(arcadeBalance())+(Arcade.mode==='practice'?' 练习筹码':' 金币');$('arcModeLabel').textContent='纯单机 · '+(Arcade.mode==='practice'?'免费练习，不计奖励':'共享金币，独立战绩');
+  $('arcMode').value=Arcade.mode;$('arcMode').disabled=!!live;$('arcBet').disabled=!!live;$('arcRefill').hidden=Arcade.mode!=='practice';$('arcRefill').disabled=!!live;$('arcHelp').textContent=ARCADE_RULES[Arcade.game];
+  $('arcStats').textContent='正式场 '+s.hands+' 局 / '+s.wins+' 胜 / 净 '+s.net;$('arcMessage').textContent=Arcade.message;
+  var table='',actions='',bet=Number($('arcBet').value);
+  if(Arcade.game==='blackjack'){
+    if(r){table='<div class="arc-seat"><h3>庄家</h3>'+arcCards(r.dealer,function(i){return live&&i===1;})+'<p>'+(live?'暗牌待揭晓':blackjackValue(r.dealer).total+' 点')+'</p></div><div class="arc-seat"><h3>'+escapeHTML(player.name)+'</h3>'+arcCards(r.hand,false)+'<p>'+blackjackValue(r.hand).total+' 点 · 投入 '+r.stake+'</p></div>';}
+    else table='<div class="arc-seat"><h3>接近21，不要超过</h3><p>天然21点净赢1.5倍，庄家软17停牌</p></div>';
+    if(live)actions=arcButton('要牌','hit')+arcButton('停牌','stand',false,true)+arcButton('加倍','double',r.hand.length!==2||arcadeBalance()<r.base);else actions=arcButton('发牌 · '+bet,'start',arcadeBalance()<bet,true);
+  }else if(Arcade.game==='gold'){
+    if(r){table=r.seats.map(function(p,i){return '<div class="arc-seat'+(p.folded?' out':'')+'"><h3>'+escapeHTML(p.name)+(i===0?' · 你':' · AI')+'</h3>'+arcCards(p.hand,!r.done&&(i!==0||!p.seen))+'<p>'+(p.folded?'已弃牌':p.seen?'已看牌':'闷牌')+' · 投入 '+p.paid+'</p><p>'+((r.done||i===0&&p.seen)?goldLabel(p.hand):'')+'</p></div>';}).join('');table+='<p style="width:100%;text-align:center;margin:0;color:#ddc68d">底池 '+r.pot+' · 第 '+r.turn+' / 10 轮 · 闷牌单注 '+r.unit+'</p>';}
+    else table='<div class="arc-seat"><h3>三张牌，一场心理较量</h3><p>四人桌 · 每人底注 '+bet+' · 最多十轮</p></div>';
+    if(live){var cost=r.unit*(r.seats[0].seen?2:1);actions=arcButton('看牌','peek',r.seats[0].seen)+arcButton('跟注 '+cost,'call',arcadeBalance()<cost,true)+arcButton('加注','raise',r.unit>=r.base*4||arcadeBalance()<(r.unit+r.base)*(r.seats[0].seen?2:1))+arcButton('弃牌','fold');for(var i=1;i<4;i++)if(!r.seats[i].folded)actions+=arcButton('比 '+escapeHTML(r.seats[i].name),'compare-'+i,r.turn<3||arcadeBalance()<cost);}
+    else actions=arcButton('开局 · 底注 '+bet,'start',arcadeBalance()<bet,true);
+  }else{
+    table='<div style="text-align:center"><div>'+[0,1,2].map(function(i){return '<span class="arc-die">'+(r?diceFace(r.dice[i]):'?')+'</span>';}).join('')+'</div><p>小：4–10　大：11–17　豹子通杀</p></div>';
+    actions=arcButton('猜小 · '+bet,'small',arcadeBalance()<bet,true)+arcButton('猜大 · '+bet,'big',arcadeBalance()<bet,true);
+  }
+  if(r&&r.retry)actions=arcButton('重试保存结算','retry',false,true);
+  $('arcTable').innerHTML=table;$('arcActions').innerHTML=actions;
+  $('arcHistory').textContent=Arcade.mode==='practice'?'练习记录不会进入正式场，不发金币和任务奖励':a.history.filter(function(h){return h.game===Arcade.game;}).slice(0,4).map(function(h){return h.label+' '+(h.net>=0?'+':'')+h.net;}).join(' · ');
+}
+function arcadeDispatch(action){if(Arcade.busy)return;Arcade.busy=true;try{initAudio();sfx('click');var bet=Number($('arcBet').value),r=Arcade.round;if(action==='retry'){if(r&&r.retry)arcadeSettle(r.retry.payout,r.retry.label);return;}
+  if(action==='start'){if(Arcade.game==='blackjack')blackjackStart(bet);else goldStart(bet);}
+  else if(Arcade.game==='dice')dicePlay(bet,action);
+  else if(Arcade.game==='blackjack'){if(action==='hit')blackjackHit(false);if(action==='double')blackjackHit(true);if(action==='stand')blackjackStand();}
+  else if(action.indexOf('compare-')===0)goldAction('compare',Number(action.split('-')[1]));else goldAction(action);
+ }finally{Arcade.busy=false;}}
+function arcadeLeave(confirm){var r=Arcade.round;if(r&&!r.done&&!confirm){$('arcExit').hidden=false;return;}if(r&&!r.done){if(r.retry){Arcade.message='请先重试保存结算';renderArcade();return;}if(!arcadeSettle(0,'主动离桌'))return;}
+  $('arcExit').hidden=true;Arcade.round=null;showScreen('lobby');renderLobby();}
+function initArcade(){document.querySelectorAll('[data-game]').forEach(function(b){b.addEventListener('click',function(){hubGame=b.dataset.game;document.querySelectorAll('[data-game]').forEach(function(x){x.classList.toggle('selected',x===b);});$('hubHint').textContent='已选'+(hubGame==='holdem'?'德州扑克':ARCADE_NAMES[hubGame])+' · 纯单机';$('lbStartBtn').textContent='开始'+(hubGame==='holdem'?'游戏':ARCADE_NAMES[hubGame]);});});
+  $('arcActions').addEventListener('click',function(e){var b=e.target.closest('[data-arc]');if(b&&!b.disabled)arcadeDispatch(b.dataset.arc);});$('arcMode').addEventListener('change',function(){if(Arcade.round&&!Arcade.round.done)return;Arcade.mode=this.value==='practice'?'practice':'coins';Arcade.round=null;renderArcade();});$('arcBet').addEventListener('change',renderArcade);
+  $('arcRules').addEventListener('click',function(){$('arcHelp').hidden=!$('arcHelp').hidden;});$('arcRefill').addEventListener('click',function(){if(Arcade.mode==='practice'&&(!Arcade.round||Arcade.round.done)){Arcade.practice=500;renderArcade();}});
+  $('arcBack').addEventListener('click',function(){arcadeLeave(false);});$('arcExitYes').addEventListener('click',function(){arcadeLeave(true);});$('arcExitNo').addEventListener('click',function(){$('arcExit').hidden=true;});}
 
 /* ============================================================
    模式选择
@@ -2985,7 +3147,7 @@ function renderDifficultyCards() {
 
 function tryEnterGame(diffKey) {
   var cfg = DIFFICULTY_CONFIG[diffKey];
-  if (!cfg || G.active) return false;
+  if (!cfg || G.active || (Arcade && Arcade.round && !Arcade.round.done)) return false;
   if (player.coins < cfg.minCoins) {
     showToast('🔒 金币不足，需要 ' + fmt(cfg.minCoins) + ' 🪙', 2000, true);
     return false;
@@ -3019,6 +3181,7 @@ function tryEnterGame(diffKey) {
 
 /* 大厅 */
 function renderLobby() {
+  if(player) arcadeRecover();
   if (!player) return;
   $('lbLevel').textContent = 'Lv.' + player.level;
   $('lbName').textContent = player.name || '玩家';
@@ -5282,8 +5445,10 @@ function bindEvents() {
     var link = document.createElement('a'); link.href=url; link.download='dezhou-legacy-backup.json';
     document.body.appendChild(link); link.click(); link.remove(); setTimeout(function(){URL.revokeObjectURL(url);},1000);
   });
+  initArcade();
   $('lbStartBtn').addEventListener('click', function(){
     initAudio(); sfx('click');
+    if(hubGame !== 'holdem'){openArcade(hubGame);return;}
     renderModeCards();
     showScreen('mode');
   });

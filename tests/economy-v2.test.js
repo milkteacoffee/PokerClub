@@ -8,7 +8,7 @@ const w=dom.window; w.setTimeout=()=>0; w.requestAnimationFrame=()=>0;
 w.eval(code);
 let count=0;function test(name,fn){fn();count++;console.log('PASS '+name);}
 test('新版独立key旧档不覆盖',()=>{w.localStorage.setItem(w.LEGACY_SAVE_KEY,'{"old":true}');w.loadAllSaves();assert.equal(w.localStorage.getItem(w.LEGACY_SAVE_KEY),'{"old":true}');assert.notEqual(w.LEGACY_SAVE_KEY,w.SAVE_KEY_ALL);});
-test('单机新档直接500且无领取接口',()=>{assert.equal(w.START_COINS,500);assert.equal(w.player.coins,500);assert.equal(w.SAVE_VERSION,13);assert(!html.includes('GRANT_ENDPOINT'));assert(!w.document.getElementById('initialGrant'));});
+test('单机新档直接500且无领取接口',()=>{assert.equal(w.START_COINS,500);assert.equal(w.player.coins,500);assert.equal(w.SAVE_VERSION,14);assert(!html.includes('GRANT_ENDPOINT'));assert(!w.document.getElementById('initialGrant'));});
 test('每日5项恰好100',()=>{w.ensureDailyTasks();assert.equal(w.player.dailyTasks.ids.length,5);assert.equal(w.player.dailyTasks.ids.reduce((s,id)=>s+w.getDailyTaskById(id).reward,0),100);});
 test('每日领取防重复和越权',()=>{let ids=w.player.dailyTasks.ids;ids.forEach(id=>w.player.dailyProgress[id]=9999);let before=w.player.coins;ids.forEach(id=>w.claimDaily(id));ids.forEach(id=>w.claimDaily(id));assert.equal(w.player.coins-before,100);let other=w.TASK_POOL.find(t=>!ids.includes(t.id));w.player.dailyProgress[other.id]=999;w.claimDaily(other.id);assert.equal(w.player.coins-before,100);});
 test('25周常总额910且奖励20至60',()=>{assert.equal(w.WEEKLY_TASKS.length,25);assert.equal(w.WEEKLY_TASKS.reduce((s,t)=>s+t.reward,0),910);w.WEEKLY_TASKS.forEach(t=>assert(t.reward>=20&&t.reward<=60));});
