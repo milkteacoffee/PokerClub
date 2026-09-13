@@ -15,7 +15,7 @@ function check(value, msg) { assert.ok(value, msg); checks++; }
     await new Promise(r => dom.window.addEventListener('load', r, { once:true }));
     const w = dom.window, d = w.document, name = d.getElementById('lbName'), input = d.getElementById('lbNameInput');
     const key = (k, composing = false) => input.dispatchEvent(new w.KeyboardEvent('keydown', { key:k, bubbles:true, isComposing:composing }));
-    const saved = () => JSON.parse(w.localStorage.getItem('texas_poker_multi_saves_v1')).slots[1].player.name;
+    const saved = () => JSON.parse(w.localStorage.getItem('texas_poker_device_saves_v2')).slots[1].player.name;
     check(!d.getElementById('lbNameEdit'), 'No explicit edit button');
     check(name.tagName === 'BUTTON' && input.hidden, 'Accessible name, editor initially hidden');
     name.click();
@@ -38,9 +38,9 @@ function check(value, msg) { assert.ok(value, msg); checks++; }
       check(css.borderTopWidth === '0px', selector + ' has no border');
     }
     check(errors.length === 0, 'No script errors: ' + errors.join(';'));
-    const stored = w.localStorage.getItem('texas_poker_multi_saves_v1');
+    const stored = w.localStorage.getItem('texas_poker_device_saves_v2');
     const reload = new JSDOM(html, { runScripts:'dangerously', pretendToBeVisual:true, url:'https://localhost/', virtualConsole:vc,
-      beforeParse(win) { win.localStorage.setItem('texas_poker_multi_saves_v1', stored); }
+      beforeParse(win) { win.localStorage.setItem('texas_poker_device_saves_v2', stored); }
     });
     try {
       await new Promise(r => reload.window.addEventListener('load', r, { once:true }));

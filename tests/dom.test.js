@@ -40,6 +40,7 @@ const dom = new JSDOM(html, {
   pretendToBeVisual: true,
   url: 'https://localhost/',
   virtualConsole: vc,
+  beforeParse(w) { w.localStorage.setItem('texas_poker_device_saves_v2', JSON.stringify({activeSlot:1,slots:{1:{player:{name:'玩家',coins:500,version:13,initialGrantResolved:true},createdAt:Date.now(),lastPlayed:Date.now()},2:null,3:null}})); },
 });
 const { window } = dom;
 const doc = window.document;
@@ -68,7 +69,7 @@ function click(el) {
 
   console.log('【大厅渲染】');
   ok($('lbLevel').textContent === 'Lv.1', '初始等级 Lv.1（实际 ' + $('lbLevel').textContent + '）');
-  ok($('lbCoins').textContent === '1,000', '初始金币 1,000（实际 ' + $('lbCoins').textContent + '）');
+  ok($('lbCoins').textContent === '500', '已核验存档金币500（实际 ' + $('lbCoins').textContent + '）');
   ok($('lobbyScreen').style.display === 'flex', '大厅默认可见');
 
   console.log('【进入场次选择】');
@@ -95,8 +96,8 @@ function click(el) {
   click($('lbBtnAchieve'));
   await tick(30);
   ok($('ovAchieve').classList.contains('show'), '打开成就面板');
-  ok($('achList').querySelectorAll('.ach-item').length === 16,
-     '成就列表渲染 16 项（实际 ' + $('achList').querySelectorAll('.ach-item').length + '）');
+  ok($('achList').querySelectorAll('.ach-item').length === 20,
+     '成就列表每页渲染20项（实际 ' + $('achList').querySelectorAll('.ach-item').length + '）');
   ok($('stHands').textContent === '0', '总手数初始为 0');
   click($('ovAchieve').querySelector('[data-close="ovAchieve"]'));
   await tick(20);
@@ -139,7 +140,7 @@ function click(el) {
   ok($('ovShop').classList.contains('show'), '打开商城面板');
   ok($('shopList').querySelectorAll('.shop-item').length === 11,
      '商城渲染 11 件商品（实际 ' + $('shopList').querySelectorAll('.shop-item').length + '）');
-  ok($('shopCoins').textContent === '1,000', '商城顶栏显示金币');
+  ok($('shopCoins').textContent === '500', '商城顶栏显示金币');
   click($('ovShop').querySelector('[data-close="ovShop"]'));
   await tick(20);
 
@@ -169,11 +170,11 @@ function click(el) {
   var coinBefore = $('lbCoins').textContent;
   click($('btnClaimCheckin'));
   await tick(60);
-  ok($('lbCoins').textContent === '1,060', '签到后金币 1,000 → 1,060（实际 ' + $('lbCoins').textContent + '）');
+  ok($('lbCoins').textContent === '560', '签到后金币 500 → 560（实际 ' + $('lbCoins').textContent + '）');
   ok($('ciPanel').textContent.indexOf('今日已签到') >= 0, '领取后按钮变为已签到');
   click($('tabWk'));
   await tick(30);
-  ok($('wkPanel').querySelectorAll('.task-item').length === 6, '周常 6 项挑战');
+  ok($('wkPanel').querySelectorAll('.task-item').length === 25, '周常25项挑战');
   click($('ovCheckin').querySelector('[data-close="ovCheckin"]'));
   await tick(20);
 
@@ -219,8 +220,8 @@ function click(el) {
   ok($('gameScreen').classList.contains('active'), '进入游戏界面');
   ok($('lobbyScreen').style.display === 'none', '大厅已隐藏');
   ok($('topbar').querySelector('#pLevel').textContent === 'Lv.1', '顶栏等级正常');
-  ok($('pCoins').textContent === '1,060',
-     '顶栏金币与大厅一致（签到后 1,060，实际 ' + $('pCoins').textContent + '）');
+  ok($('pCoins').textContent === '560',
+     '顶栏金币与大厅一致（签到后 560，实际 ' + $('pCoins').textContent + '）');
   const seats = [0,1,2,3].map(i => $('seat' + i));
   ok(seats.every(s => s.querySelector('.chips')), '4 个座位均渲染了筹码');
 
@@ -256,7 +257,7 @@ function click(el) {
   ok($('lobbyScreen').style.display === 'flex', '退出后回到大厅');
 
   /* 存档持久化 */
-  const raw = window.localStorage.getItem('texas_poker_multi_saves_v1');
+  const raw = window.localStorage.getItem('texas_poker_device_saves_v2');
   ok(!!raw, '对局后存档已写入 localStorage');
   try {
     const s = JSON.parse(raw);
@@ -314,7 +315,7 @@ function click(el) {
     runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://localhost/',
     virtualConsole: vc2,
     beforeParse: function (w) {
-      w.localStorage.setItem('texas_poker_multi_saves_v1', JSON.stringify(seeded));
+      w.localStorage.setItem('texas_poker_device_saves_v2', JSON.stringify(seeded));
     }
   });
   await tick(120);

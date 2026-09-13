@@ -1,0 +1,21 @@
+'use strict';
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const {JSDOM}=require('jsdom');
+const html=fs.readFileSync(require('path').join(__dirname,'../index.html'),'utf8');
+const code=html.match(/<script>([\s\S]*?)<\/script>/)[1].replace(/\(function \(\) \{\s*'use strict';/,'').replace(/\}\)\(\);\s*$/,'').replace(/  init\(\);/,'');
+const dom=new JSDOM(html.replace(/<script>[\s\S]*?<\/script>/,''),{url:'https://example.test',runScripts:'outside-only'});
+const w=dom.window; w.setTimeout=()=>0; w.requestAnimationFrame=()=>0;
+w.eval(code);
+let count=0;function test(name,fn){fn();count++;console.log('PASS '+name);}
+test('新版独立key旧档不覆盖',()=>{w.localStorage.setItem(w.LEGACY_SAVE_KEY,'{"old":true}');w.loadAllSaves();assert.equal(w.localStorage.getItem(w.LEGACY_SAVE_KEY),'{"old":true}');assert.notEqual(w.LEGACY_SAVE_KEY,w.SAVE_KEY_ALL);});
+test('单机新档直接500且无领取接口',()=>{assert.equal(w.START_COINS,500);assert.equal(w.player.coins,500);assert.equal(w.SAVE_VERSION,13);assert(!html.includes('GRANT_ENDPOINT'));assert(!w.document.getElementById('initialGrant'));});
+test('每日5项恰好2000',()=>{w.ensureDailyTasks();assert.equal(w.player.dailyTasks.ids.length,5);assert.equal(w.player.dailyTasks.ids.reduce((s,id)=>s+w.getDailyTaskById(id).reward,0),2000);});
+test('每日领取防重复和越权',()=>{let ids=w.player.dailyTasks.ids;ids.forEach(id=>w.player.dailyProgress[id]=9999);let before=w.player.coins;ids.forEach(id=>w.claimDaily(id));ids.forEach(id=>w.claimDaily(id));assert.equal(w.player.coins-before,2000);let other=w.TASK_POOL.find(t=>!ids.includes(t.id));w.player.dailyProgress[other.id]=999;w.claimDaily(other.id);assert.equal(w.player.coins-before,2000);});
+test('25周常总额50000且上限2000',()=>{assert.equal(w.WEEKLY_TASKS.length,25);assert.equal(w.WEEKLY_TASKS.reduce((s,t)=>s+t.reward,0),50000);w.WEEKLY_TASKS.forEach(t=>assert.equal(t.reward,2000));});
+test('同族事件真实更新各阶段并防重复领取',()=>{w.ensureWeekly();w.bumpWeeklyProgress('w_play_30',30);let list=w.WEEKLY_TASKS.filter(t=>t.event==='w_play_30');assert(list.every(t=>w.player.weekly.progress[t.id]===Math.min(30,t.target)));let before=w.player.coins;assert(w.claimWeekly(list[0].id));assert(!w.claimWeekly(list[0].id));assert.equal(w.player.coins-before,2000);});
+test('成就1000项ID唯一奖励合法',()=>{assert.equal(w.ACHIEVEMENTS.length,1000);assert.equal(new Set(w.ACHIEVEMENTS.map(a=>a.id)).size,1000);assert(w.ACHIEVEMENTS.every(a=>a.reward>=10&&a.reward<=2000));});
+test('成就独立领取且分页不渲染1000项',()=>{let a=w.ACHIEVEMENTS.find(a=>a.metric);w.player.totalHands=a.target;let before=w.player.coins;assert(w.claimAchievement(a.id));assert(!w.claimAchievement(a.id));assert.equal(w.player.coins-before,a.reward);w.renderAchList();assert(w.document.querySelectorAll('.ach-item').length<=20);});
+test('新手盲注10/20',()=>{assert.equal(w.DIFFICULTY_CONFIG.easy.sb,10);assert.equal(w.DIFFICULTY_CONFIG.easy.bb,20);});
+test('独立浏览器存档隔离且可直接开局',()=>{const other=new JSDOM(html.replace(/<script>[\s\S]*?<\/script>/,''),{url:'https://example.test',runScripts:'outside-only'});other.window.setTimeout=()=>0;other.window.requestAnimationFrame=()=>0;other.window.eval(code);other.window.loadAllSaves();assert.equal(other.window.player.coins,500);assert.notEqual(other.window.player.coins,w.player.coins);assert.equal(other.window.localStorage.getItem(w.LEGACY_SAVE_KEY),null);other.window.startGame=()=>{};assert(other.window.tryEnterGame('easy'));other.window.close();});
+test('刷新不重置余额，新建档500',()=>{w.player.coins=321;w.saveAllSaves(true);w.player=null;w.allSaves=null;w.loadAllSaves();assert.equal(w.player.coins,321);w.createNewSaveAt(2);assert.equal(w.player.coins,500);assert.equal(w.allSaves.slots[1].player.coins,321);});
+console.log('TOTAL '+count);dom.window.close();

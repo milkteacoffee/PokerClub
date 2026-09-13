@@ -511,6 +511,9 @@
   }
 
   .ach-list { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  .ach-toolbar .slot-mini, .ach-item .slot-mini, #exportLegacy { width:auto; height:auto; min-height:30px; padding:6px 12px; white-space:nowrap; font-size:12px; flex-shrink:0; }
+  .ach-item > span { font-size:11px; color:#9babbc; white-space:nowrap; }
+  .ach-toolbar { position:sticky; top:0; z-index:1; background:#182533; padding:8px 0; }
   .ach-item { display:flex; align-items:center; gap:12px;
     padding:10px 14px; border-radius:12px;
     background:rgba(255,255,255,.035);
@@ -909,7 +912,7 @@
       </div>
       <div class="lobby-coins">
         <span class="icon">🪙</span>
-        <span id="lbCoins">1,000</span>
+        <span id="lbCoins">0</span>
       </div>
       <div class="lobby-topbtns">
         <button class="lobby-iconbtn" id="lbBtnTasks" title="任务">📋<span class="badge" id="lbTaskBadge" style="display:none">!</span></button>
@@ -1046,7 +1049,7 @@
         <p style="color:#f2c14e;font-weight:800;margin-bottom:6px;">🎴 基本玩法</p>
         <p>每人获得 2 张底牌，桌面依次发出 5 张公共牌。从 7 张牌中选最佳 5 张与对手比大小，最大者赢取底池。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">💰 场次门槛</p>
-        <p>🌱 简单：200🪙 入场 · 免费 · 加注 ≥10<br>
+        <p>🌱 简单：200🪙 入场 · 免费 · 盲注10/20 · 加注 ≥20<br>
            🎯 普通：5,000🪙 入场 · 入场费 200 · 加注 ≥100<br>
            🔥 困难：20,000🪙 入场 · 入场费 1,000 · 加注 ≥500<br>
            👑 冠军：100,000🪙 入场 · 入场费 5,000 · 加注 ≥1,000</p>
@@ -1055,7 +1058,8 @@
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">💾 多存档</p>
         <p>共 3 个存档槽，每个独立记录金币、等级、成就与任务。金币用完后可以开新档重玩新手场。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎁 任务与成就</p>
-        <p>新手任务 21 关（全清约 8,250🪙）、每日任务每天刷新、周常挑战每周一刷新 6 项，另有 16 项成就。</p>
+        <p>每日5项，每项400金币，合计2000；每周一刷新25项，每项2000金币，合计50000。成就共1000项，按进阶目标解锁，单项10至2000金币，需在成就页领取。日周刷新以北京时间为准。</p>
+        <p>纯单机，无登录、无后端、不收集IP。每个浏览器独立保存，新档直接获得500金币；同Wi-Fi不同设备互不影响。旧版存档保留只读导出。清除网站数据会丢失存档，换浏览器或新建存档可重新开始。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🏅 段位排位</p>
         <p>本游戏为单机电脑对战，无真人匹配。快速模式不影响段位；排位入场前需资产至少 10,000 金币，每次入场消耗 1 排位积分（初始 100，可在模式页用 100 金币购买 1 分），继续下一手不重复收门票。</p>
         <p>段位积分与入场积分独立：青铜 → 白银 → 黄金 → 铂金 → 钻石 → 大师 → 传奇。胜手 +12 至 +26，三连胜起额外 +2；弃牌失利 -5，摊牌失利 -10，最低 0 分，可降段。各段位金币奖励仅首次到达发放。</p>
@@ -1127,6 +1131,7 @@
         每个存档独立记录金币、等级、成就与任务进度。<br>
         你可以随时切换存档，或开新档重新体验新手场。
       </div>
+      <button class="slot-mini" id="exportLegacy">导出旧版存档备份（只读，不合并资产）</button>
       <div class="slot-list" id="slotList"></div>
     </div>
   </div>
@@ -1137,7 +1142,7 @@
       <div class="confirm-title">新建存档</div>
       <div class="confirm-msg">
         将在此槽位创建一个全新存档，<br>
-        初始金币 <b style="color:#f2c14e;">1,000 🪙</b>。<br>
+        新档初始金币 <b style="color:#f2c14e;">500 金币</b>，在本浏览器独立保存，无需联网领取。<br>
         该槽位原有进度将被覆盖。
       </div>
       <div class="confirm-btns">
@@ -1305,9 +1310,9 @@ var MODE_CONFIG = {
 var DIFFICULTY_CONFIG = {
   easy: {
     key:'easy', name:'简单', tag:'新手', icon:'🌱',
-    sb:5, bb:10, buyIn:500, minCoins:200, entryFee:0,
-    minRaiseUnit:10, thinkTime:30, aiBonus:-0.18,
-    desc:['盲注 5 / 10','带入 $500','入场免费','⏰ 思考 30 秒','加注 ≥10','AI 温和 · 适合练手']
+    sb:10, bb:20, buyIn:500, minCoins:200, entryFee:0,
+    minRaiseUnit:20, thinkTime:30, aiBonus:-0.18,
+    desc:['盲注 10 / 20','新档初始 $500','入场免费','⏰ 思考 30 秒','加注 ≥20','AI 温和 · 适合练手']
   },
   normal: {
     key:'normal', name:'普通', tag:'标准', icon:'🎯',
@@ -1332,9 +1337,10 @@ var DIFFICULTY_CONFIG = {
 /* ============================================================
    多存档系统
    ============================================================ */
-var SAVE_KEY_ALL = 'texas_poker_multi_saves_v1';
+var LEGACY_SAVE_KEY = 'texas_poker_multi_saves_v1';
+var SAVE_KEY_ALL = 'texas_poker_device_saves_v2';
 var MAX_SLOTS = 3;
-var START_COINS = 1000;   // 新玩家初始金币
+var START_COINS = 500;   // 纯单机：每个新档直接获得初始筹码，不收集IP或设备指纹
 
 /* 当前玩家（活动存档） */
 var player = null;
@@ -1342,7 +1348,7 @@ var activeSlot = 1;
 var allSaves = null;
 
 /* 存档结构版本：11 = 加入音乐 / 段位 / 商城 / 签到 / 周常 / 统计 / 图鉴 */
-var SAVE_VERSION = 12;
+var SAVE_VERSION = 13;
 var WEEK_START_DAY = 1;   // 0=周日, 1=周一
 
 /* 创建新玩家默认状态 */
@@ -1351,6 +1357,7 @@ function createNewPlayer(name) {
     name: name || '玩家',
     version: SAVE_VERSION,
     level: 1, exp: 0, coins: START_COINS,
+    achievementClaims: {},
     totalHands: 0, totalWins: 0, streak: 0, maxStreak: 0, maxWin: 0,
     achievements: {},
     newbieTasks: {},        // 新手任务领取记录 { taskId: true }
@@ -1567,6 +1574,7 @@ function switchToSlot(slotNum) {
 
 /* 在指定槽位创建新档 */
 function createNewSaveAt(slotNum) {
+  if (G.active) return false;
   saveAllSaves(true);
   allSaves.slots[slotNum] = {
     player: createNewPlayer('玩家 ' + slotNum),
@@ -1583,6 +1591,7 @@ function createNewSaveAt(slotNum) {
 
 /* 删除槽位 */
 function deleteSlot(slotNum) {
+  if (G.active) return false;
   if (!allSaves.slots[slotNum]) return;
   var isActive = slotNum === activeSlot;
   allSaves.slots[slotNum] = null;
@@ -1648,6 +1657,9 @@ var TASK_POOL = [
   { id:'fast_decide', name:'快速决策 10 次', target:10, reward:180 }
 ];
 
+// 每日随机抽取5项，每项400金币，全部完成恰好2000。
+TASK_POOL.forEach(function(t){ t.reward = 400; });
+
 /* 成就 */
 var ACHIEVEMENTS = [
   { id:'first_win', name:'初战告捷', desc:'赢得第一局', icon:'🥇', reward:100 },
@@ -1667,6 +1679,41 @@ var ACHIEVEMENTS = [
   { id:'enter_champion', name:'踏入殿堂', desc:'首次进入冠军场', icon:'👑', reward:2000 },
   { id:'newbie_master', name:'新手毕业', desc:'完成所有新手任务', icon:'🎓', reward:3000 }
 ];
+
+// 16个特色成就 + 12条路线各82阶 = 1000个独立目标。
+var ACH_ROUTES = [
+  ['hands','牌桌历练',10,function(p){return p.totalHands;}],
+  ['wins','胜局积累',5,function(p){return p.totalWins;}],
+  ['wager','筹码投入',1000,function(p){return p.stats.totalWagered;}],
+  ['showdown','摊牌经验',5,function(p){return p.stats.showdowns;}],
+  ['allin','全下行动',3,function(p){return p.stats.allIns;}],
+  ['allinwin','全下胜手',2,function(p){return p.stats.allInWins;}],
+  ['bluff','诈唬胜手',2,function(p){return p.stats.bluffWins;}],
+  ['pair','一对收集',5,function(p){return p.handDex[1] || 0;}],
+  ['twopair','两对收集',3,function(p){return p.handDex[2] || 0;}],
+  ['trips','三条收集',2,function(p){return p.handDex[3] || 0;}],
+  ['straight','顺子收集',1,function(p){return p.handDex[4] || 0;}],
+  ['flush','同花收集',1,function(p){return p.handDex[5] || 0;}]
+];
+ACHIEVEMENTS.forEach(function(a){ a.reward = Math.max(10,Math.min(2000,a.reward)); });
+ACH_ROUTES.forEach(function(route){
+  for (var tier = 1; tier <= 82; tier++) {
+    var target = route[2] * tier * tier;
+    ACHIEVEMENTS.push({id:'milestone_' + route[0] + '_' + tier, name:route[1] + ' · ' + tier + '阶',
+      desc:'累计达到 ' + target, icon:'', target:target, metric:route[3], route:route[0],
+      reward:10 + Math.floor((tier-1)*199/81)*10});
+  }
+});
+function achievementReady(a) {
+  return !!player.achievements[a.id] || !!(a.metric && a.metric(player) >= a.target);
+}
+function claimAchievement(id) {
+  var a = ACHIEVEMENTS.find(function(x){return x.id === id;});
+  if (!a || player.achievementClaims[id] || !achievementReady(a)) return false;
+  player.achievements[id] = true; player.achievementClaims[id] = true;
+  addCoins(a.reward); saveAllSaves(true); renderAchList(); renderLobby(); return true;
+}
+var achPage = 0, achFilter = 'all';
 
 /* 段位 */
 var RANKS = [
@@ -1691,6 +1738,21 @@ var WEEKLY_TASKS = [
   { id:'w_big_3',   name:'凑成 3 次同花及以上', target:3,    reward:900 },
   { id:'w_streak_3',name:'达成一次 3 连胜',     target:1,    reward:1000 }
 ];
+
+// 共25项，每项2000，合计50000；同类事件累积到各独立阶段目标。
+var WEEKLY_FAMILIES = [
+  ['w_play_30','完成牌局',[10,30,60,100,150]],
+  ['w_win_10','赢得牌局',[3,10,20,35,50]],
+  ['w_allin_3','全下次数',[1,3,6,10]],
+  ['w_bluff_3','弱牌获胜',[1,3,6,10]],
+  ['w_big_3','同花及以上',[1,3,6,10]],
+  ['w_streak_3','达成三连胜',[1,2,3]]
+];
+WEEKLY_TASKS = [];
+WEEKLY_FAMILIES.forEach(function(f){
+  f[2].forEach(function(target,i){ WEEKLY_TASKS.push({id:i===0?f[0]:f[0]+'_'+i,
+    event:f[0], name:f[1]+' '+target+' 次', target:target, reward:2000}); });
+});
 
 /* 商城 */
 var SHOP_ITEMS = [
@@ -3747,9 +3809,9 @@ function distributePot() {
 }
 
 function todayStr() {
-  var d = new Date();
-  var mm = d.getMonth() + 1, dd = d.getDate();
-  return d.getFullYear() + '-' + (mm < 10 ? '0' + mm : mm) + '-' + (dd < 10 ? '0' + dd : dd);
+  var d = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  var mm = d.getUTCMonth() + 1, dd = d.getUTCDate();
+  return d.getUTCFullYear() + '-' + (mm < 10 ? '0' + mm : mm) + '-' + (dd < 10 ? '0' + dd : dd);
 }
 
 /* 金币统一入口：游戏中的奖励同步进牌桌筹码 */
@@ -3816,11 +3878,10 @@ function checkAchievement(id, silent) {
   }
   if (!a) return;
   player.achievements[id] = true;
-  addCoins(a.reward);
   saveAllSaves(true);
   if (!silent) {
     sfx('achievement');
-    showToast('🏆 成就达成：' + a.name + '  +' + a.reward + '🪙', 2400, false, 'success');
+    showToast('成就达成：' + a.name + '，请到成就面板领取奖励', 2400, false, 'success');
   }
 }
 
@@ -3913,6 +3974,8 @@ function claimNewbie(id) {
 
 function claimDaily(id) {
   if (!player) return;
+  ensureDailyTasks();
+  if (player.dailyTasks.ids.indexOf(id) < 0) return;
   var task = getDailyTaskById(id);
   if (!task || player.dailyClaimed[id]) return;
   if ((player.dailyProgress[id] || 0) < task.target) return;
@@ -4063,10 +4126,10 @@ function getWeeklyTaskById(id) {
 function bumpWeeklyProgress(id, n) {
   if (!player) return;
   ensureWeekly();
-  if (player.weekly.claimed[id]) return;
-  if (!getWeeklyTaskById(id)) return;
-  var cur = player.weekly.progress[id] || 0;
-  player.weekly.progress[id] = cur + (n || 1);
+  WEEKLY_TASKS.forEach(function(t){
+    if (t.event !== id || player.weekly.claimed[t.id]) return;
+    player.weekly.progress[t.id] = Math.min(t.target,(player.weekly.progress[t.id] || 0) + (n || 1));
+  });
 }
 function setWeeklyProgressIfHigher(id, v) {
   if (!player) return;
@@ -4368,7 +4431,7 @@ async function finishHand() {
   }
   if (humanWon && hv && hv[0] <= 1) bumpWeeklyProgress('w_bluff_3', 1);
   if (humanWon) bumpWeeklyProgress('w_win_10', 1);
-  if (player.streak >= 3) setWeeklyProgressIfHigher('w_streak_3', 1);
+  if (humanWon && player.streak > 0 && player.streak % 3 === 0) bumpWeeklyProgress('w_streak_3', 1);
 
   /* ---- 牌型图鉴 ---- */
   if (hv) {
@@ -4606,18 +4669,33 @@ function renderAchList() {
   $('stWins').textContent = fmt(player.totalWins);
   $('stStreak').textContent = fmt(player.maxStreak);
   $('stMaxWin').textContent = '$' + fmt(player.maxWin);
-  var html = '';
-  for (var i = 0; i < ACHIEVEMENTS.length; i++) {
-    var a = ACHIEVEMENTS[i];
-    var done = !!player.achievements[a.id];
+  var filtered = ACHIEVEMENTS.filter(function(a){
+    if (achFilter === 'ready') return achievementReady(a) && !player.achievementClaims[a.id];
+    if (achFilter === 'claimed') return !!player.achievementClaims[a.id];
+    return true;
+  });
+  var pages = Math.max(1,Math.ceil(filtered.length/20)); achPage = Math.max(0,Math.min(achPage,pages-1));
+  var html = '<div class="ach-toolbar" style="grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">';
+  [['all','全部1000项'],['ready','可领取'],['claimed','已领取']].forEach(function(f){
+    html += '<button class="slot-mini" data-ach-filter="'+f[0]+'">'+f[1]+'</button>';
+  });
+  html += '<button class="slot-mini" data-ach-page="-1">上一页</button><span>'+(achPage+1)+' / '+pages+'</span><button class="slot-mini" data-ach-page="1">下一页</button></div>';
+  if (!filtered.length) html += '<p>暂无符合条件的成就</p>';
+  for (var i = achPage*20; i < Math.min(filtered.length,(achPage+1)*20); i++) {
+    var a = filtered[i];
+    var done = !!player.achievementClaims[a.id];
     html += '<div class="ach-item' + (done ? ' done' : '') + '">';
     html += '<div class="ic">' + a.icon + '</div>';
     html += '<div class="info"><div class="t">' + a.name + '</div>';
     html += '<div class="d">' + a.desc + '</div>';
-    html += '<div class="rw">+' + fmt(a.reward) + '🪙</div></div>';
+    html += '<div class="rw">+' + fmt(a.reward) + ' 金币</div></div>';
+    html += done ? '<span>已领取</span>' : (achievementReady(a) ? '<button class="slot-mini" data-ach-claim="'+a.id+'">领取</button>' : '<span>'+(a.metric?Math.min(a.target,a.metric(player))+'/'+a.target:'未达成')+'</span>');
     html += '</div>';
   }
   $('achList').innerHTML = html;
+  document.querySelectorAll('[data-ach-filter]').forEach(function(b){b.addEventListener('click',function(){achFilter=b.getAttribute('data-ach-filter');achPage=0;renderAchList();});});
+  document.querySelectorAll('[data-ach-page]').forEach(function(b){b.addEventListener('click',function(){achPage+=Number(b.getAttribute('data-ach-page'));renderAchList();});});
+  document.querySelectorAll('[data-ach-claim]').forEach(function(b){b.addEventListener('click',function(){claimAchievement(b.getAttribute('data-ach-claim'));});});
 }
 
 function renderSlotList() {
@@ -5144,6 +5222,13 @@ function bindEvents() {
       finishNameEdit(e.key === 'Escape');
       $('lbName').focus();
     }
+  });
+  $('exportLegacy').addEventListener('click', function(){
+    var raw = localStorage.getItem(LEGACY_SAVE_KEY);
+    if (!raw) { showToast('此浏览器没有旧版存档',1600); return; }
+    var url = URL.createObjectURL(new Blob([raw],{type:'application/json'}));
+    var link = document.createElement('a'); link.href=url; link.download='dezhou-legacy-backup.json';
+    document.body.appendChild(link); link.click(); link.remove(); setTimeout(function(){URL.revokeObjectURL(url);},1000);
   });
   $('lbStartBtn').addEventListener('click', function(){
     initAudio(); sfx('click');

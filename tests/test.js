@@ -402,10 +402,10 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   ok(Object.keys(ctx.player.newbieProgress).length > 0, '新手任务进度被记录');
   ok(ctx.player.totalHands === handsPlayed, '手数统计与模拟一致（'
      + ctx.player.totalHands + ' vs ' + handsPlayed + '）');
-  ok(injected > 0, '对局中触发了成就/任务奖励注入（共 ' + injected + ' 🪙）');
+  ok(injected === 0, '新版成就需手动领取，不在对局自动注币');
 
   // 存档持久化
-  const raw = storage.get('texas_poker_multi_saves_v1');
+  const raw = storage.get(ctx.SAVE_KEY_ALL);
   ok(!!raw, '存档已写入 localStorage');
   try {
     const parsed = JSON.parse(raw);
@@ -415,9 +415,10 @@ const sleepTick = () => new Promise(r => setImmediate(r));
 
   // 多存档：新建 + 切换 + 删除
   try {
+    ctx.G.active = false;
     ctx.createNewSaveAt(2);
     ok(!!ctx.allSaves.slots[2], '可在槽位 2 创建新档');
-    ok(ctx.player.coins === 1000, '新档初始金币为 1000');
+    ok(ctx.player.coins === 500 && ctx.START_COINS === 500, '单机新档直接获得500金币');
     ctx.deleteSlot(2);
     ok(!ctx.allSaves.slots[2], '可删除槽位 2');
   } catch (e) {
@@ -436,6 +437,7 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   ok(ctx.player.rankedPoints === 100, '新档初始排位积分为 100');
   ctx.player.name = '自定义牌手';
   ok(ctx.player.name === '自定义牌手', '用户名称可自定义并写入玩家存档');
+  ctx.player.coins = 500; // 单机初始余额
   var rankCoins = ctx.player.coins;
   ok(ctx.spendCoins(100) === true, '100 金币可兑换排位积分的金币扣除接口可用');
   ctx.player.rankedPoints++;
@@ -482,7 +484,7 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   ok(ctx.checkWeeklyHasClaimable() === true, '达标后出现可领取项');
   var cWeekly = ctx.player.coins;
   ctx.claimWeekly('w_play_30');
-  ok(ctx.player.coins === cWeekly + 800, '领取周常奖励 800');
+  ok(ctx.player.coins === cWeekly + 2000, '领取周常奖励 2000');
   ok(ctx.claimWeekly('w_play_30') === false, '周常不可重复领取');
 
   /* ---- 商城与道具 ---- */
@@ -811,7 +813,7 @@ const sleepTick = () => new Promise(r => setImmediate(r));
     achievements: {}, newbieTasks: {}, newbieProgress: {}
   };
   var mg = ctx.migratePlayer(legacy);
-  ok(mg.version === 12, '迁移后版本号升级到 12');
+  ok(mg.version === 13, '迁移后版本号升级到 13');
   ok(mg.coins === 4242 && mg.level === 7, '迁移保留原有金币与等级');
   ok(mg.rankPoints === 0 && typeof mg.musicOn === 'boolean', '迁移补齐段位与音乐字段');
   ok(!!mg.stats && mg.stats.vpip === 0, '迁移补齐统计结构');
@@ -860,6 +862,7 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   }
 
   ctx.createNewSaveAt(1);
+  ctx.player.coins = 500;
   ctx.App.difficulty = 'easy';
   ctx.startGame('easy');
   await advanceToHandOver(30000);
