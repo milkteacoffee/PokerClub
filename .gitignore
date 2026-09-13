@@ -1,0 +1,10 @@
+# 测试生成物
+tests/game.extracted.js
+tests/shots/
+
+# 系统/编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log

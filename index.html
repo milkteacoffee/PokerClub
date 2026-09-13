@@ -50,77 +50,103 @@
       radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,.2), transparent),
       radial-gradient(1px 1px at 60% 80%, rgba(255,217,122,.3), transparent);
     pointer-events:none; opacity:.7; }
-  .lobby-top { display:flex; align-items:center; padding:12px 20px; gap:14px;
+  .lobby-top { display:flex; align-items:center; padding:10px 20px; gap:12px;
     position:relative; z-index:2; }
-  .lobby-avatar { width:52px; height:52px; border-radius:50%;
+  .lobby-avatar { width:46px; height:46px; border-radius:50%;
     background:linear-gradient(135deg,#2e9e6b,#1e7a4f);
     border:2px solid #f2c14e; display:flex; align-items:center;
-    justify-content:center; font-size:28px;
-    box-shadow:0 0 12px rgba(242,193,78,.4); }
-  .lobby-pinfo { display:flex; flex-direction:column; gap:4px; min-width:160px; }
-  .lobby-name-row { display:flex; align-items:center; gap:8px; }
+    justify-content:center; font-size:24px;
+    box-shadow:0 0 12px rgba(242,193,78,.4); flex-shrink:0; }
+  .lobby-pinfo { display:flex; flex-direction:column; gap:3px; min-width:130px; }
+  .lobby-name-row { display:flex; align-items:center; gap:6px; }
   .lobby-lvl { background:linear-gradient(180deg,#f2c14e,#c8932a);
-    color:#2a1a0a; font-weight:900; font-size:11px;
-    padding:2px 8px; border-radius:8px;
+    color:#2a1a0a; font-weight:900; font-size:10px;
+    padding:2px 7px; border-radius:7px;
     border:1px solid rgba(255,255,255,.3); }
-  .lobby-name { font-size:15px; font-weight:800; color:#e8eef5; }
-  .lobby-expbar { width:100%; height:6px; background:rgba(255,255,255,.08);
+  .lobby-name { font-size:13px; font-weight:800; color:#e8eef5; }
+  .lobby-expbar { width:100%; height:5px; background:rgba(255,255,255,.08);
     border-radius:3px; overflow:hidden;
     border:1px solid rgba(255,255,255,.06); }
   .lobby-expfill { height:100%; width:0%;
     background:linear-gradient(90deg,#f2c14e,#c8932a); transition:width .4s; }
-  .lobby-coins { display:flex; align-items:center; gap:6px;
+  .lobby-coins { display:flex; align-items:center; gap:5px;
     background:linear-gradient(180deg,rgba(242,193,78,.15),rgba(242,193,78,.06));
     border:1.5px solid rgba(242,193,78,.4);
-    padding:8px 16px; border-radius:22px;
-    font-size:16px; font-weight:900; color:#f2c14e;
+    padding:6px 13px; border-radius:20px;
+    font-size:14px; font-weight:900; color:#f2c14e;
     text-shadow:0 2px 4px rgba(0,0,0,.4); }
-  .lobby-coins .icon { font-size:18px; }
-  .lobby-topbtns { margin-left:auto; display:flex; gap:10px; }
-  .lobby-iconbtn { width:44px; height:44px; border-radius:12px;
+  .lobby-coins .icon { font-size:15px; }
+  .lobby-topbtns { margin-left:auto; display:flex; gap:7px; }
+  .lobby-iconbtn { width:40px; height:40px; border-radius:11px;
     border:1.5px solid rgba(255,255,255,.12);
-    background:rgba(255,255,255,.05); font-size:20px;
+    background:rgba(255,255,255,.05); font-size:18px;
     cursor:pointer; display:flex; align-items:center;
     justify-content:center; position:relative;
     transition:all .15s; color:#e8eef5; }
   .lobby-iconbtn:active { transform:scale(.92); background:rgba(255,255,255,.14); }
   .lobby-iconbtn .badge { position:absolute; top:-4px; right:-4px;
-    min-width:18px; height:18px; line-height:18px;
-    background:#e5484d; color:#fff; font-size:11px;
-    font-weight:900; border-radius:9px; padding:0 5px; text-align:center; }
+    min-width:16px; height:16px; line-height:16px;
+    background:#e5484d; color:#fff; font-size:10px;
+    font-weight:900; border-radius:8px; padding:0 4px; text-align:center; }
+  .lobby-iconbtn .badge.green { background:#16a34a; }
+
+  .save-status {
+    display:flex; align-items:center; gap:6px;
+    padding:0 20px; height:18px;
+    font-size:11px; color:#4a5c6e;
+    position:relative; z-index:2;
+  }
+  .save-status .dot {
+    width:6px; height:6px; border-radius:50%;
+    background:#4ade80; box-shadow:0 0 6px rgba(74,222,128,.6);
+    transition:background .3s;
+  }
+  .save-status .dot.saving {
+    background:#fbbf24; box-shadow:0 0 6px rgba(251,191,36,.6);
+    animation:pulseDot .8s ease-in-out infinite alternate;
+  }
+  @keyframes pulseDot {
+    from { opacity:.5; } to { opacity:1; }
+  }
+
   .lobby-logo-area { flex:1; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:8px;
+    align-items:center; justify-content:center; gap:4px;
     position:relative; z-index:2; }
-  .lobby-logo { font-size:68px; font-weight:900; letter-spacing:20px;
-    padding-left:20px;
+  .lobby-logo { font-size:60px; font-weight:900; letter-spacing:18px;
+    padding-left:18px;
     background:linear-gradient(180deg,#fef3c7 0%,#f2c14e 40%,#c8932a 75%,#8a6420 100%);
     -webkit-background-clip:text; background-clip:text;
     -webkit-text-fill-color:transparent;
     filter:drop-shadow(0 4px 14px rgba(242,193,78,.45));
     text-align:center; }
-  .lobby-subtitle { font-size:13px; letter-spacing:12px; padding-left:12px;
+  .lobby-subtitle { font-size:11px; letter-spacing:10px; padding-left:10px;
     color:#8fa0b4; font-weight:700; }
-  .lobby-decoration { display:flex; gap:24px; margin-top:12px; opacity:.85; }
-  .lobby-decoration span { font-size:26px;
+  .lobby-decoration { display:flex; gap:20px; margin-top:8px; opacity:.85; }
+  .lobby-decoration span { font-size:22px;
     filter:drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
-  .lobby-bottom { padding:0 20px 24px; display:flex; flex-direction:column;
-    align-items:center; gap:12px; position:relative; z-index:2; }
-  .lobby-quickbtns { display:flex; gap:12px; justify-content:center; }
+  .lobby-bottom { padding:0 20px 18px; display:flex; flex-direction:column;
+    align-items:center; gap:9px; position:relative; z-index:2; }
+  .lobby-quickbtns { display:flex; gap:10px; justify-content:center; }
   .lobby-quickbtn { display:flex; flex-direction:column;
-    align-items:center; gap:3px; padding:8px 18px;
+    align-items:center; gap:3px; padding:6px 14px;
     background:rgba(255,255,255,.04);
     border:1px solid rgba(255,255,255,.08);
-    border-radius:12px; font-size:11px; color:#8fa0b4;
+    border-radius:11px; font-size:10.5px; color:#8fa0b4;
     font-weight:700; cursor:pointer; font-family:inherit;
-    transition:all .15s; }
-  .lobby-quickbtn .ic { font-size:20px; }
+    transition:all .15s; position:relative; }
+  .lobby-quickbtn .ic { font-size:17px; }
   .lobby-quickbtn:active { background:rgba(255,255,255,.1); }
-  .lobby-start-btn { width:320px; height:68px; font-size:24px;
+  .lobby-quickbtn .badge { position:absolute; top:-4px; right:-4px;
+    min-width:15px; height:15px; line-height:15px;
+    background:#e5484d; color:#fff; font-size:10px;
+    font-weight:900; border-radius:8px; padding:0 4px; text-align:center; }
+  .lobby-quickbtn .badge.green { background:#16a34a; }
+  .lobby-start-btn { width:280px; height:60px; font-size:20px;
     letter-spacing:12px; padding-left:12px; display:flex;
     align-items:center; justify-content:center;
     animation:btnBreathe 2.4s ease-in-out infinite; }
   @keyframes btnBreathe { 0%,100%{filter:brightness(1);} 50%{filter:brightness(1.15);} }
-  .lobby-hint { font-size:11.5px; color:#4a5c6e; letter-spacing:1px; }
+  .lobby-hint { font-size:10.5px; color:#4a5c6e; letter-spacing:1px; }
 
   /* 难度 */
   #difficultyScreen { position:absolute; inset:0;
@@ -128,7 +154,7 @@
     display:none; flex-direction:column; overflow:hidden; }
   #difficultyScreen.active { display:flex; }
   .diff-header { display:flex; align-items:center;
-    padding:12px 20px; gap:14px;
+    padding:12px 20px; gap:12px;
     border-bottom:1px solid rgba(255,255,255,.06); }
   .diff-back { width:38px; height:38px; border-radius:50%;
     border:1.5px solid rgba(255,255,255,.12);
@@ -138,14 +164,16 @@
   .diff-back:active { background:rgba(255,255,255,.14); }
   .diff-title { font-size:18px; font-weight:900;
     letter-spacing:4px; color:#f2c14e; }
+  .diff-hint { font-size:11px; color:#8fa0b4; margin-left:auto;
+    letter-spacing:1px; }
   .diff-body { flex:1; display:flex; align-items:center;
     justify-content:center; gap:12px; padding:12px 16px; }
-  .diff-card { width:212px; height:372px;
+  .diff-card { width:212px; height:364px;
     background:linear-gradient(180deg,rgba(28,40,55,.9),rgba(15,22,32,.95));
     border:2px solid rgba(255,255,255,.08);
     border-radius:16px; display:flex; flex-direction:column;
     align-items:center; justify-content:center;
-    padding:20px 14px; gap:8px; cursor:pointer;
+    padding:18px 14px; gap:7px; cursor:pointer;
     transition:all .2s; position:relative; overflow:hidden;
     font-family:inherit; color:inherit; }
   .diff-card:active { transform:scale(.96); }
@@ -156,12 +184,16 @@
     background:rgba(0,0,0,.6); z-index:1; pointer-events:none; }
   .diff-lock-overlay { position:absolute; inset:0; z-index:2;
     display:none; flex-direction:column;
-    align-items:center; justify-content:center; gap:6px;
-    color:#f2c14e; pointer-events:none; padding:10px; }
+    align-items:center; justify-content:space-between;
+    color:#f2c14e; pointer-events:none; padding:26px 10px 20px; }
   .diff-card.locked .diff-lock-overlay { display:flex; }
-  .diff-lock-overlay .lockicon { font-size:40px; }
+  .diff-lock-overlay .lockicon { font-size:34px;
+    filter:drop-shadow(0 2px 8px rgba(0,0,0,.8)); }
+  .diff-lock-overlay .lockwrap { display:flex; flex-direction:column;
+    gap:4px; align-items:center;
+    background:rgba(0,0,0,.45); padding:6px 12px; border-radius:10px; }
   .diff-lock-overlay .locktxt { font-size:12px; font-weight:800; text-align:center; }
-  .diff-icon { font-size:46px;
+  .diff-icon { font-size:44px;
     filter:drop-shadow(0 4px 10px rgba(0,0,0,.5)); }
   .diff-name { font-size:20px; font-weight:900;
     letter-spacing:5px; padding-left:5px; }
@@ -176,9 +208,8 @@
   .diff-divider { width:60%; height:1px;
     background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent); }
   .diff-info { display:flex; flex-direction:column;
-    gap:3px; align-items:center; font-size:11px;
-    color:#8fa0b4; line-height:1.55; text-align:center; }
-  .diff-info b { color:#cfdae5; font-weight:700; }
+    gap:2px; align-items:center; font-size:11px;
+    color:#8fa0b4; line-height:1.5; text-align:center; }
   .diff-info .highlight { color:#f2c14e; font-weight:800; }
   .diff-info .fee { color:#f87171; font-weight:800; }
   .diff-info .timeline { color:#22d3ee; font-weight:800; }
@@ -191,30 +222,29 @@
   .diff-card.hard .diff-tag { background:#991b1b; color:#fecaca; }
   .diff-card.champion .diff-tag {
     background:linear-gradient(135deg,#7c2d12,#b45309,#f59e0b);
-    color:#fef3c7;
-    text-shadow:0 1px 3px rgba(0,0,0,.6); }
+    color:#fef3c7; text-shadow:0 1px 3px rgba(0,0,0,.6); }
 
   /* 游戏 */
   #gameScreen { position:absolute; inset:0;
     background:radial-gradient(ellipse at 50% 0%,#0d1520 0%,#070a10 70%);
     display:none; }
   #gameScreen.active { display:block; }
-  #topbar { position:absolute; left:0; top:0; right:0; height:44px;
-    display:flex; align-items:center; padding:0 14px; gap:14px;
+  #topbar { position:absolute; left:0; top:0; right:0; height:42px;
+    display:flex; align-items:center; padding:0 14px; gap:12px;
     background:linear-gradient(180deg,rgba(10,15,22,.95),rgba(10,15,22,.4));
     z-index:50; }
   .pinfo { display:flex; align-items:center; gap:8px; }
-  .pavatar { width:34px; height:34px; border-radius:50%;
+  .pavatar { width:32px; height:32px; border-radius:50%;
     background:linear-gradient(135deg,#2e9e6b,#1e7a4f);
     display:flex; align-items:center; justify-content:center;
-    font-size:19px; border:2px solid rgba(255,255,255,.18); }
-  .pmeta { display:flex; flex-direction:column; gap:2px; min-width:110px; }
-  .pmeta .row1 { display:flex; align-items:center; gap:6px; font-size:12px; }
+    font-size:18px; border:2px solid rgba(255,255,255,.18); }
+  .pmeta { display:flex; flex-direction:column; gap:2px; min-width:100px; }
+  .pmeta .row1 { display:flex; align-items:center; gap:5px; font-size:11px; }
   .pmeta .lvl { background:linear-gradient(135deg,#ffd97a,#d29a3a);
     color:#2a1a0a; font-weight:900; font-size:10px;
     padding:1px 6px; border-radius:6px; }
   .pmeta .name { color:#cfdae5; font-weight:700; }
-  .expbar { width:100%; height:4px; background:rgba(255,255,255,.1);
+  .expbar { width:100%; height:3px; background:rgba(255,255,255,.1);
     border-radius:2px; overflow:hidden; }
   .expfill { height:100%; width:0%;
     background:linear-gradient(90deg,#ffd97a,#d29a3a); transition:width .3s; }
@@ -222,19 +252,22 @@
     background:rgba(255,217,122,.1);
     border:1px solid rgba(255,217,122,.28);
     padding:5px 12px; border-radius:20px;
-    font-size:14px; font-weight:800; color:#ffd97a; }
-  .coins .icon { font-size:15px; }
-  .topbtns { margin-left:auto; display:flex; gap:8px; }
-  .iconbtn { width:34px; height:34px; border-radius:10px;
+    font-size:13px; font-weight:800; color:#ffd97a; }
+  .coins .icon { font-size:14px; }
+  .topbtns { margin-left:auto; display:flex; gap:7px; }
+  .iconbtn { width:32px; height:32px; border-radius:9px;
     border:1px solid rgba(255,255,255,.1);
-    background:rgba(255,255,255,.05); font-size:16px;
+    background:rgba(255,255,255,.05); font-size:15px;
     cursor:pointer; display:flex; align-items:center;
     justify-content:center; padding:0;
     transition:all .15s; color:#e8eef5; }
   .iconbtn:active { transform:scale(.9); background:rgba(255,255,255,.14); }
   .iconbtn.off { opacity:.35; }
+  .iconbtn.exit { background:rgba(168,58,58,.2);
+    border-color:rgba(168,58,58,.5); color:#ffb3b3; }
+  .iconbtn.exit:active { background:rgba(168,58,58,.4); }
 
-  #table { position:absolute; left:100px; top:79px;
+  #table { position:absolute; left:100px; top:77px;
     width:760px; height:330px; border-radius:50%;
     background:radial-gradient(ellipse at 50% 38%,#2e9e6b 0%,#1a6b4a 48%,#0d3a28 100%);
     box-shadow:0 0 0 10px #3d2614,0 0 0 13px #23140a,
@@ -249,23 +282,23 @@
     padding:3px 14px; background:rgba(0,0,0,.35);
     border-radius:12px; opacity:0; transition:opacity .2s; }
   #potDisplay.show { opacity:1; }
-  #boardArea { position:absolute; left:480px; top:244px;
+  #boardArea { position:absolute; left:480px; top:242px;
     transform:translate(-50%,-50%); display:flex;
     gap:6px; z-index:5; }
-  #stageBox { position:absolute; left:130px; top:95px;
+  #stageBox { position:absolute; left:130px; top:93px;
     font-size:11px; color:rgba(255,255,255,.45);
     letter-spacing:3px; z-index:5; }
 
-  .seat { position:absolute; width:180px; height:84px;
+  .seat { position:absolute; width:180px; height:82px;
     border-radius:12px; background:rgba(8,16,22,.9);
     border:2px solid rgba(255,255,255,.1);
     backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
     padding:5px 8px; text-align:center;
     transition:all .2s; z-index:10; }
-  .seat.pos-0 { left:390px; top:348px; }
-  .seat.pos-1 { left:6px;   top:202px; }
-  .seat.pos-2 { left:390px; top:50px; }
-  .seat.pos-3 { left:774px; top:202px; }
+  .seat.pos-0 { left:390px; top:346px; }
+  .seat.pos-1 { left:6px;   top:200px; }
+  .seat.pos-2 { left:390px; top:48px; }
+  .seat.pos-3 { left:774px; top:200px; }
   .seat.active { border-color:#ffd97a;
     box-shadow:0 0 0 3px rgba(255,217,122,.25),0 0 22px rgba(255,217,122,.4); }
   .seat.folded { opacity:.3; }
@@ -279,16 +312,16 @@
   .seat .cards { display:flex; gap:3px; justify-content:center;
     height:50px; align-items:center; margin-bottom:1px; }
   .seat .info { display:flex; align-items:center;
-    justify-content:center; gap:5px; line-height:1; }
-  .seat .avatar { font-size:15px; }
-  .seat .nm { font-size:12px; font-weight:700; color:#cfdae5; }
+    justify-content:center; gap:4px; line-height:1; }
+  .seat .avatar { font-size:14px; }
+  .seat .nm { font-size:11.5px; font-weight:700; color:#cfdae5; }
   .seat .style-tag { font-size:9px; color:#8fa0b4;
     background:rgba(255,255,255,.06); padding:0 4px; border-radius:4px; }
   .seat .dealer { display:inline-block; margin-left:3px;
     width:14px; height:14px; line-height:14px;
     border-radius:50%; background:#f5f5f5; color:#111;
     font-size:9px; font-weight:900; vertical-align:-1px; }
-  .seat .chips { font-size:12px; color:#8fd6b0; font-weight:800; }
+  .seat .chips { font-size:11.5px; color:#8fd6b0; font-weight:800; }
   .seat .action { font-size:10px; font-weight:700;
     color:#ffd97a; height:12px; line-height:12px; margin-top:1px; }
   .seat .res { font-size:10px; font-weight:700;
@@ -323,7 +356,7 @@
     to { transform:translateY(0) scale(1) rotate(0); opacity:1; }
   }
 
-  #bottomBar { position:absolute; left:0; right:0; bottom:0; height:96px;
+  #bottomBar { position:absolute; left:0; right:0; bottom:0; height:94px;
     display:flex; align-items:center; justify-content:center;
     gap:12px; padding:0 20px;
     background:linear-gradient(180deg,transparent,rgba(6,9,14,.9) 45%);
@@ -357,7 +390,7 @@
 
   /* 倒计时 */
   #timerWrapper {
-    position: absolute; right: 24px; bottom: 106px;
+    position: absolute; right: 24px; bottom: 104px;
     width: 72px; height: 72px; z-index: 60;
     opacity: 0; transform: translateY(10px);
     transition: opacity 0.25s, transform 0.25s;
@@ -430,20 +463,49 @@
   .overlay.show { display:flex; }
   .panel { background:linear-gradient(180deg,rgba(28,40,55,.98),rgba(15,22,32,.99));
     border:2px solid rgba(242,193,78,.35);
-    border-radius:20px; padding:22px 26px;
-    max-width:720px; max-height:480px; overflow-y:auto;
+    border-radius:20px; padding:20px 24px;
+    max-width:760px; max-height:490px; overflow-y:auto;
     box-shadow:0 24px 70px rgba(0,0,0,.8); width:100%; }
   .panel::-webkit-scrollbar { width:6px; }
   .panel::-webkit-scrollbar-thumb { background:rgba(255,255,255,.15); border-radius:3px; }
-  .panel h2 { font-size:20px; font-weight:900; margin-bottom:16px;
+  .panel h2 { font-size:19px; font-weight:900; margin-bottom:14px;
     color:#f2c14e; letter-spacing:3px;
     display:flex; align-items:center; gap:10px; }
   .panel .closebtn { margin-left:auto; background:rgba(255,255,255,.08);
-    border:none; color:#9fb0c2; width:30px; height:30px;
-    border-radius:50%; font-size:17px; cursor:pointer;
+    border:none; color:#9fb0c2; width:28px; height:28px;
+    border-radius:50%; font-size:16px; cursor:pointer;
     font-family:inherit; display:flex; align-items:center;
     justify-content:center; }
   .panel .closebtn:active { background:rgba(255,255,255,.16); }
+
+  /* Tab 切换 */
+  .tab-row {
+    display: flex; gap: 6px; margin-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    padding-bottom: 0;
+  }
+  .tab-btn {
+    padding: 8px 18px; border: none;
+    background: transparent; color: #8fa0b4;
+    font-size: 13px; font-weight: 800;
+    cursor: pointer; font-family: inherit;
+    border-bottom: 2px solid transparent;
+    transition: all .15s; letter-spacing: 1px;
+    position: relative;
+  }
+  .tab-btn.active {
+    color: #f2c14e;
+    border-bottom-color: #f2c14e;
+  }
+  .tab-btn .badge {
+    display: inline-block;
+    min-width: 16px; height: 16px; line-height: 16px;
+    background: #e5484d; color: #fff;
+    font-size: 10px; font-weight: 900;
+    border-radius: 8px; padding: 0 4px;
+    margin-left: 5px; vertical-align: 1px;
+    text-align: center;
+  }
 
   .ach-list { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
   .ach-item { display:flex; align-items:center; gap:12px;
@@ -461,21 +523,21 @@
   .ach-item .rw { font-size:11px; color:#f2c14e; font-weight:700; margin-top:2px; }
 
   .task-item { display:flex; align-items:center; gap:12px;
-    padding:12px 16px; border-radius:12px;
+    padding:10px 14px; border-radius:12px;
     background:rgba(255,255,255,.035);
-    border:1px solid rgba(255,255,255,.06); margin-bottom:10px; }
+    border:1px solid rgba(255,255,255,.06); margin-bottom:8px; }
   .task-item.done { background:rgba(74,222,128,.08);
     border-color:rgba(74,222,128,.3); }
   .task-item .info { flex:1; }
-  .task-item .t { font-size:14px; font-weight:800; color:#cfdae5; }
+  .task-item .t { font-size:13px; font-weight:800; color:#cfdae5; }
   .task-item .pg { font-size:11px; color:#566c82; margin-top:3px; }
-  .task-item .rw { font-size:13px; font-weight:900; color:#f2c14e; }
-  .task-item .claim { padding:7px 14px; border-radius:8px; border:none;
+  .task-item .rw { font-size:12px; font-weight:900; color:#f2c14e; }
+  .task-item .claim { padding:6px 12px; border-radius:8px; border:none;
     background:linear-gradient(180deg,#ffd97a,#d29a3a);
-    color:#2a1a0a; font-weight:900; font-size:12px;
+    color:#2a1a0a; font-weight:900; font-size:11.5px;
     cursor:pointer; font-family:inherit; }
   .task-item .claim:disabled { opacity:.4; }
-  .task-item .claimed { font-size:12px; color:#4ade80; font-weight:800; }
+  .task-item .claimed { font-size:11.5px; color:#4ade80; font-weight:800; }
 
   .go-title { font-size:30px; font-weight:900; letter-spacing:6px;
     background:linear-gradient(180deg,#fef3c7,#f2c14e,#c8932a);
@@ -498,10 +560,10 @@
   .go-btns .back:active { background:rgba(255,255,255,.15); }
 
   .stat-row { display:flex; gap:12px; margin-bottom:12px; }
-  .stat-cell { flex:1; padding:12px; text-align:center;
+  .stat-cell { flex:1; padding:10px; text-align:center;
     background:rgba(255,255,255,.035);
     border:1px solid rgba(255,255,255,.06); border-radius:12px; }
-  .stat-cell .v { font-size:18px; font-weight:900; color:#8fd6b0; }
+  .stat-cell .v { font-size:17px; font-weight:900; color:#8fd6b0; }
   .stat-cell .l { font-size:11px; color:#566c82; margin-top:3px; }
 
   .toast { position:absolute; left:50%; top:30%;
@@ -515,10 +577,116 @@
     white-space:nowrap; box-shadow:0 12px 40px rgba(0,0,0,.6); }
   .toast.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
   .toast.danger { border-color:#f87171; color:#f87171; }
+  .toast.success { border-color:#4ade80; color:#4ade80; }
+
+  /* 存档槽位 */
+  .slot-list { display: flex; flex-direction: column; gap: 10px; }
+  .slot-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px; border-radius: 14px;
+    background: rgba(255,255,255,.035);
+    border: 2px solid rgba(255,255,255,.06);
+    cursor: pointer; transition: all .15s;
+    font-family: inherit; color: inherit;
+    text-align: left; width: 100%;
+  }
+  .slot-item:active { transform: scale(.99); }
+  .slot-item.active {
+    background: rgba(242,193,78,.1);
+    border-color: #f2c14e;
+    box-shadow: 0 0 14px rgba(242,193,78,.25);
+  }
+  .slot-item.empty {
+    border-style: dashed;
+    opacity: 0.7;
+  }
+  .slot-num {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg,#2e9e6b,#1e7a4f);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 900; color: #fff;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,.15);
+  }
+  .slot-item.active .slot-num {
+    background: linear-gradient(135deg,#f2c14e,#c8932a);
+    color: #2a1a0a;
+    border-color: #f2c14e;
+    box-shadow: 0 0 12px rgba(242,193,78,.5);
+  }
+  .slot-item.empty .slot-num {
+    background: rgba(255,255,255,.06);
+    color: #566c82;
+    border-color: rgba(255,255,255,.1);
+  }
+  .slot-info { flex: 1; min-width: 0; }
+  .slot-title {
+    font-size: 14px; font-weight: 800;
+    color: #cfdae5; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .slot-title .tag {
+    font-size: 10px; font-weight: 900;
+    padding: 1px 7px; border-radius: 6px;
+    background: rgba(74,222,128,.2); color: #4ade80;
+    border: 1px solid rgba(74,222,128,.4);
+  }
+  .slot-meta {
+    display: flex; gap: 14px;
+    font-size: 11.5px; color: #8fa0b4;
+  }
+  .slot-meta .c { color: #f2c14e; font-weight: 800; }
+  .slot-actions {
+    display: flex; gap: 6px;
+  }
+  .slot-mini {
+    width: 34px; height: 34px; border-radius: 9px;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.05);
+    color: #9fb0c2; font-size: 15px;
+    cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .12s;
+  }
+  .slot-mini:active { transform: scale(.9); background: rgba(255,255,255,.14); }
+  .slot-mini.danger { color: #d98b8b; border-color: rgba(156,53,53,.4); }
+  .slot-mini.danger:active { background: rgba(156,53,53,.3); }
+
+  /* 确认面板 */
+  .confirm-panel { text-align: center; max-width: 380px; }
+  .confirm-title {
+    font-size: 20px; font-weight: 900; letter-spacing: 3px;
+    color: #f2c14e; margin-bottom: 10px;
+  }
+  .confirm-msg {
+    font-size: 13.5px; color: #9fb0c2; line-height: 1.7;
+    margin-bottom: 22px;
+  }
+  .confirm-btns { display: flex; gap: 12px; }
+  .confirm-btns button {
+    flex: 1; padding: 13px; border-radius: 12px;
+    font-weight: 800; font-size: 14px; cursor: pointer;
+    font-family: inherit; border: none; transition: all .15s;
+  }
+  .confirm-btns .yes {
+    background: linear-gradient(135deg, #a83a3a, #7a2828); color: #fff;
+  }
+  .confirm-btns .yes:active { transform: scale(.96); }
+  .confirm-btns .no {
+    background: rgba(255,255,255,.07); color: #9fb0c2;
+  }
+  .confirm-btns .no:active { background: rgba(255,255,255,.15); }
+  .confirm-btns .neutral {
+    background: linear-gradient(135deg, #2e9e6b, #1e7a4f); color: #fff;
+  }
+  .confirm-btns .neutral:active { transform: scale(.96); }
+  .confirm-btns .gold {
+    background: linear-gradient(135deg, #f2c14e, #c8932a); color: #2a1a0a;
+  }
+  .confirm-btns .gold:active { transform: scale(.96); }
 </style>
 </head>
 <body>
-
 <div id="rotateHint">
   <div style="font-size:64px">📱</div>
   <div>请横屏体验游戏</div>
@@ -540,13 +708,18 @@
       </div>
       <div class="lobby-coins">
         <span class="icon">🪙</span>
-        <span id="lbCoins">5000</span>
+        <span id="lbCoins">1,000</span>
       </div>
       <div class="lobby-topbtns">
-        <button class="lobby-iconbtn" id="lbBtnTasks">📋<span class="badge" id="lbTaskBadge" style="display:none">!</span></button>
-        <button class="lobby-iconbtn" id="lbBtnAchieve">🏆</button>
-        <button class="lobby-iconbtn" id="lbBtnSound">🔊</button>
+        <button class="lobby-iconbtn" id="lbBtnTasks" title="任务">📋<span class="badge" id="lbTaskBadge" style="display:none">!</span></button>
+        <button class="lobby-iconbtn" id="lbBtnAchieve" title="成就">🏆</button>
+        <button class="lobby-iconbtn" id="lbBtnStorage" title="存档">💾</button>
+        <button class="lobby-iconbtn" id="lbBtnSound" title="音效">🔊</button>
       </div>
+    </div>
+    <div class="save-status">
+      <span class="dot" id="saveDot"></span>
+      <span id="saveText">存档已就绪 · 自动保存</span>
     </div>
     <div class="lobby-logo-area">
       <div class="lobby-logo">德州扑克</div>
@@ -557,8 +730,9 @@
     </div>
     <div class="lobby-bottom">
       <div class="lobby-quickbtns">
-        <button class="lobby-quickbtn" id="lbQTasks"><span class="ic">🎯</span><span>每日任务</span></button>
+        <button class="lobby-quickbtn" id="lbQTasks"><span class="ic">🎯</span><span>任务</span><span class="badge green" id="lbQTaskBadge" style="display:none">!</span></button>
         <button class="lobby-quickbtn" id="lbQAchieve"><span class="ic">🏅</span><span>成就</span></button>
+        <button class="lobby-quickbtn" id="lbQStorage"><span class="ic">💾</span><span>存档</span></button>
         <button class="lobby-quickbtn" id="lbQHelp"><span class="ic">❓</span><span>规则</span></button>
       </div>
       <button class="btn-primary lobby-start-btn" id="lbStartBtn">开始游戏</button>
@@ -570,6 +744,7 @@
     <div class="diff-header">
       <button class="diff-back" id="diffBack">←</button>
       <div class="diff-title">选择场次</div>
+      <div class="diff-hint" id="diffHint">新手建议先玩简单场攒钱</div>
     </div>
     <div class="diff-body" id="diffBody"></div>
   </div>
@@ -588,13 +763,13 @@
       </div>
       <div class="coins">
         <span class="icon">🪙</span>
-        <span id="pCoins">5000</span>
+        <span id="pCoins">1,000</span>
       </div>
       <div class="topbtns">
-        <button class="iconbtn" id="btnAchieve">🏆</button>
-        <button class="iconbtn" id="btnTasks">📋</button>
-        <button class="iconbtn" id="btnSound">🔊</button>
-        <button class="iconbtn" id="btnExit">🚪</button>
+        <button class="iconbtn" id="btnAchieve" title="成就">🏆</button>
+        <button class="iconbtn" id="btnTasks" title="任务">📋</button>
+        <button class="iconbtn" id="btnSound" title="音效">🔊</button>
+        <button class="iconbtn exit" id="btnExit" title="退出并保存">🚪</button>
       </div>
     </div>
     <div id="table">
@@ -621,6 +796,7 @@
 
   <div class="toast" id="toast"></div>
 
+  <!-- 成就 -->
   <div class="overlay" id="ovAchieve">
     <div class="panel">
       <h2>🏆 成就 <button class="closebtn" data-close="ovAchieve">✕</button></h2>
@@ -634,10 +810,16 @@
     </div>
   </div>
 
+  <!-- 任务 (含 Tab) -->
   <div class="overlay" id="ovTasks">
     <div class="panel">
-      <h2>📋 每日任务 <button class="closebtn" data-close="ovTasks">✕</button></h2>
-      <div id="taskList"></div>
+      <h2>📋 任务 <button class="closebtn" data-close="ovTasks">✕</button></h2>
+      <div class="tab-row">
+        <button class="tab-btn active" id="tabNewbie" data-tab="newbie">新手任务 <span class="badge" id="nbBadge" style="display:none">!</span></button>
+        <button class="tab-btn" id="tabDaily" data-tab="daily">每日任务 <span class="badge" id="dailyBadge" style="display:none">!</span></button>
+      </div>
+      <div id="taskListNewbie"></div>
+      <div id="taskListDaily" style="display:none"></div>
     </div>
   </div>
 
@@ -648,30 +830,32 @@
         <p style="color:#f2c14e;font-weight:800;margin-bottom:6px;">🎴 基本玩法</p>
         <p>每人获得 2 张底牌，桌面依次发出 5 张公共牌。从 7 张牌中选最佳 5 张与对手比大小，最大者赢取底池。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">💰 场次门槛</p>
-        <p>🌱 简单：200🪙 入场 · 免费<br>
-           🎯 普通：5000🪙 入场 · 每次加注 ≥100<br>
-           🔥 困难：20000🪙 入场 · 每次加注 ≥500<br>
-           👑 冠军：100000🪙 入场 · 每次加注 ≥1000</p>
+        <p>🌱 简单：200🪙 入场 · 免费 · 加注 ≥10<br>
+           🎯 普通：5,000🪙 入场 · 入场费 200 · 加注 ≥100<br>
+           🔥 困难：20,000🪙 入场 · 入场费 1,000 · 加注 ≥500<br>
+           👑 冠军：100,000🪙 入场 · 入场费 5,000 · 加注 ≥1,000</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">⏰ 行动倒计时</p>
-        <p>每次轮到你时右下角出现倒计时圆环。超时自动过牌/弃牌。简单 30 秒，普通 20 秒，困难 15 秒，冠军 12 秒。</p>
-        <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🏆 牌型大小</p>
-        <p>皇家同花顺 &gt; 同花顺 &gt; 四条 &gt; 葫芦 &gt; 同花 &gt; 顺子 &gt; 三条 &gt; 两对 &gt; 一对 &gt; 高牌</p>
+        <p>每次轮到你时右下角出现倒计时圆环。超时自动过牌/弃牌。</p>
+        <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">💾 多存档</p>
+        <p>共 3 个存档槽，每个独立记录金币、等级、成就与任务。金币用完后可以开新档重玩新手场。</p>
+        <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎁 新手任务</p>
+        <p>新手任务包含 21 个关卡，全部完成可获得 8,000+ 金币。每日任务每天刷新。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🧠 AI 心理博弈</p>
-        <p>AI 会观察你的下注风格，如果你经常弃牌它们会更频繁诈唬；如果你爱跟注它们会收紧范围。还会根据位置、牌面纹理和自身情绪调整打法。</p>
+        <p>AI 会观察你的下注风格，如果你经常弃牌它们会更频繁诈唬；如果你爱跟注它们会收紧范围。</p>
       </div>
     </div>
   </div>
 
   <div class="overlay" id="ovGameOver">
     <div class="panel" style="max-width:420px;">
-      <div class="go-title">游戏结束</div>
-      <div class="go-sub">你的筹码用完了</div>
+      <div class="go-title">筹码用尽</div>
+      <div class="go-sub">你的筹码已用完，可以领取补充金或返回大厅换新档</div>
       <div class="go-stats">
         <div class="go-stat"><div class="v" id="goHands">0</div><div class="l">手 数</div></div>
         <div class="go-stat"><div class="v" id="goWins">0</div><div class="l">胜 局</div></div>
       </div>
       <div class="go-btns">
-        <button class="again" id="goAgain">重新入场</button>
+        <button class="again" id="goAgain">领取补充金</button>
         <button class="back" id="goBackLobby">返回大厅</button>
       </div>
     </div>
@@ -688,6 +872,65 @@
     </div>
   </div>
 
+  <!-- 退出确认 -->
+  <div class="overlay" id="ovExitConfirm">
+    <div class="panel confirm-panel">
+      <div class="confirm-title">退出牌桌</div>
+      <div class="confirm-msg">
+        确定要离开当前牌桌吗？<br>
+        你的筹码和进度将自动保存。
+      </div>
+      <div class="confirm-btns">
+        <button class="no" data-close="ovExitConfirm">继续游戏</button>
+        <button class="yes" id="exitConfirmYes">退出并保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 存档管理 -->
+  <div class="overlay" id="ovStorage">
+    <div class="panel" style="max-width:520px;">
+      <h2>💾 存档管理 <button class="closebtn" data-close="ovStorage">✕</button></h2>
+      <div style="font-size:12px;color:#8fa0b4;margin-bottom:14px;line-height:1.7;">
+        每个存档独立记录金币、等级、成就与任务进度。<br>
+        你可以随时切换存档，或开新档重新体验新手场。
+      </div>
+      <div class="slot-list" id="slotList"></div>
+    </div>
+  </div>
+
+  <!-- 新建存档确认 -->
+  <div class="overlay" id="ovNewSaveConfirm">
+    <div class="panel confirm-panel">
+      <div class="confirm-title">新建存档</div>
+      <div class="confirm-msg">
+        将在此槽位创建一个全新存档，<br>
+        初始金币 <b style="color:#f2c14e;">1,000 🪙</b>。<br>
+        该槽位原有进度将被覆盖。
+      </div>
+      <div class="confirm-btns">
+        <button class="no" data-close="ovNewSaveConfirm">取消</button>
+        <button class="gold" id="newSaveConfirmYes">创建新档</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 删除存档确认 -->
+  <div class="overlay" id="ovDeleteConfirm">
+    <div class="panel confirm-panel">
+      <div class="confirm-title">⚠️ 删除存档</div>
+      <div class="confirm-msg">
+        将永久删除此存档的所有进度，<br>
+        包括金币、等级、成就与任务。<br>
+        <b style="color:#f87171;">此操作不可撤销！</b>
+      </div>
+      <div class="confirm-btns">
+        <button class="no" data-close="ovDeleteConfirm">取消</button>
+        <button class="yes" id="deleteConfirmYes">确认删除</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -698,6 +941,7 @@ var SUITS = ['♠','♥','♦','♣'];
 var RANK_STR = {2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'J',12:'Q',13:'K',14:'A'};
 function rankName(r) { return RANK_STR[r] || '?'; }
 function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
+function fmt(n) { return (n || 0).toLocaleString(); }
 
 var STAGE_NAME = ['翻牌前','翻牌圈','转牌圈','河牌圈'];
 var SEAT_POS = ['pos-0','pos-1','pos-2','pos-3'];
@@ -708,57 +952,263 @@ var App = {
   difficulty: 'easy'
 };
 
-/* ========== 场次配置：4 档 + 加注单位 ========== */
+/* ========== 场次配置 ========== */
 var DIFFICULTY_CONFIG = {
   easy: {
     key:'easy', name:'简单', tag:'新手', icon:'🌱',
     sb:5, bb:10, buyIn:500, minCoins:200, entryFee:0,
     minRaiseUnit:10, thinkTime:30, aiBonus:-0.18,
-    desc:['盲注 5 / 10','带入 $500','入场免费','⏰ 思考 30 秒','每次加注 ≥10','AI 温和 · 适合练手']
+    desc:['盲注 5 / 10','带入 $500','入场免费','⏰ 思考 30 秒','加注 ≥10','AI 温和 · 适合练手']
   },
   normal: {
     key:'normal', name:'普通', tag:'标准', icon:'🎯',
     sb:50, bb:100, buyIn:5000, minCoins:5000, entryFee:200,
     minRaiseUnit:100, thinkTime:20, aiBonus:0,
-    desc:['盲注 50 / 100','带入 $5000','入场费 $200','⏰ 思考 20 秒','每次加注 ≥100','AI 平衡 · 标准玩法']
+    desc:['盲注 50 / 100','带入 $5,000','入场费 $200','⏰ 思考 20 秒','加注 ≥100','AI 平衡 · 标准玩法']
   },
   hard: {
     key:'hard', name:'困难', tag:'高手', icon:'🔥',
     sb:250, bb:500, buyIn:20000, minCoins:20000, entryFee:1000,
     minRaiseUnit:500, thinkTime:15, aiBonus:0.16,
-    desc:['盲注 250 / 500','带入 $20000','入场费 $1000','⏰ 思考 15 秒','每次加注 ≥500','AI 激进 · 高手对决']
+    desc:['盲注 250 / 500','带入 $20,000','入场费 $1,000','⏰ 思考 15 秒','加注 ≥500','AI 激进 · 高手对决']
   },
   champion: {
     key:'champion', name:'冠军', tag:'传奇', icon:'👑',
     sb:500, bb:1000, buyIn:100000, minCoins:100000, entryFee:5000,
     minRaiseUnit:1000, thinkTime:12, aiBonus:0.28,
-    desc:['盲注 500 / 1000','带入 $100000','入场费 $5000','⏰ 思考 12 秒','每次加注 ≥1000','AI 顶级 · 冠军荣耀']
+    desc:['盲注 500 / 1000','带入 $100,000','入场费 $5,000','⏰ 思考 12 秒','加注 ≥1,000','AI 顶级 · 冠军荣耀']
   }
 };
 
-/* ========== 存档 ========== */
-var SAVE_KEY = 'texas_poker_save_v8';
-var player = {
-  level: 1, exp: 0, coins: 5000,
-  totalHands: 0, totalWins: 0, streak: 0, maxStreak: 0, maxWin: 0,
-  achievements: {}, tasks: null, taskProgress: {}, taskClaimed: {},
-  soundOn: true
-};
+/* ============================================================
+   多存档系统
+   ============================================================ */
+var SAVE_KEY_ALL = 'texas_poker_multi_saves_v1';
+var MAX_SLOTS = 3;
+var START_COINS = 1000;   // 新玩家初始金币
 
-function loadPlayer() {
+/* 当前玩家（活动存档） */
+var player = null;
+var activeSlot = 1;
+var allSaves = null;
+
+/* 创建新玩家默认状态 */
+function createNewPlayer(name) {
+  return {
+    name: name || '玩家',
+    version: 10,
+    level: 1, exp: 0, coins: START_COINS,
+    totalHands: 0, totalWins: 0, streak: 0, maxStreak: 0, maxWin: 0,
+    achievements: {},
+    newbieTasks: {},        // 新手任务领取记录 { taskId: true }
+    newbieProgress: {},     // 新手任务进度 { taskId: number }
+    daily: null,            // { date, streak, lastClaim }
+    dailyTasks: null,       // { date, ids: [...] }
+    dailyProgress: {},
+    dailyClaimed: {},
+    soundOn: true,
+    createdAt: Date.now(),
+    lastPlayed: Date.now()
+  };
+}
+
+/* 加载所有存档 */
+function loadAllSaves() {
   try {
-    var s = localStorage.getItem(SAVE_KEY);
+    var s = localStorage.getItem(SAVE_KEY_ALL);
     if (s) {
       var d = JSON.parse(s);
-      for (var k in d) if (d.hasOwnProperty(k)) player[k] = d[k];
+      if (d && d.slots) {
+        allSaves = d;
+        activeSlot = d.activeSlot || 1;
+        if (allSaves.slots[activeSlot]) {
+          player = allSaves.slots[activeSlot].player;
+        }
+      }
     }
-  } catch (e) { console.warn('存档读取失败', e); }
-}
-function savePlayer() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(player)); } catch (e) {}
+  } catch (e) {
+    console.warn('读取存档失败', e);
+  }
+
+  // 初始化默认存档结构
+  if (!allSaves) {
+    allSaves = {
+      activeSlot: 1,
+      slots: {
+        1: { player: createNewPlayer('玩家'), createdAt: Date.now(), lastPlayed: Date.now() },
+        2: null,
+        3: null
+      }
+    };
+    activeSlot = 1;
+    player = allSaves.slots[1].player;
+    saveAllSaves(true);
+  }
+
+  if (!player) {
+    player = allSaves.slots[activeSlot].player;
+  }
 }
 
-/* ========== 成就 ========== */
+/* 保存所有存档 */
+function saveAllSaves(silent) {
+  return new Promise(function(resolve) {
+    try {
+      if (!silent) updateSaveIndicator('saving');
+      if (player) {
+        player.lastPlayed = Date.now();
+        allSaves.slots[activeSlot].lastPlayed = Date.now();
+      }
+      localStorage.setItem(SAVE_KEY_ALL, JSON.stringify(allSaves));
+      if (!silent) {
+        setTimeout(function() {
+          updateSaveIndicator('saved');
+          resolve(true);
+        }, 200);
+      } else {
+        resolve(true);
+      }
+    } catch (e) {
+      console.warn('保存失败', e);
+      if (!silent) {
+        updateSaveIndicator('error');
+        showToast('⚠️ 保存失败，可能是隐私模式限制', 2500, true);
+      }
+      resolve(false);
+    }
+  });
+}
+
+function updateSaveIndicator(state) {
+  var dot = $('saveDot');
+  var txt = $('saveText');
+  if (!dot || !txt) return;
+  dot.classList.toggle('saving', state === 'saving');
+  if (state === 'saving') {
+    txt.textContent = '正在保存…';
+  } else if (state === 'saved') {
+    txt.textContent = '已保存 · ' + timeAgo(player ? player.lastPlayed : 0);
+    setTimeout(function(){
+      if (App.screen === 'lobby') {
+        txt.textContent = '存档已保存 · 自动保存';
+      }
+    }, 2000);
+  } else if (state === 'error') {
+    txt.textContent = '⚠️ 保存失败';
+  }
+}
+
+function timeAgo(ts) {
+  if (!ts) return '从未';
+  var diff = Date.now() - ts;
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff / 60000) + ' 分钟前';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小时前';
+  return Math.floor(diff / 86400000) + ' 天前';
+}
+
+/* 切换到指定槽位 */
+function switchToSlot(slotNum) {
+  if (!allSaves.slots[slotNum]) return false;
+  // 先保存当前
+  saveAllSaves(true);
+  // 切换
+  activeSlot = slotNum;
+  allSaves.activeSlot = slotNum;
+  player = allSaves.slots[slotNum].player;
+  saveAllSaves(true);
+  // 重置 UI 状态
+  G.active = false;
+  Timer.stop();
+  renderLobby();
+  showScreen('lobby');
+  return true;
+}
+
+/* 在指定槽位创建新档 */
+function createNewSaveAt(slotNum) {
+  saveAllSaves(true);
+  allSaves.slots[slotNum] = {
+    player: createNewPlayer('玩家 ' + slotNum),
+    createdAt: Date.now(),
+    lastPlayed: Date.now()
+  };
+  activeSlot = slotNum;
+  allSaves.activeSlot = slotNum;
+  player = allSaves.slots[slotNum].player;
+  saveAllSaves(true);
+  renderLobby();
+  showScreen('lobby');
+}
+
+/* 删除槽位 */
+function deleteSlot(slotNum) {
+  if (!allSaves.slots[slotNum]) return;
+  var isActive = slotNum === activeSlot;
+  allSaves.slots[slotNum] = null;
+  // 如果删除的是活动槽，找其他槽
+  if (isActive) {
+    for (var i = 1; i <= MAX_SLOTS; i++) {
+      if (allSaves.slots[i]) {
+        activeSlot = i;
+        allSaves.activeSlot = i;
+        player = allSaves.slots[i].player;
+        break;
+      }
+    }
+    // 所有槽都空了，创建新档
+    if (!player) {
+      createNewSaveAt(1);
+      return;
+    }
+  }
+  saveAllSaves(true);
+  renderLobby();
+  renderSlotList();
+}
+
+/* ============================================================
+   新手任务系统
+   ============================================================ */
+var NEWBIE_TASKS = [
+  { id:'nb_play_1',  name:'完成第 1 手牌局',        target:1,  reward:100 },
+  { id:'nb_play_5',  name:'完成 5 手牌局',          target:5,  reward:200 },
+  { id:'nb_play_15', name:'完成 15 手牌局',         target:15, reward:400 },
+  { id:'nb_play_30', name:'完成 30 手牌局',         target:30, reward:700 },
+  { id:'nb_win_1',   name:'赢得第 1 局',            target:1,  reward:150 },
+  { id:'nb_win_3',   name:'赢得 3 局',              target:3,  reward:300 },
+  { id:'nb_win_8',   name:'赢得 8 局',              target:8,  reward:600 },
+  { id:'nb_win_15',  name:'赢得 15 局',             target:15, reward:1000 },
+  { id:'nb_raise_3', name:'加注 3 次',              target:3,  reward:150 },
+  { id:'nb_raise_10',name:'加注 10 次',             target:10, reward:350 },
+  { id:'nb_call_5',  name:'跟注 5 次',              target:5,  reward:150 },
+  { id:'nb_allin_1', name:'全下 1 次',              target:1,  reward:200 },
+  { id:'nb_allin_win_1', name:'全下并获胜',          target:1,  reward:500 },
+  { id:'nb_bluff_1', name:'诈唬成功（弱牌赢）',      target:1,  reward:600 },
+  { id:'nb_pair',    name:'拿到一对',              target:1,  reward:100 },
+  { id:'nb_twopair', name:'拿到两对',              target:1,  reward:200 },
+  { id:'nb_trips',   name:'拿到三条',              target:1,  reward:300 },
+  { id:'nb_straight',name:'拿到顺子',              target:1,  reward:500 },
+  { id:'nb_flush',   name:'拿到同花',              target:1,  reward:700 },
+  { id:'nb_fullhouse',name:'拿到葫芦',             target:1,  reward:900 },
+  { id:'nb_fast_5',  name:'快速决策 5 次',          target:5,  reward:150 }
+];
+// 全部完成总奖励：8250
+
+/* 每日任务池 */
+var TASK_POOL = [
+  { id:'play_3', name:'完成 3 手牌局', target:3, reward:100 },
+  { id:'play_5', name:'完成 5 手牌局', target:5, reward:200 },
+  { id:'win_1', name:'赢得 1 局', target:1, reward:150 },
+  { id:'win_2', name:'赢得 2 局', target:2, reward:300 },
+  { id:'raise_5', name:'加注 5 次', target:5, reward:120 },
+  { id:'allin_1', name:'全下 1 次', target:1, reward:200 },
+  { id:'win_allin', name:'全下并获胜 1 次', target:1, reward:250 },
+  { id:'bluff_win', name:'诈唬成功（用弱牌赢）', target:1, reward:400 },
+  { id:'fast_decide', name:'快速决策 10 次', target:10, reward:180 }
+];
+
+/* 成就 */
 var ACHIEVEMENTS = [
   { id:'first_win', name:'初战告捷', desc:'赢得第一局', icon:'🥇', reward:100 },
   { id:'win_10', name:'小有名气', desc:'累计赢得10局', icon:'🎖️', reward:500 },
@@ -774,25 +1224,11 @@ var ACHIEVEMENTS = [
   { id:'level_5', name:'五级牌手', desc:'达到5级', icon:'⭐', reward:500 },
   { id:'beat_pro', name:'战胜专业', desc:'战胜专业型AI', icon:'🎩', reward:600 },
   { id:'beat_boss', name:'击溃赌神', desc:'战胜赌神', icon:'👊', reward:2000 },
-  { id:'no_timeout_10', name:'沉着冷静', desc:'连续10手未超时', icon:'🧊', reward:400 },
-  { id:'fast_player', name:'快枪手', desc:'单局中3秒内完成动作5次', icon:'⚡', reward:300 },
-  { id:'enter_champion', name:'踏入殿堂', desc:'首次进入冠军场', icon:'👑', reward:2000 }
+  { id:'enter_champion', name:'踏入殿堂', desc:'首次进入冠军场', icon:'👑', reward:2000 },
+  { id:'newbie_master', name:'新手毕业', desc:'完成所有新手任务', icon:'🎓', reward:3000 }
 ];
 
-/* ========== 任务 ========== */
-var TASK_POOL = [
-  { id:'play_3', name:'完成 3 手牌局', target:3, reward:100 },
-  { id:'play_5', name:'完成 5 手牌局', target:5, reward:200 },
-  { id:'win_1', name:'赢得 1 局', target:1, reward:150 },
-  { id:'win_2', name:'赢得 2 局', target:2, reward:300 },
-  { id:'raise_5', name:'加注 5 次', target:5, reward:120 },
-  { id:'allin_1', name:'全下 1 次', target:1, reward:200 },
-  { id:'win_allin', name:'全下并获胜 1 次', target:1, reward:250 },
-  { id:'bluff_win', name:'诈唬成功（用弱牌赢）', target:1, reward:400 },
-  { id:'fast_decide', name:'快速决策 10 次', target:10, reward:180 }
-];
-
-/* ========== AI 对手 ========== */
+/* AI */
 var OPPONENTS = [
   { id:'xiaohong', name:'小红', avatar:'👩‍🦰', style:'aggressive',
     styleName:'激进型', unlockLv:1, desc:'爱加注，偶尔诈唬' },
@@ -843,7 +1279,7 @@ function createPsychology(style) {
   };
 }
 
-/* ========== 音效 ========== */
+/* 音效 */
 var audioCtx = null;
 function initAudio() {
   if (!audioCtx) {
@@ -852,7 +1288,7 @@ function initAudio() {
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 }
 function sfx(name) {
-  if (!player.soundOn || !audioCtx) return;
+  if (!player || !player.soundOn || !audioCtx) return;
   var t = audioCtx.currentTime;
   function tone(freq, dur, type, vol, delay) {
     try {
@@ -894,7 +1330,7 @@ function sfx(name) {
   }
 }
 
-/* ========== 牌型 ========== */
+/* 牌型 */
 function evaluate5(cards) {
   var ranks = cards.map(function(c){ return c.r; }).sort(function(a,b){ return b-a; });
   var flush = cards.every(function(c){ return c.s === cards[0].s; });
@@ -984,17 +1420,22 @@ var nextHandResolve = null;
 function $(id) { return document.getElementById(id); }
 
 var toastTimer = null;
-function showToast(msg, dur, danger) {
+function showToast(msg, dur, danger, type) {
   var el = $('toast');
   if (!el) return;
   el.textContent = msg;
   el.classList.toggle('danger', !!danger);
+  el.classList.toggle('success', type === 'success');
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, dur || 1800);
+  toastTimer = setTimeout(function(){
+    el.classList.remove('show');
+    el.classList.remove('danger');
+    el.classList.remove('success');
+  }, dur || 1800);
 }
 
-/* ============ 倒计时 ============ */
+/* 倒计时 */
 var Timer = {
   id: null, startTime: 0, total: 0, active: false,
   onTimeout: null, lastTickSec: -1,
@@ -1036,9 +1477,7 @@ var Timer = {
   hide: function() {
     var w = $('timerWrapper');
     if (w) {
-      w.classList.remove('show');
-      w.classList.remove('warning');
-      w.classList.remove('danger');
+      w.classList.remove('show', 'warning', 'danger');
     }
     var sw = $('screenWarning');
     if (sw) sw.classList.remove('show');
@@ -1079,7 +1518,6 @@ var Timer = {
   }
 };
 
-/* ========== 界面 ========== */
 function showScreen(name) {
   App.screen = name;
   $('lobbyScreen').style.display = name === 'lobby' ? 'flex' : 'none';
@@ -1090,7 +1528,7 @@ function showScreen(name) {
   Timer.stop();
 }
 
-/* ========== 难度卡片 ========== */
+/* 难度卡片 */
 function renderDifficultyCards() {
   var body = $('diffBody');
   body.innerHTML = '';
@@ -1103,15 +1541,17 @@ function renderDifficultyCards() {
     cfg.desc.forEach(function(line){
       if (line.indexOf('入场费') === 0) infoHTML += '<div class="fee">' + line + '</div>';
       else if (line.indexOf('⏰') === 0) infoHTML += '<div class="timeline">' + line + '</div>';
-      else if (line.indexOf('每次加注') === 0) infoHTML += '<div class="minraise">' + line + '</div>';
+      else if (line.indexOf('加注 ≥') === 0) infoHTML += '<div class="minraise">' + line + '</div>';
       else if (line.indexOf('AI ') === 0) infoHTML += '<div class="highlight">' + line + '</div>';
       else infoHTML += '<div>' + line + '</div>';
     });
     var lockHTML = canEnter ? '' :
       '<div class="diff-lock-overlay">' +
       '<div class="lockicon">🔒</div>' +
-      '<div class="locktxt">需要 ' + cfg.minCoins.toLocaleString() + ' 🪙</div>' +
-      '<div class="locktxt" style="font-size:11px;color:#8fa0b4;">你当前 ' + player.coins.toLocaleString() + '</div>' +
+      '<div class="lockwrap">' +
+      '<div class="locktxt">需要 ' + fmt(cfg.minCoins) + ' 🪙</div>' +
+      '<div class="locktxt" style="font-size:11px;color:#8fa0b4;">你当前 ' + fmt(player.coins) + '</div>' +
+      '</div>' +
       '</div>';
     card.innerHTML =
       '<div class="diff-tag">' + cfg.tag + '</div>' +
@@ -1123,7 +1563,7 @@ function renderDifficultyCards() {
     card.addEventListener('click', function(){
       if (!canEnter) {
         sfx('lose');
-        showToast('🔒 需要 ' + cfg.minCoins.toLocaleString() + ' 🪙 才能进入', 2000, true);
+        showToast('🔒 需要 ' + fmt(cfg.minCoins) + ' 🪙 才能进入', 2000, true);
         return;
       }
       sfx('click');
@@ -1136,41 +1576,45 @@ function renderDifficultyCards() {
 function tryEnterGame(diffKey) {
   var cfg = DIFFICULTY_CONFIG[diffKey];
   if (player.coins < cfg.minCoins) {
-    showToast('🔒 金币不足，需要 ' + cfg.minCoins.toLocaleString() + ' 🪙', 2000, true);
+    showToast('🔒 金币不足，需要 ' + fmt(cfg.minCoins) + ' 🪙', 2000, true);
     return;
   }
   if (cfg.entryFee > 0) {
     player.coins -= cfg.entryFee;
-    savePlayer();
-    showToast('💸 扣除入场费 $' + cfg.entryFee.toLocaleString(), 1600);
+    saveAllSaves(true);
+    showToast('💸 扣除入场费 $' + fmt(cfg.entryFee), 1600);
   }
-  if (diffKey === 'champion') {
-    checkAchievement('enter_champion');
-  }
+  if (diffKey === 'champion') checkAchievement('enter_champion');
   startGame(diffKey);
 }
 
-/* ========== 大厅 ========== */
+/* 大厅 */
 function renderLobby() {
+  if (!player) return;
   $('lbLevel').textContent = 'Lv.' + player.level;
-  $('lbCoins').textContent = player.coins.toLocaleString();
+  $('lbName').textContent = player.name || '玩家';
+  $('lbCoins').textContent = fmt(player.coins);
   var need = player.level * 100;
   var pct = Math.min(100, (player.exp / need) * 100);
   $('lbExp').style.width = pct + '%';
   $('lbBtnSound').textContent = player.soundOn ? '🔊' : '🔇';
-  ensureTasks();
-  var hasClaimable = false;
-  player.tasks.ids.forEach(function(id){
-    var t = TASK_POOL.find(function(x){ return x.id === id; });
-    if (!t || player.taskClaimed[id]) return;
-    if (getTaskProgress(id) >= t.target) hasClaimable = true;
-  });
-  $('lbTaskBadge').style.display = hasClaimable ? 'block' : 'none';
+
+  ensureDailyTasks();
+
+  // 检查红点
+  var nbDone = checkNewbieHasClaimable();
+  var dailyDone = checkDailyHasClaimable();
+  $('lbTaskBadge').style.display = (nbDone || dailyDone) ? 'block' : 'none';
+  $('lbQTaskBadge').style.display = (nbDone || dailyDone) ? 'block' : 'none';
+
+  updateSaveIndicator('saved');
 }
 
 function renderTopbar() {
+  if (!player) return;
   $('pLevel').textContent = 'Lv.' + player.level;
-  $('pCoins').textContent = player.coins.toLocaleString();
+  $('pName').textContent = player.name || '玩家';
+  $('pCoins').textContent = fmt(player.coins);
   var need = player.level * 100;
   var pct = Math.min(100, (player.exp / need) * 100);
   $('pExp').style.width = pct + '%';
@@ -1212,7 +1656,7 @@ function seatHTML(p, i) {
     html += '<span class="style-tag">' + p.styleName + '</span>';
   }
   html += dealerBtn + '</div>';
-  html += '<div class="chips">$' + p.chips.toLocaleString() + '</div>';
+  html += '<div class="chips">$' + fmt(p.chips) + '</div>';
   html += '<div class="action">' + (p.lastAction || '') + '</div>';
   if (resText) html += '<div class="res">' + resText + '</div>';
   return html;
@@ -1223,7 +1667,7 @@ function renderTable() {
   if (stageEl) stageEl.textContent = G.handOver ? '' : (STAGE_NAME[G.stage] || '');
   var potEl = $('potDisplay');
   if (potEl) {
-    if (G.pot > 0) { potEl.textContent = '底池  $' + G.pot.toLocaleString(); potEl.classList.add('show'); }
+    if (G.pot > 0) { potEl.textContent = '底池  $' + fmt(G.pot); potEl.classList.add('show'); }
     else potEl.classList.remove('show');
   }
   var boardEl = $('boardArea');
@@ -1266,7 +1710,7 @@ function renderControls() {
     var b2 = document.createElement('button');
     b2.className = 'abtn leave';
     b2.innerHTML = '🚪 离开牌桌';
-    b2.addEventListener('click', function(){ sfx('click'); exitGame(); });
+    b2.addEventListener('click', function(){ sfx('click'); requestExit(); });
     el.appendChild(b2);
     return;
   }
@@ -1282,7 +1726,7 @@ function renderControls() {
     var s2 = document.createElement('button');
     s2.className = 'abtn leave';
     s2.innerHTML = '🚪 离开牌桌';
-    s2.addEventListener('click', function(){ sfx('click'); exitGame(); });
+    s2.addEventListener('click', function(){ sfx('click'); requestExit(); });
     el.appendChild(s2);
     return;
   }
@@ -1295,7 +1739,6 @@ function renderControls() {
     var minRaiseTo = Math.min(maxRaiseTo, G.currentBet + G.minRaise);
     var unit = G.minRaiseUnit;
 
-    // 对齐滑块最小值到单位倍数
     var sliderMin = Math.ceil(minRaiseTo / unit) * unit;
     if (sliderMin > maxRaiseTo) sliderMin = maxRaiseTo;
     var sliderMax = maxRaiseTo;
@@ -1314,7 +1757,7 @@ function renderControls() {
     } else {
       bc.className = 'abtn call';
       var callAmt = Math.min(toCall, p.chips);
-      bc.innerHTML = '跟注 $' + callAmt.toLocaleString() + '<span class="sub">CALL</span>';
+      bc.innerHTML = '跟注 $' + fmt(callAmt) + '<span class="sub">CALL</span>';
       bc.addEventListener('click', function(){ sfx('click'); doAct({type:'call'}); });
     }
     el.appendChild(bc);
@@ -1334,9 +1777,9 @@ function renderControls() {
       var valSpan = document.createElement('span');
       valSpan.className = 'val';
       valSpan.id = 'raiseVal';
-      valSpan.textContent = '$' + def.toLocaleString();
+      valSpan.textContent = '$' + fmt(def);
       slider.addEventListener('input', function(){
-        valSpan.textContent = '$' + parseInt(this.value, 10).toLocaleString();
+        valSpan.textContent = '$' + fmt(parseInt(this.value, 10));
       });
       var br = document.createElement('button');
       br.className = 'abtn raise';
@@ -1352,7 +1795,7 @@ function renderControls() {
       el.appendChild(panel);
       var ba = document.createElement('button');
       ba.className = 'abtn allin';
-      ba.innerHTML = '全下 $' + maxRaiseTo.toLocaleString() + '<span class="sub">ALL IN</span>';
+      ba.innerHTML = '全下 $' + fmt(maxRaiseTo) + '<span class="sub">ALL IN</span>';
       ba.addEventListener('click', function(){ sfx('click'); doAct({type:'raise', amount:maxRaiseTo}); });
       el.appendChild(ba);
     }
@@ -1361,8 +1804,9 @@ function renderControls() {
 
   Timer.stop();
   var actorName = (G.players[G.actor] && G.players[G.actor].name) || '';
-  el.innerHTML = '<div class="waiting"><span class="who">' + actorName +
-                 '</span> 行动中<span class="dots"></span></div>';
+  var waitingText = G.actor < 0 ? '正在发牌' : (actorName + ' 行动中');
+  el.innerHTML = '<div class="waiting"><span class="who">' + waitingText +
+                 '</span><span class="dots"></span></div>';
 }
 
 function render() {
@@ -1371,7 +1815,7 @@ function render() {
   renderControls();
 }
 
-/* ========== 下注 ========== */
+/* 下注 */
 function putIn(p, amt) {
   amt = Math.max(0, Math.min(amt, p.chips));
   p.chips -= amt;
@@ -1395,26 +1839,38 @@ function applyAction(p, act) {
   } else if (act.type === 'call') {
     var amt = putIn(p, toCall);
     p.acted = true;
-    p.lastAction = p.allIn ? ('全下 $' + p.bet.toLocaleString()) : ('跟注 $' + amt.toLocaleString());
+    p.lastAction = p.allIn ? ('全下 $' + fmt(p.bet)) : ('跟注 $' + fmt(amt));
     sfx('chip');
-    if (p.human) notifyAIsPlayerAction('call');
+    if (p.human) {
+      notifyAIsPlayerAction('call');
+      bumpNewbieProgress('nb_call_5', 1);
+      if (p.allIn) bumpNewbieProgress('nb_allin_1', 1);
+    }
   } else if (act.type === 'raise') {
     var target = Math.min(act.amount, p.bet + p.chips);
     if (target <= G.currentBet) {
       var amt2 = putIn(p, toCall);
       p.acted = true;
-      p.lastAction = p.allIn ? ('全下 $' + p.bet.toLocaleString()) : ('跟注 $' + amt2.toLocaleString());
-      if (p.human) notifyAIsPlayerAction('call');
+      p.lastAction = p.allIn ? ('全下 $' + fmt(p.bet)) : ('跟注 $' + fmt(amt2));
+      if (p.human) {
+        notifyAIsPlayerAction('call');
+        if (p.allIn) bumpNewbieProgress('nb_allin_1', 1);
+      }
     } else {
       var raiseSize = target - G.currentBet;
       putIn(p, target - p.bet);
       G.minRaise = Math.max(G.minRaise, raiseSize);
       G.currentBet = p.bet;
       p.acted = true;
-      p.lastAction = p.allIn ? ('全下 $' + p.bet.toLocaleString()) : ('加注到 $' + p.bet.toLocaleString());
+      p.lastAction = p.allIn ? ('全下 $' + fmt(p.bet)) : ('加注到 $' + fmt(p.bet));
       if (p.human) {
-        player.taskProgress.raise = (player.taskProgress.raise || 0) + 1;
-        if (p.allIn) player.taskProgress.allin = (player.taskProgress.allin || 0) + 1;
+        bumpNewbieProgress('nb_raise_3', 1);
+        bumpNewbieProgress('nb_raise_10', 1);
+        bumpDailyProgress('raise_5', 1);
+        if (p.allIn) {
+          bumpNewbieProgress('nb_allin_1', 1);
+          bumpDailyProgress('allin_1', 1);
+        }
         notifyAIsPlayerAction(p.allIn ? 'allin' : 'raise');
       }
       for (var i = 0; i < G.players.length; i++) {
@@ -1445,8 +1901,7 @@ async function bettingRound(startIdx) {
   var idx = startIdx;
   var guard = 0;
   while (guard++ < 400) {
-    if (!G.active) return;
-    if (G.skipFlag) return;
+    if (!G.active || G.skipFlag) return;
     if (bettingRoundDone()) break;
     var p = G.players[idx];
     if (p && !p.folded && !p.allIn && !(p.acted && p.bet === G.currentBet)) {
@@ -1495,7 +1950,6 @@ function clampRaise(p, target) {
   var maxT = p.bet + p.chips;
   var unit = G.minRaiseUnit;
   var minT = Math.min(G.currentBet + G.minRaise, maxT);
-  // 对齐到单位倍数
   target = Math.round(target / unit) * unit;
   var minAligned = Math.ceil(minT / unit) * unit;
   if (minAligned > maxT) minAligned = maxT;
@@ -1527,18 +1981,15 @@ function aiDecide(p) {
   var maxRaiseTo = p.bet + p.chips;
   var potOdds = toCall / ((G.pot + toCall) || 1);
   var r = Math.random();
-
   var oppFoldRate = psy.getFoldRate();
   var oppAggrRate = psy.getAggrRate();
   var readSkill = cfg.readSkill;
-
   var bluffMult = 1;
   if (oppFoldRate > 0.5) bluffMult = 1 + (oppFoldRate - 0.5) * readSkill * 3;
   if (oppFoldRate < 0.2) bluffMult = 0.3;
   var aggrMult = 1;
   if (oppAggrRate > 0.4) aggrMult = 1 - (oppAggrRate - 0.4) * readSkill * 1.5;
   if (aggrMult < 0.4) aggrMult = 0.4;
-
   var tiltFactor = 1 + psy.tilt * 0.6;
 
   if (G.community.length === 0) {
@@ -1566,14 +2017,12 @@ function aiDecide(p) {
   }
 
   var boardTexture = analyzeBoardTexture(G.community);
-
   var shouldSlowPlay = s > 0.85 && r < cfg.slowPlay && !p.allIn &&
                        boardTexture.safe && toCall <= G.pot * 0.2;
   if (shouldSlowPlay) {
     if (toCall > 0) return { type:'call' };
     return { type:'check' };
   }
-
   var shouldBluff = s < 0.42 && r < cfg.bluff * bluffMult * tiltFactor &&
                     G.community.length >= 3 && maxRaiseTo > G.currentBet;
   if (shouldBluff) {
@@ -1587,7 +2036,6 @@ function aiDecide(p) {
     }
     return { type:'fold' };
   }
-
   if (canCheck) {
     if (s > cfg.betT && r < cfg.aggr * aggrMult) {
       return { type:'raise', amount: clampRaise(p, G.pot * (0.5 + Math.random() * 0.4)) };
@@ -1597,7 +2045,6 @@ function aiDecide(p) {
     }
     return { type:'check' };
   }
-
   if (s < cfg.foldT) {
     if (r < 0.08 * readSkill && toCall <= G.pot * 0.6 && G.pot > G.bb * 4) {
       return { type:'raise', amount: clampRaise(p, G.currentBet * 2.5) };
@@ -1605,17 +2052,14 @@ function aiDecide(p) {
     if (toCall <= G.bb && r < cfg.call) return { type:'call' };
     return { type:'fold' };
   }
-
   if (s > cfg.raiseT && r < cfg.aggr * aggrMult) {
     var raiseSize = G.currentBet * (2 + Math.random() * 1.5) + G.pot * 0.3;
     return { type:'raise', amount: clampRaise(p, raiseSize) };
   }
-
   if (s > potOdds + 0.08) return { type:'call' };
   if (s > 0.6 && toCall <= G.pot * 0.4) return { type:'call' };
   if (toCall <= G.bb && r < cfg.call + 0.2) return { type:'call' };
   if (oppAggrRate > 0.5 && toCall > G.pot * 0.4) return { type:'fold' };
-
   return { type:'fold' };
 }
 
@@ -1627,7 +2071,7 @@ function analyzeBoardTexture(board) {
   var paired = uniqRanks.length < ranks.length;
   var suitCount = {};
   suits.forEach(function(s){ suitCount[s] = (suitCount[s]||0)+1; });
-  var maxSuit = Math.max.apply(null, Object.values(suitCount));
+  var maxSuit = Math.max.apply(null, Object.keys(suitCount).map(function(k){ return suitCount[k]; }));
   var flushDraw = maxSuit >= 3;
   var sortedR = uniqRanks.slice().sort(function(a,b){ return a-b; });
   var straightDraw = false;
@@ -1663,7 +2107,6 @@ async function getAction(p) {
           var r = humanResolve;
           humanResolve = null;
           Timer.playerActive = false;
-          player.taskProgress._lastWasTimeout = true;
           sfx('timeout');
           showToast('⏰ 超时！自动执行', 1800, true);
           var toCall = G.currentBet - p.bet;
@@ -1692,10 +2135,8 @@ function doAct(a) {
   var elapsed = (performance.now() - Timer.startTime) / 1000;
   if (Timer.playerActive && elapsed <= 3 && a.type !== 'fold') {
     Timer.fastDecideCount++;
-    player.taskProgress.fast_decide = (player.taskProgress.fast_decide || 0) + 1;
-    if (Timer.fastDecideCount === 5) {
-      checkAchievement('fast_player');
-    }
+    bumpNewbieProgress('nb_fast_5', 1);
+    bumpDailyProgress('fast_decide', 1);
   }
   Timer.playerActive = false;
   Timer.stop();
@@ -1759,7 +2200,13 @@ async function playHand() {
   G.skipFlag = false;
   G.handNo++;
   player.totalHands++;
-  player.taskProgress.play = (player.taskProgress.play || 0) + 1;
+  bumpNewbieProgress('nb_play_1', 1);
+  bumpNewbieProgress('nb_play_5', 1);
+  bumpNewbieProgress('nb_play_15', 1);
+  bumpNewbieProgress('nb_play_30', 1);
+  bumpDailyProgress('play_3', 1);
+  bumpDailyProgress('play_5', 1);
+
   G.deck = shuffle(makeDeck());
   G.community = [];
   G.pot = 0;
@@ -1769,8 +2216,9 @@ async function playHand() {
   G.stage = 0;
   for (var i = 0; i < G.players.length; i++) {
     var p = G.players[i];
+    if (!p.human && p.chips <= 0) { p.chips = G.buyIn; }   // AI 自动重买
     p.hole = []; p.bet = 0; p.totalBet = 0;
-    p.folded = false; p.allIn = false; p.acted = false;
+    p.folded = false; p.allIn = p.chips <= 0; p.acted = false;
     p.reveal = false; p.lastAction = ''; p.resultText = '';
     p.winner = false; p._v = null;
   }
@@ -1782,22 +2230,26 @@ async function playHand() {
   for (var k = 1; k <= n; k++) order.push((G.dealer + k) % n);
   for (var m = 0; m < 2; m++) {
     for (var o = 0; o < order.length; o++) {
-      G.players[order[o]].hole.push(G.deck.pop());
+      if (!G.active) return;
+      var tp = G.players[order[o]];
+      if (!tp) return;
+      tp.hole.push(G.deck.pop());
       sfx('deal');
-      await sleep(80);
+      await sleep(G.skipFlag ? 0 : 80);
     }
   }
+  if (!G.players[sbIdx] || !G.players[bbIdx]) return;
   putIn(G.players[sbIdx], G.sb);
-  G.players[sbIdx].lastAction = '小盲 $' + G.players[sbIdx].bet.toLocaleString();
+  G.players[sbIdx].lastAction = '小盲 $' + fmt(G.players[sbIdx].bet);
   putIn(G.players[bbIdx], G.bb);
-  G.players[bbIdx].lastAction = '大盲 $' + G.players[bbIdx].bet.toLocaleString();
+  G.players[bbIdx].lastAction = '大盲 $' + fmt(G.players[bbIdx].bet);
   G.currentBet = G.bb;
   G.minRaise = G.bb;
   render();
-  await sleep(500);
-  if (!G.active || G.skipFlag) return;
+  await sleep(G.skipFlag ? 0 : 500);
+  if (!G.active) return;
   await bettingRound((G.dealer + 3) % n);
-  if (!G.active || G.skipFlag) { await finishHand(); return; }
+  if (!G.active) return;
   var streets = [
     { count: 3, name: '翻牌' },
     { count: 1, name: '转牌' },
@@ -1805,18 +2257,15 @@ async function playHand() {
   ];
   for (var si = 0; si < streets.length; si++) {
     if (!G.active) return;
-    if (G.skipFlag) break;
     if (G.players.filter(function(x){ return !x.folded; }).length <= 1) break;
     var st = streets[si];
     var fastMode = G.players[0] && G.players[0].folded;
     G.deck.pop();
     for (var ci = 0; ci < st.count; ci++) {
       G.community.push(G.deck.pop());
-      if (!fastMode) sfx('deal');
-      await sleep(fastMode ? 40 : 180);
-      if (G.skipFlag) break;
+      if (!fastMode && !G.skipFlag) sfx('deal');
+      await sleep((fastMode || G.skipFlag) ? 20 : 180);
     }
-    if (G.skipFlag) break;
     G.stage++;
     G.currentBet = 0;
     G.minRaise = G.bb;
@@ -1826,11 +2275,11 @@ async function playHand() {
       G.players[ri].lastAction = '';
     }
     render();
-    await sleep(fastMode ? 100 : 500);
-    if (!G.active || G.skipFlag) break;
+    await sleep((fastMode || G.skipFlag) ? 60 : 500);
+    if (!G.active) return;
     if (G.players.filter(function(x){ return !x.folded; }).length > 1) {
       await bettingRound((G.dealer + 1) % n);
-      if (!G.active || G.skipFlag) break;
+      if (!G.active) return;
     }
   }
   await finishHand();
@@ -1839,131 +2288,69 @@ async function playHand() {
   render();
 }
 
-async function finishHand() {
-  Timer.stop();
-  G.actor = -1;
-  var fast = G.skipFlag;
-  var contenders = G.players.filter(function(p){ return !p.folded; });
-  var humanWon = false;
-  var humanWinAmount = 0;
-  var humanAllIn = G.players[0].allIn;
-  if (contenders.length === 1) {
-    var w = contenders[0];
-    var amount = G.pot;
-    w.chips += amount;
-    w.winner = true;
-    w.lastAction = '+$' + amount.toLocaleString();
-    if (w.human) { humanWon = true; humanWinAmount = amount; }
-    G.pot = 0;
-    render();
-    if (!fast) {
-      if (w.human) sfx('win'); else sfx('lose');
-      await sleep(900);
+/* ============================================================
+   侧池分配（从 totalBet 分层，逐层判定赢家）
+   ============================================================ */
+function distributePot() {
+  var contribs = G.players.map(function(p){ return { p: p, amt: p.totalBet }; });
+  var results = [];
+  var guard = 0;
+  while (guard++ < 60) {
+    var live = contribs.filter(function(c){ return c.amt > 0; });
+    if (live.length === 0) break;
+    var minAmt = Math.min.apply(null, live.map(function(c){ return c.amt; }));
+    var layerTotal = 0;
+    var layerPlayers = [];
+    for (var i = 0; i < contribs.length; i++) {
+      if (contribs[i].amt > 0) {
+        contribs[i].amt -= minAmt;
+        layerTotal += minAmt;
+        layerPlayers.push(contribs[i].p);
+      }
     }
-  } else {
-    contenders.forEach(function(p){ p.reveal = true; });
-    render();
-    if (!fast) { await sleep(700); if (!G.active) return; }
-    var levels = [];
-    var seen = {};
-    G.players.forEach(function(p){
-      if (p.totalBet > 0 && !seen[p.totalBet]) {
-        seen[p.totalBet] = true;
-        levels.push(p.totalBet);
-      }
-    });
-    levels.sort(function(a,b){ return a-b; });
-    var prev = 0;
-    for (var li = 0; li < levels.length; li++) {
-      var lv = levels[li];
-      var amt = 0;
-      for (var pi = 0; pi < G.players.length; pi++) {
-        amt += Math.min(G.players[pi].totalBet, lv) - Math.min(G.players[pi].totalBet, prev);
-      }
-      prev = lv;
-      var eligible = contenders.filter(function(p){ return p.totalBet >= lv; });
-      if (amt <= 0 || eligible.length === 0) continue;
-      var best = null, winners = [];
-      for (var ei = 0; ei < eligible.length; ei++) {
-        var p2 = eligible[ei];
-        if (!p2._v) p2._v = bestHand(p2.hole.concat(G.community));
-        if (!best || cmpHand(p2._v, best) > 0) { best = p2._v; winners = [p2]; }
-        else if (cmpHand(p2._v, best) === 0) winners.push(p2);
-      }
-      var share = Math.floor(amt / winners.length);
-      var rem = amt - share * winners.length;
-      winners.forEach(function(w2, wi){
-        w2.chips += share + (wi < rem ? 1 : 0);
-        w2.winner = true;
-        if (w2.human) { humanWon = true; humanWinAmount += share; }
-      });
+    var eligible = layerPlayers.filter(function(p){ return !p.folded && p._v; });
+    if (eligible.length === 0) eligible = layerPlayers.filter(function(p){ return p._v; });
+    if (eligible.length === 0) eligible = layerPlayers;
+    var bestV = null, winners = [];
+    for (var j = 0; j < eligible.length; j++) {
+      var v = eligible[j]._v;
+      if (!v) { if (winners.length === 0) winners = [eligible[j]]; continue; }
+      if (!bestV || cmpHand(v, bestV) > 0) { bestV = v; winners = [eligible[j]]; }
+      else if (cmpHand(v, bestV) === 0) winners.push(eligible[j]);
     }
-    contenders.forEach(function(p){ if (p._v) p.resultText = describeHand(p._v); });
-    G.pot = 0;
-    render();
-    if (!fast) {
-      if (humanWon) sfx('win'); else sfx('lose');
-      await sleep(1400);
+    var share = Math.floor(layerTotal / winners.length);
+    var rem = layerTotal - share * winners.length;
+    for (var w = 0; w < winners.length; w++) {
+      var got = share + (w === 0 ? rem : 0);
+      if (got <= 0) continue;
+      winners[w].chips += got;
+      winners[w].winner = true;
+      var found = null;
+      for (var q = 0; q < results.length; q++) {
+        if (results[q].player === winners[w]) { found = results[q]; break; }
+      }
+      if (found) found.amount += got;
+      else results.push({ player: winners[w], amount: got });
     }
   }
-  player.coins = G.players[0].chips;
-
-  if (humanWon) {
-    player.totalWins++;
-    player.streak++;
-    if (player.streak > player.maxStreak) player.maxStreak = player.streak;
-    if (humanWinAmount > player.maxWin) player.maxWin = humanWinAmount;
-    player.taskProgress.win = (player.taskProgress.win || 0) + 1;
-    if (humanAllIn) player.taskProgress.win_allin = (player.taskProgress.win_allin || 0) + 1;
-    try {
-      var v = bestHand(G.players[0].hole.concat(G.community));
-      if (v[0] <= 1 && humanWinAmount > 0) {
-        player.taskProgress.bluff_win = (player.taskProgress.bluff_win || 0) + 1;
-      }
-      if (v[0] >= 6) checkAchievement('get_fullhouse');
-      if (v[0] >= 7) checkAchievement('get_quads');
-      if (v[0] >= 8 && v[1] !== 14) checkAchievement('get_sf');
-      if (v[0] >= 8 && v[1] === 14) checkAchievement('get_royal');
-    } catch(e) {}
-    checkAchievement('first_win');
-    if (player.totalWins >= 10) checkAchievement('win_10');
-    if (player.totalWins >= 50) checkAchievement('win_50');
-    if (player.streak >= 3) checkAchievement('streak_3');
-    if (player.streak >= 5) checkAchievement('streak_5');
-    if (humanAllIn) checkAchievement('all_in_win');
-    if (humanWinAmount >= 1000) checkAchievement('max_win_1000');
-    for (var i = 1; i < G.players.length; i++) {
-      var opp = G.players[i];
-      if (opp.folded) continue;
-      if (opp.style === 'pro') checkAchievement('beat_pro');
-      if (opp.style === 'boss') checkAchievement('beat_boss');
-    }
-    for (var j = 1; j < G.players.length; j++) {
-      if (G.players[j].psych) G.players[j].psych.justLostBig = true;
-    }
-  } else {
-    player.streak = 0;
-  }
-
-  // 冷静成就
-  if (player.taskProgress._lastWasTimeout) {
-    player.taskProgress.no_timeout_streak = 0;
-    player.taskProgress._lastWasTimeout = false;
-  } else {
-    player.taskProgress.no_timeout_streak = (player.taskProgress.no_timeout_streak || 0) + 1;
-    if (player.taskProgress.no_timeout_streak >= 10) {
-      checkAchievement('no_timeout_10');
-    }
-  }
-
-  addExp(10 + (humanWon ? 20 : 0));
-  savePlayer();
-  renderTopbar();
-  G.skipFlag = false;
+  return results;
 }
 
-function addExp(amount) {
-  player.exp += amount;
+function todayStr() {
+  var d = new Date();
+  var mm = d.getMonth() + 1, dd = d.getDate();
+  return d.getFullYear() + '-' + (mm < 10 ? '0' + mm : mm) + '-' + (dd < 10 ? '0' + dd : dd);
+}
+
+/* 金币统一入口：游戏中的奖励同步进牌桌筹码 */
+function addCoins(n) {
+  if (!player) return;
+  player.coins += n;
+  if (G.active && G.players[0]) G.players[0].chips += n;
+}
+function addExp(n) {
+  if (!player) return false;
+  player.exp += n;
   var leveled = false;
   while (player.exp >= player.level * 100) {
     player.exp -= player.level * 100;
@@ -1971,299 +2358,744 @@ function addExp(amount) {
     leveled = true;
   }
   if (leveled) {
-    sfx('levelup');
-    if (player.level >= 5) checkAchievement('level_5');
+    checkAchievement('level_5', true);
     showLevelUp();
   }
+  return leveled;
 }
 
-function showLevelUp() {
-  $('luSub').textContent = '恭喜你升到了 Lv.' + player.level;
-  $('ovLevelUp').classList.add('show');
+/* ============================================================
+   进度 / 任务 / 成就
+   ============================================================ */
+function bumpNewbieProgress(id, n) {
+  if (!player) return;
+  if (player.newbieTasks[id]) return;
+  var task = null;
+  for (var i = 0; i < NEWBIE_TASKS.length; i++) {
+    if (NEWBIE_TASKS[i].id === id) { task = NEWBIE_TASKS[i]; break; }
+  }
+  if (!task) return;
+  var cur = player.newbieProgress[id] || 0;
+  if (cur >= task.target) return;
+  player.newbieProgress[id] = Math.min(task.target, cur + (n || 1));
+  updateTasksBadges();
 }
 
-function checkAchievement(id) {
-  if (player.achievements[id]) return;
-  var a = ACHIEVEMENTS.find(function(x){ return x.id === id; });
+function bumpDailyProgress(id, n) {
+  if (!player) return;
+  ensureDailyTasks();
+  if (player.dailyClaimed[id]) return;
+  var ids = (player.dailyTasks && player.dailyTasks.ids) || [];
+  if (ids.indexOf(id) < 0) return;
+  var task = null;
+  for (var i = 0; i < TASK_POOL.length; i++) {
+    if (TASK_POOL[i].id === id) { task = TASK_POOL[i]; break; }
+  }
+  if (!task) return;
+  var cur = player.dailyProgress[id] || 0;
+  if (cur >= task.target) return;
+  player.dailyProgress[id] = Math.min(task.target, cur + (n || 1));
+  updateTasksBadges();
+}
+
+function checkAchievement(id, silent) {
+  if (!player || player.achievements[id]) return;
+  var a = null;
+  for (var i = 0; i < ACHIEVEMENTS.length; i++) {
+    if (ACHIEVEMENTS[i].id === id) { a = ACHIEVEMENTS[i]; break; }
+  }
   if (!a) return;
   player.achievements[id] = true;
-  player.coins += a.reward;
-  savePlayer();
-  renderTopbar();
-  if (App.screen === 'lobby') renderLobby();
-  sfx('achievement');
-  showToast('🏆 解锁成就：' + a.name + '  +' + a.reward + '🪙', 2400);
-  renderAchList();
-}
-
-function renderAchList() {
-  var el = $('achList');
-  if (!el) return;
-  var html = '';
-  ACHIEVEMENTS.forEach(function(a){
-    var done = !!player.achievements[a.id];
-    html += '<div class="ach-item' + (done ? ' done' : '') + '">';
-    html += '<div class="ic">' + a.icon + '</div>';
-    html += '<div class="info">';
-    html += '<div class="t">' + a.name + '</div>';
-    html += '<div class="d">' + a.desc + '</div>';
-    html += '<div class="rw">+' + a.reward + ' 🪙</div>';
-    html += '</div></div>';
-  });
-  el.innerHTML = html;
-  $('stHands').textContent = player.totalHands;
-  $('stWins').textContent = player.totalWins;
-  $('stStreak').textContent = player.maxStreak;
-  $('stMaxWin').textContent = player.maxWin;
-}
-
-function getToday() {
-  var d = new Date();
-  return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
-}
-function ensureTasks() {
-  var today = getToday();
-  if (!player.tasks || player.tasks.date !== today) {
-    var pool = TASK_POOL.slice().sort(function(){ return Math.random() - 0.5; });
-    player.tasks = { date: today, ids: pool.slice(0, 3).map(function(t){ return t.id; }) };
-    player.taskProgress = {};
-    player.taskClaimed = {};
-    savePlayer();
+  addCoins(a.reward);
+  saveAllSaves(true);
+  if (!silent) {
+    sfx('achievement');
+    showToast('🏆 成就达成：' + a.name + '  +' + a.reward + '🪙', 2400, false, 'success');
   }
 }
-function getTaskProgress(id) {
-  if (id === 'play_3' || id === 'play_5') return player.taskProgress.play || 0;
-  if (id === 'win_1' || id === 'win_2') return player.taskProgress.win || 0;
-  if (id === 'raise_5') return player.taskProgress.raise || 0;
-  if (id === 'allin_1') return player.taskProgress.allin || 0;
-  if (id === 'win_allin') return player.taskProgress.win_allin || 0;
-  if (id === 'bluff_win') return player.taskProgress.bluff_win || 0;
-  if (id === 'fast_decide') return player.taskProgress.fast_decide || 0;
-  return 0;
+
+function ensureDailyTasks() {
+  if (!player) return;
+  var today = todayStr();
+  if (!player.dailyTasks || player.dailyTasks.date !== today) {
+    var pool = TASK_POOL.slice();
+    for (var i = pool.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = pool[i]; pool[i] = pool[j]; pool[j] = t;
+    }
+    var picked = pool.slice(0, 5);
+    player.dailyTasks = { date: today, ids: picked.map(function(x){ return x.id; }) };
+    player.dailyProgress = {};
+    player.dailyClaimed = {};
+    player.daily = { date: today, streak: (player.daily ? (player.daily.streak || 0) : 0), lastClaim: 0 };
+    saveAllSaves(true);
+  }
 }
-function renderTasks() {
-  var el = $('taskList');
-  if (!el) return;
-  ensureTasks();
-  var html = '';
-  player.tasks.ids.forEach(function(id){
-    var t = TASK_POOL.find(function(x){ return x.id === id; });
-    if (!t) return;
-    var prog = getTaskProgress(id);
-    var done = prog >= t.target;
-    var claimed = !!player.taskClaimed[id];
-    html += '<div class="task-item' + (done ? ' done' : '') + '">';
-    html += '<div class="info">';
-    html += '<div class="t">' + t.name + '</div>';
-    html += '<div class="pg">进度 ' + Math.min(prog, t.target) + ' / ' + t.target + '</div>';
-    html += '</div>';
-    html += '<div class="rw">+' + t.reward + ' 🪙</div>';
-    if (claimed) html += '<div class="claimed">已领取</div>';
-    else html += '<button class="claim" data-task="' + id + '" ' + (done ? '' : 'disabled') + '>领取</button>';
-    html += '</div>';
-  });
-  el.innerHTML = html;
-  el.querySelectorAll('button.claim').forEach(function(btn){
-    btn.addEventListener('click', function(){ claimTask(this.getAttribute('data-task')); });
-  });
+
+function getDailyTaskById(id) {
+  for (var i = 0; i < TASK_POOL.length; i++) {
+    if (TASK_POOL[i].id === id) return TASK_POOL[i];
+  }
+  return null;
 }
-function claimTask(id) {
-  if (player.taskClaimed[id]) return;
-  var t = TASK_POOL.find(function(x){ return x.id === id; });
-  if (!t) return;
-  player.taskClaimed[id] = true;
-  player.coins += t.reward;
-  savePlayer();
+
+function checkNewbieHasClaimable() {
+  if (!player) return false;
+  for (var i = 0; i < NEWBIE_TASKS.length; i++) {
+    var t = NEWBIE_TASKS[i];
+    if (player.newbieTasks[t.id]) continue;
+    if ((player.newbieProgress[t.id] || 0) >= t.target) return true;
+  }
+  return false;
+}
+
+function checkDailyHasClaimable() {
+  if (!player) return false;
+  ensureDailyTasks();
+  var ids = (player.dailyTasks && player.dailyTasks.ids) || [];
+  for (var i = 0; i < ids.length; i++) {
+    var t = getDailyTaskById(ids[i]);
+    if (!t) continue;
+    if (player.dailyClaimed[t.id]) continue;
+    if ((player.dailyProgress[t.id] || 0) >= t.target) return true;
+  }
+  return false;
+}
+
+function allNewbieDone() {
+  if (!player) return false;
+  for (var i = 0; i < NEWBIE_TASKS.length; i++) {
+    if (!player.newbieTasks[NEWBIE_TASKS[i].id]) return false;
+  }
+  return true;
+}
+
+function updateTasksBadges() {
+  if (!player) return;
+  var nb = checkNewbieHasClaimable();
+  var dl = checkDailyHasClaimable();
+  var nbEl = $('nbBadge'), dlEl = $('dailyBadge');
+  if (nbEl) nbEl.style.display = nb ? 'inline-block' : 'none';
+  if (dlEl) dlEl.style.display = dl ? 'inline-block' : 'none';
+  var any = nb || dl;
+  var b1 = $('lbTaskBadge'), b2 = $('lbQTaskBadge');
+  if (b1) b1.style.display = any ? 'block' : 'none';
+  if (b2) b2.style.display = any ? 'block' : 'none';
+}
+
+function claimNewbie(id) {
+  if (!player) return;
+  var task = null;
+  for (var i = 0; i < NEWBIE_TASKS.length; i++) {
+    if (NEWBIE_TASKS[i].id === id) { task = NEWBIE_TASKS[i]; break; }
+  }
+  if (!task || player.newbieTasks[id]) return;
+  if ((player.newbieProgress[id] || 0) < task.target) return;
+  player.newbieTasks[id] = true;
+  addCoins(task.reward);
+  saveAllSaves();
   sfx('achievement');
-  showToast('✅ 任务完成 +' + t.reward + '🪙', 2000);
-  renderTopbar();
-  renderLobby();
+  showToast('🎁 任务完成  +' + task.reward + '🪙', 2000, false, 'success');
+  if (allNewbieDone()) checkAchievement('newbie_master');
   renderTasks();
+  renderLobby();
 }
 
-async function gameLoop() {
-  G.active = true;
-  var cfg = DIFFICULTY_CONFIG[App.difficulty];
-  G.sb = cfg.sb;
-  G.bb = cfg.bb;
-  G.buyIn = cfg.buyIn;
-  G.minRaiseUnit = cfg.minRaiseUnit;
-  G.minRaise = cfg.bb;
-  if (player.coins < cfg.buyIn) {
-    player.coins = cfg.buyIn;
-    savePlayer();
+function claimDaily(id) {
+  if (!player) return;
+  var task = getDailyTaskById(id);
+  if (!task || player.dailyClaimed[id]) return;
+  if ((player.dailyProgress[id] || 0) < task.target) return;
+  player.dailyClaimed[id] = true;
+  addCoins(task.reward);
+  saveAllSaves();
+  sfx('achievement');
+  showToast('🎁 每日任务完成  +' + task.reward + '🪙', 2000, false, 'success');
+  renderTasks();
+  renderLobby();
+}
+
+/* ============================================================
+   结算
+   ============================================================ */
+async function finishHand() {
+  Timer.stop();
+  G.actor = -1;
+  if (!G.active || !G.players.length || !G.players[0]) return;
+  var fast = G.skipFlag;
+  var contenders = G.players.filter(function(p){ return !p.folded; });
+  var humanWon = false;
+  var humanWinAmount = 0;
+  var humanAllIn = G.players[0].allIn;
+  var human = G.players[0];
+
+  if (contenders.length === 1) {
+    var w = contenders[0];
+    var amount = G.pot;
+    w.chips += amount;
+    w.winner = true;
+    w.lastAction = '+$' + fmt(amount);
+    if (w.human) { humanWon = true; humanWinAmount = amount; }
+    G.pot = 0;
+    render();
+    if (!fast) {
+      sfx(w.human ? 'win' : 'lose');
+      showToast(w.human ? ('🎉 赢得底池 $' + fmt(amount)) : (w.name + ' 赢得底池'),
+                1800, false, w.human ? 'success' : undefined);
+      await sleep(900);
+    }
+    if (w.human) {
+      // 其他人都弃牌 → 诈唬成功（若自己手牌确实不强）
+      var fv = G.community.length >= 3 ? bestHand(w.hole.concat(G.community)) : null;
+      if (!fv || fv[0] <= 1) {
+        bumpNewbieProgress('nb_bluff_1', 1);
+        bumpDailyProgress('bluff_win', 1);
+      }
+    }
+  } else {
+    /* ---- 摊牌 ---- */
+    for (var i = 0; i < contenders.length; i++) {
+      contenders[i].reveal = true;
+      contenders[i]._v = bestHand(contenders[i].hole.concat(G.community));
+      contenders[i].resultText = describeHand(contenders[i]._v);
+    }
+    var pots = distributePot();
+    G.pot = 0;
+    render();
+    if (!fast) {
+      await sleep(500);
+      for (var pi = 0; pi < pots.length; pi++) {
+        sfx(pots[pi].player.human ? 'win' : 'chip');
+        await sleep(240);
+      }
+    }
+    for (var k = 0; k < pots.length; k++) {
+      pots[k].player.lastAction = '+$' + fmt(pots[k].amount);
+      if (pots[k].player.human) {
+        humanWon = true;
+        humanWinAmount += pots[k].amount;
+      }
+      if (pots[k].player !== human && pots[k].player.psych) {
+        // AI 输了大的会 tilt
+        if (pots[k].amount > G.buyIn * 0.3) pots[k].player.psych.justLostBig = false;
+      }
+    }
+    // 人类输了大的 → AI 记一笔“运气好”，同时人类没有 tilt 机制
+    if (!humanWon && human.totalBet > G.buyIn * 0.3) {
+      for (var z = 1; z < G.players.length; z++) {
+        if (!G.players[z].folded && G.players[z].psych) G.players[z].psych.confidence = Math.min(1, G.players[z].psych.confidence + 0.1);
+      }
+    }
+    render();
+    await sleep(fast ? 100 : 700);
+
+    // 人类牌型任务
+    if (human._v) {
+      var cat = human._v[0];
+      if (cat >= 1) bumpNewbieProgress('nb_pair', 1);
+      if (cat >= 2) bumpNewbieProgress('nb_twopair', 1);
+      if (cat >= 3) bumpNewbieProgress('nb_trips', 1);
+      if (cat >= 4) bumpNewbieProgress('nb_straight', 1);
+      if (cat >= 5) bumpNewbieProgress('nb_flush', 1);
+      if (cat >= 6) bumpNewbieProgress('nb_fullhouse', 1);
+      if (cat >= 6) checkAchievement('get_fullhouse', true);
+      if (cat >= 7) checkAchievement('get_quads', true);
+      if (cat >= 8) checkAchievement('get_sf', true);
+      if (cat === 8 && human._v[1] === 14) checkAchievement('get_royal', true);
+    }
+    // 诈唬：以高牌/一对赢下摊牌
+    if (humanWon && human._v && human._v[0] <= 1) {
+      bumpNewbieProgress('nb_bluff_1', 1);
+      bumpDailyProgress('bluff_win', 1);
+    }
+    if (humanWon) {
+      sfx('win');
+      showToast('🎉 赢得底池 $' + fmt(humanWinAmount), 1900, false, 'success');
+    } else if (!fast) {
+      sfx('lose');
+    }
   }
+
+  /* ---- 统计与奖励 ---- */
+  if (humanWon) {
+    player.totalWins++;
+    player.streak = (player.streak || 0) + 1;
+    if (player.streak > (player.maxStreak || 0)) player.maxStreak = player.streak;
+    if (humanWinAmount > (player.maxWin || 0)) player.maxWin = humanWinAmount;
+    bumpNewbieProgress('nb_win_1', 1);
+    bumpNewbieProgress('nb_win_3', 1);
+    bumpNewbieProgress('nb_win_8', 1);
+    bumpNewbieProgress('nb_win_15', 1);
+    bumpDailyProgress('win_1', 1);
+    bumpDailyProgress('win_2', 1);
+    if (humanAllIn) {
+      bumpNewbieProgress('nb_allin_win_1', 1);
+      bumpDailyProgress('win_allin', 1);
+      checkAchievement('all_in_win', true);
+    }
+    if (humanWinAmount >= 1000) checkAchievement('max_win_1000', true);
+    checkAchievement('first_win', true);
+    if (player.totalWins >= 10) checkAchievement('win_10', true);
+    if (player.totalWins >= 50) checkAchievement('win_50', true);
+    if (player.streak >= 3) checkAchievement('streak_3', true);
+    if (player.streak >= 5) checkAchievement('streak_5', true);
+    // 战胜特定风格
+    for (var bi = 1; bi < G.players.length; bi++) {
+      var opp = G.players[bi];
+      if (opp.folded) continue;
+      if (opp.style === 'pro') checkAchievement('beat_pro', true);
+      if (opp.style === 'boss') checkAchievement('beat_boss', true);
+    }
+  } else {
+    player.streak = 0;
+  }
+
+  addExp(10 + (humanWon ? 25 : 0) + Math.min(60, Math.floor(humanWinAmount / 100)));
+
+  // 同步筹码回存档
+  player.coins = G.players[0].chips;
+  if (player.coins < 0) player.coins = 0;
+  saveAllSaves(true);
+  renderTopbar();
+  updateTasksBadges();
+
+  if (!fast) await sleep(400);
+}
+
+/* ============================================================
+   对局主循环
+   ============================================================ */
+function startGame(diffKey) {
+  App.difficulty = diffKey;
+  var cfg = DIFFICULTY_CONFIG[diffKey];
+  G.bb = cfg.bb; G.sb = cfg.sb; G.buyIn = cfg.buyIn;
+  G.minRaiseUnit = cfg.minRaiseUnit;
+  G.active = true; G.handOver = false; G.handNo = 0; G.skipFlag = false;
+  G.pot = 0; G.community = []; G.currentBet = 0; G.actor = -1; G.stage = 0;
+  humanResolve = null; nextHandResolve = null;
   initPlayers();
-  G.handOver = false;
+  showScreen('game');
   render();
+  renderSlotList();
+  runGameLoop();
+}
+
+async function runGameLoop() {
   while (G.active) {
-    if (G.players[0].chips <= 0) break;
+    if (!G.players[0] || G.players[0].chips <= 0) {
+      player.coins = G.players[0] ? G.players[0].chips : 0;
+      G.active = false;
+      Timer.stop();
+      saveAllSaves(true);
+      showGameOver();
+      return;
+    }
     await playHand();
     if (!G.active) return;
-    player.coins = G.players[0].chips;
-    savePlayer();
-    if (player.coins <= 0) break;
-    renderControls();
     await new Promise(function(res){ nextHandResolve = res; });
-    if (!G.active) return;
   }
-  G.active = false;
-  Timer.stop();
-  $('goHands').textContent = G.handNo;
-  $('goWins').textContent = player.totalWins;
+}
+
+function showGameOver() {
+  $('goHands').textContent = fmt(player.totalHands);
+  $('goWins').textContent = fmt(player.totalWins);
   $('ovGameOver').classList.add('show');
 }
 
-function startGame(difficulty) {
-  initAudio();
-  sfx('click');
-  App.difficulty = difficulty;
-  G.active = false;
-  G.skipFlag = false;
-  Timer.stop();
-  if (humanResolve) { var r = humanResolve; humanResolve = null; r({type:'fold'}); }
-  if (nextHandResolve) { var r2 = nextHandResolve; nextHandResolve = null; r2(); }
-  showScreen('game');
-  ensureTasks();
-  savePlayer();
-  renderTopbar();
-  setTimeout(function(){
-    gameLoop().catch(function(e){
-      console.error('gameLoop error:', e);
-      G.active = false;
-      Timer.stop();
-      showToast('⚠️ 出错：' + (e && e.message || '未知'), 3000, true);
-    });
-  }, 50);
+function claimRelief() {
+  addCoins(1000);
+  saveAllSaves();
+  $('ovGameOver').classList.remove('show');
+  sfx('win');
+  showToast('💰 领取补充金 $1,000', 2000, false, 'success');
+  renderLobby();
+  showScreen('lobby');
+}
+
+function showLevelUp() {
+  var lu = $('luTitle'), ls = $('luSub');
+  if (lu) lu.textContent = '升级！Lv.' + player.level;
+  if (ls) ls.textContent = '恭喜你升到了 Lv.' + player.level + '，解锁更强的对手与场次';
+  sfx('levelup');
+  $('ovLevelUp').classList.add('show');
+}
+
+function requestExit() {
+  $('ovExitConfirm').classList.add('show');
 }
 
 function exitGame() {
+  if (G.active && G.players[0]) {
+    player.coins = G.players[0].chips;
+    if (player.coins < 0) player.coins = 0;
+  }
   G.active = false;
-  G.skipFlag = true;
+  humanResolve = null;
+  if (nextHandResolve) { var r = nextHandResolve; nextHandResolve = null; r(); }
   Timer.stop();
-  if (humanResolve) { var r = humanResolve; humanResolve = null; r({type:'fold'}); }
-  if (nextHandResolve) { var r2 = nextHandResolve; nextHandResolve = null; r2(); }
-  if (G.players[0]) player.coins = G.players[0].chips;
-  savePlayer();
-  setTimeout(function(){
-    renderLobby();
-    showScreen('lobby');
-  }, 100);
+  saveAllSaves();
+  $('ovExitConfirm').classList.remove('show');
+  G.handOver = true;
+  G.players = [];
+  render();
+  renderLobby();
+  showScreen('lobby');
+  showToast('💾 已保存并离开牌桌', 1600);
 }
 
+/* ============================================================
+   面板渲染
+   ============================================================ */
+function renderTasks() {
+  if (!player) return;
+  ensureDailyTasks();
+  // 新手任务
+  var nbEl = $('taskListNewbie');
+  if (nbEl) {
+    var html = '';
+    for (var i = 0; i < NEWBIE_TASKS.length; i++) {
+      var t = NEWBIE_TASKS[i];
+      var done = !!player.newbieTasks[t.id];
+      var cur = Math.min(player.newbieProgress[t.id] || 0, t.target);
+      var canClaim = !done && cur >= t.target;
+      html += '<div class="task-item' + (done ? ' done' : '') + '">';
+      html += '<div class="info"><div class="t">' + t.name + '</div>';
+      html += '<div class="pg">进度 ' + cur + ' / ' + t.target + '</div></div>';
+      html += '<div class="rw">+' + fmt(t.reward) + '🪙</div>';
+      if (done) html += '<div class="claimed">已领取</div>';
+      else if (canClaim) html += '<button class="claim" data-claim="' + t.id + '">领取</button>';
+      else html += '<button class="claim" disabled>未完成</button>';
+      html += '</div>';
+    }
+    nbEl.innerHTML = html;
+  }
+  // 每日任务
+  var dlEl = $('taskListDaily');
+  if (dlEl) {
+    var ids = (player.dailyTasks && player.dailyTasks.ids) || [];
+    var h2 = '';
+    for (var j = 0; j < ids.length; j++) {
+      var dt = getDailyTaskById(ids[j]);
+      if (!dt) continue;
+      var dDone = !!player.dailyClaimed[dt.id];
+      var dCur = Math.min(player.dailyProgress[dt.id] || 0, dt.target);
+      var dCan = !dDone && dCur >= dt.target;
+      h2 += '<div class="task-item' + (dDone ? ' done' : '') + '">';
+      h2 += '<div class="info"><div class="t">' + dt.name + '</div>';
+      h2 += '<div class="pg">进度 ' + dCur + ' / ' + dt.target + '</div></div>';
+      h2 += '<div class="rw">+' + fmt(dt.reward) + '🪙</div>';
+      if (dDone) h2 += '<div class="claimed">已领取</div>';
+      else if (dCan) h2 += '<button class="claim" data-dclaim="' + dt.id + '">领取</button>';
+      else h2 += '<button class="claim" disabled>未完成</button>';
+      h2 += '</div>';
+    }
+    dlEl.innerHTML = h2;
+  }
+  // 绑定领取按钮
+  var btns = document.querySelectorAll('[data-claim]');
+  for (var b = 0; b < btns.length; b++) {
+    btns[b].addEventListener('click', function(){
+      sfx('click');
+      claimNewbie(this.getAttribute('data-claim'));
+    });
+  }
+  var dbtns = document.querySelectorAll('[data-dclaim]');
+  for (var d = 0; d < dbtns.length; d++) {
+    dbtns[d].addEventListener('click', function(){
+      sfx('click');
+      claimDaily(this.getAttribute('data-dclaim'));
+    });
+  }
+  updateTasksBadges();
+}
+
+function renderAchList() {
+  if (!player) return;
+  $('stHands').textContent = fmt(player.totalHands);
+  $('stWins').textContent = fmt(player.totalWins);
+  $('stStreak').textContent = fmt(player.maxStreak);
+  $('stMaxWin').textContent = '$' + fmt(player.maxWin);
+  var html = '';
+  for (var i = 0; i < ACHIEVEMENTS.length; i++) {
+    var a = ACHIEVEMENTS[i];
+    var done = !!player.achievements[a.id];
+    html += '<div class="ach-item' + (done ? ' done' : '') + '">';
+    html += '<div class="ic">' + a.icon + '</div>';
+    html += '<div class="info"><div class="t">' + a.name + '</div>';
+    html += '<div class="d">' + a.desc + '</div>';
+    html += '<div class="rw">+' + fmt(a.reward) + '🪙</div></div>';
+    html += '</div>';
+  }
+  $('achList').innerHTML = html;
+}
+
+function renderSlotList() {
+  var el = $('slotList');
+  if (!el || !allSaves) return;
+  var html = '';
+  for (var i = 1; i <= MAX_SLOTS; i++) {
+    var slot = allSaves.slots[i];
+    var isActive = i === activeSlot;
+    if (!slot || !slot.player) {
+      html += '<div class="slot-item empty' + (isActive ? ' active' : '') + '">';
+      html += '<div class="slot-num">' + i + '</div>';
+      html += '<div class="slot-info"><div class="slot-title">空存档槽</div>';
+      html += '<div class="slot-meta">点击右侧按钮创建新档</div></div>';
+      html += '<div class="slot-actions">';
+      html += '<button class="slot-mini" data-new-slot="' + i + '" title="新建存档">＋</button>';
+      html += '</div></div>';
+    } else {
+      var sp = slot.player;
+      html += '<div class="slot-item' + (isActive ? ' active' : '') + '">';
+      html += '<div class="slot-num">' + i + '</div>';
+      html += '<div class="slot-info"><div class="slot-title">' + (sp.name || ('存档 ' + i));
+      if (isActive) html += '<span class="tag">当前</span>';
+      html += '</div><div class="slot-meta">';
+      html += '<span>Lv.<b>' + sp.level + '</b></span>';
+      html += '<span class="c">' + fmt(sp.coins) + ' 🪙</span>';
+      html += '<span>' + fmt(sp.totalHands) + ' 手</span>';
+      html += '<span>' + timeAgo(slot.lastPlayed) + '</span>';
+      html += '</div></div><div class="slot-actions">';
+      if (!isActive) html += '<button class="slot-mini" data-switch-slot="' + i + '" title="切换到该存档">▶</button>';
+      html += '<button class="slot-mini danger" data-del-slot="' + i + '" title="删除该存档">🗑</button>';
+      html += '</div></div>';
+    }
+  }
+  el.innerHTML = html;
+
+  var news = document.querySelectorAll('[data-new-slot]');
+  for (var n = 0; n < news.length; n++) {
+    news[n].addEventListener('click', function(){
+      sfx('click');
+      pendingNewSlot = parseInt(this.getAttribute('data-new-slot'), 10);
+      $('ovNewSaveConfirm').classList.add('show');
+    });
+  }
+  var sws = document.querySelectorAll('[data-switch-slot]');
+  for (var s = 0; s < sws.length; s++) {
+    sws[s].addEventListener('click', function(){
+      sfx('click');
+      var n2 = parseInt(this.getAttribute('data-switch-slot'), 10);
+      $('ovStorage').classList.remove('show');
+      if (switchToSlot(n2)) showToast('✅ 已切换到存档 ' + n2, 1600, false, 'success');
+    });
+  }
+  var dels = document.querySelectorAll('[data-del-slot]');
+  for (var d = 0; d < dels.length; d++) {
+    dels[d].addEventListener('click', function(){
+      sfx('click');
+      pendingDeleteSlot = parseInt(this.getAttribute('data-del-slot'), 10);
+      $('ovDeleteConfirm').classList.add('show');
+    });
+  }
+}
+
+var pendingNewSlot = 0;
+var pendingDeleteSlot = 0;
+
+/* ============================================================
+   面板开关
+   ============================================================ */
+function openAchieve() {
+  renderAchList();
+  $('ovAchieve').classList.add('show');
+}
+function openTasks(tab) {
+  renderTasks();
+  if (tab) switchTaskTab(tab);
+  else if (checkNewbieHasClaimable()) switchTaskTab('newbie');
+  else if (checkDailyHasClaimable()) switchTaskTab('daily');
+  else switchTaskTab('newbie');
+  $('ovTasks').classList.add('show');
+}
+function openStorage() {
+  renderSlotList();
+  $('ovStorage').classList.add('show');
+}
+function openHelp() {
+  $('ovHelp').classList.add('show');
+}
+function switchTaskTab(tab) {
+  var isNewbie = tab === 'newbie';
+  $('tabNewbie').classList.toggle('active', isNewbie);
+  $('tabDaily').classList.toggle('active', !isNewbie);
+  $('taskListNewbie').style.display = isNewbie ? 'block' : 'none';
+  $('taskListDaily').style.display = isNewbie ? 'none' : 'block';
+}
+function toggleSound() {
+  player.soundOn = !player.soundOn;
+  saveAllSaves(true);
+  renderLobby();
+  renderTopbar();
+  if (player.soundOn) { initAudio(); sfx('click'); }
+  showToast(player.soundOn ? '🔊 音效已开启' : '🔇 音效已关闭', 1200);
+}
+
+/* ============================================================
+   自适应与横屏
+   ============================================================ */
 function fitStage() {
   var stage = $('stage');
-  var hint = $('rotateHint');
   if (!stage) return;
-  var w = window.innerWidth;
-  var h = window.innerHeight;
-  var isPortrait = h > w;
-  if (isPortrait && !App.forceLandscape) {
-    if (hint) hint.style.display = 'flex';
-    stage.style.display = 'none';
-    return;
-  }
-  if (hint) hint.style.display = 'none';
-  stage.style.display = 'block';
-  if (App.forceLandscape && isPortrait) {
-    var scale = Math.min(h / 960, w / 540);
-    stage.style.transform = 'translate(-50%,-50%) rotate(90deg) scale(' + scale + ')';
-  } else {
-    var scale = Math.min(w / 960, h / 540);
-    stage.style.transform = 'translate(-50%,-50%) scale(' + scale + ')';
-  }
+  var w = window.innerWidth, h = window.innerHeight;
+  var scale = Math.min(w / 960, h / 540);
+  stage.style.transform = 'translate(-50%,-50%) scale(' + scale + ')';
 }
 
-function bindUI() {
-  document.querySelectorAll('[data-close]').forEach(function(el){
-    el.addEventListener('click', function(){
-      var id = this.getAttribute('data-close');
-      if (id) $(id).classList.remove('show');
-      sfx('click');
-    });
-  });
+function checkOrientation() {
+  var hint = $('rotateHint');
+  if (!hint) return;
+  var portrait = window.innerHeight > window.innerWidth;
+  var smallest = Math.min(window.innerWidth, window.innerHeight);
+  var touch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  var show = portrait && smallest < 700 && touch && !App.forceLandscape;
+  hint.style.display = show ? 'flex' : 'none';
+  fitStage();
+}
+
+function forceLandscape() {
+  App.forceLandscape = true;
+  var el = document.documentElement;
+  try {
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(function(){});
+    }
+  } catch (e) {}
+  try {
+    if (el.requestFullscreen) el.requestFullscreen().catch(function(){});
+  } catch (e) {}
+  $('rotateHint').style.display = 'none';
+  fitStage();
+}
+
+/* ============================================================
+   事件绑定
+   ============================================================ */
+function bindEvents() {
+  // 大厅
   $('lbStartBtn').addEventListener('click', function(){
-    sfx('click');
+    initAudio(); sfx('click');
     renderDifficultyCards();
     showScreen('difficulty');
   });
-  $('lbBtnTasks').addEventListener('click', function(){ sfx('click'); renderTasks(); $('ovTasks').classList.add('show'); });
-  $('lbQTasks').addEventListener('click', function(){ sfx('click'); renderTasks(); $('ovTasks').classList.add('show'); });
-  $('lbBtnAchieve').addEventListener('click', function(){ sfx('click'); renderAchList(); $('ovAchieve').classList.add('show'); });
-  $('lbQAchieve').addEventListener('click', function(){ sfx('click'); renderAchList(); $('ovAchieve').classList.add('show'); });
-  $('lbQHelp').addEventListener('click', function(){ sfx('click'); $('ovHelp').classList.add('show'); });
-  $('lbBtnSound').addEventListener('click', function(){
-    player.soundOn = !player.soundOn;
-    savePlayer();
+  $('diffBack').addEventListener('click', function(){
+    sfx('click');
     renderLobby();
-    if (player.soundOn) { initAudio(); sfx('click'); }
+    showScreen('lobby');
   });
-  $('diffBack').addEventListener('click', function(){ sfx('click'); showScreen('lobby'); });
-  $('btnAchieve').addEventListener('click', function(){ sfx('click'); renderAchList(); $('ovAchieve').classList.add('show'); });
-  $('btnTasks').addEventListener('click', function(){ sfx('click'); renderTasks(); $('ovTasks').classList.add('show'); });
-  $('btnSound').addEventListener('click', function(){
-    player.soundOn = !player.soundOn;
-    savePlayer();
-    renderTopbar();
-    if (player.soundOn) { initAudio(); sfx('click'); }
+  $('lbBtnTasks').addEventListener('click', function(){
+    initAudio(); sfx('click');
+    openTasks();
   });
-  $('btnExit').addEventListener('click', function(){ sfx('click'); exitGame(); });
-  $('goAgain').addEventListener('click', function(){
-    var cfg = DIFFICULTY_CONFIG[App.difficulty];
-    if (player.coins < cfg.minCoins) {
-      showToast('🔒 金币不足，无法重新入场', 2000, true);
-      $('ovGameOver').classList.remove('show');
-      exitGame();
-      return;
-    }
-    $('ovGameOver').classList.remove('show');
-    sfx('click');
-    tryEnterGame(App.difficulty);
+  $('lbQTasks').addEventListener('click', function(){
+    initAudio(); sfx('click');
+    openTasks();
   });
-  $('goBackLobby').addEventListener('click', function(){
-    sfx('click');
-    $('ovGameOver').classList.remove('show');
-    exitGame();
-  });
-  var btnRotate = $('btnForceRotate');
-  if (btnRotate) {
-    btnRotate.addEventListener('click', function(){
-      sfx('click');
-      App.forceLandscape = true;
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(function(){});
-      }
-      if (screen.orientation && screen.orientation.lock) {
-        screen.orientation.lock('landscape').catch(function(){});
-      }
-      fitStage();
+  $('lbBtnAchieve').addEventListener('click', function(){ initAudio(); sfx('click'); openAchieve(); });
+  $('lbQAchieve').addEventListener('click', function(){ initAudio(); sfx('click'); openAchieve(); });
+  $('lbBtnStorage').addEventListener('click', function(){ initAudio(); sfx('click'); openStorage(); });
+  $('lbQStorage').addEventListener('click', function(){ initAudio(); sfx('click'); openStorage(); });
+  $('lbQHelp').addEventListener('click', function(){ initAudio(); sfx('click'); openHelp(); });
+  $('lbBtnSound').addEventListener('click', function(){ initAudio(); toggleSound(); });
+
+  // 游戏内
+  $('btnAchieve').addEventListener('click', function(){ sfx('click'); openAchieve(); });
+  $('btnTasks').addEventListener('click', function(){ sfx('click'); openTasks(); });
+  $('btnSound').addEventListener('click', function(){ initAudio(); toggleSound(); });
+  $('btnExit').addEventListener('click', function(){ sfx('click'); requestExit(); });
+  $('exitConfirmYes').addEventListener('click', function(){ sfx('click'); exitGame(); });
+
+  // 关闭按钮
+  var closers = document.querySelectorAll('[data-close]');
+  for (var i = 0; i < closers.length; i++) {
+    closers[i].addEventListener('click', function(){
+      var id = this.getAttribute('data-close');
+      var el = $(id);
+      if (el) el.classList.remove('show');
     });
   }
-  window.addEventListener('resize', fitStage);
-  window.addEventListener('orientationchange', function(){ setTimeout(fitStage, 120); });
-  window.addEventListener('error', function(e){
-    if (e && e.error) {
-      console.error('Global error:', e.error);
-      showToast('⚠️ 出错了：' + e.error.message, 3000, true);
+
+  // 任务 Tab
+  $('tabNewbie').addEventListener('click', function(){ sfx('click'); switchTaskTab('newbie'); });
+  $('tabDaily').addEventListener('click', function(){ sfx('click'); switchTaskTab('daily'); });
+
+  // 游戏结束
+  $('goAgain').addEventListener('click', function(){ sfx('click'); claimRelief(); });
+  $('goBackLobby').addEventListener('click', function(){ sfx('click'); exitGame(); });
+
+  // 存档确认
+  $('newSaveConfirmYes').addEventListener('click', function(){
+    sfx('click');
+    $('ovNewSaveConfirm').classList.remove('show');
+    if (pendingNewSlot) {
+      createNewSaveAt(pendingNewSlot);
+      renderSlotList();
+      showToast('✅ 存档 ' + pendingNewSlot + ' 已创建', 1600, false, 'success');
+      pendingNewSlot = 0;
+    }
+  });
+  $('deleteConfirmYes').addEventListener('click', function(){
+    sfx('click');
+    $('ovDeleteConfirm').classList.remove('show');
+    if (pendingDeleteSlot) {
+      var n = pendingDeleteSlot;
+      deleteSlot(n);
+      showToast('🗑 存档 ' + n + ' 已删除', 1600, true);
+      pendingDeleteSlot = 0;
+    }
+  });
+
+  // 横屏
+  $('btnForceRotate').addEventListener('click', forceLandscape);
+
+  // 窗口尺寸
+  window.addEventListener('resize', checkOrientation);
+  window.addEventListener('orientationchange', function(){ setTimeout(checkOrientation, 200); });
+
+  // 键盘快捷键（桌面端）
+  document.addEventListener('keydown', function(e){
+    if (App.screen !== 'game') return;
+    if (!humanResolve || G.actor !== 0) return;
+    var k = e.key.toLowerCase();
+    if (k === 'f') { doAct({type:'fold'}); }
+    else if (k === 'c' || k === ' ') {
+      e.preventDefault();
+      var p = G.players[0];
+      doAct((G.currentBet - p.bet) <= 0 ? {type:'check'} : {type:'call'});
+    } else if (k === 'r') {
+      var s = $('raiseSlider');
+      if (s) doAct({type:'raise', amount: parseInt(s.value, 10)});
+    } else if (k === 'a') {
+      var p2 = G.players[0];
+      doAct({type:'raise', amount: p2.bet + p2.chips});
     }
   });
 }
 
-function boot() {
-  loadPlayer();
-  fitStage();
-  bindUI();
-  ensureTasks();
+/* ============================================================
+   初始化
+   ============================================================ */
+function init() {
+  loadAllSaves();
+  ensureDailyTasks();
+  bindEvents();
+  checkOrientation();
   renderLobby();
-  renderAchList();
+  renderTasks();
+  renderSlotList();
   showScreen('lobby');
-  console.log('%c[德州扑克] 已就绪 · 四场次版', 'color:#8fd6b0;font-weight:700;font-size:14px');
-  console.log('%c简单 · 普通(5K) · 困难(20K) · 冠军(100K)', 'color:#8fa0b4;font-size:12px');
+  console.log('[德州扑克] 初始化完成，存档槽 ' + activeSlot);
 }
 
-document.addEventListener('DOMContentLoaded', boot);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 
 })();
+
+
 </script>
 </body>
 </html>
