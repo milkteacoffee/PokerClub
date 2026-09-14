@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a0e14">
-<title>牌友小馆 · 单机五合一</title>
+<title>赌途 · 单机六合一</title>
 
 <style>
   * { margin:0; padding:0; box-sizing:border-box;
@@ -880,12 +880,20 @@
     background:rgba(242,193,78,.07); border:1px solid rgba(242,193,78,.22);
     font-size:12px; color:#cfdae5; line-height:1.9; }
   #settleFoot b { color:#f2c14e; }
-  .lobby-logo-area {padding-top:12px;justify-content:flex-start;gap:6px;}
-  .lobby-logo {font-size:34px;letter-spacing:8px;}.lobby-subtitle{font-size:11px;letter-spacing:2px;}
-  .game-shelf{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;width:90%;max-width:760px;margin-top:22px;}
-  .game-tile{position:relative;height:170px;border:0;border-radius:16px;background:linear-gradient(150deg,rgba(59,89,94,.35),rgba(12,25,34,.2));color:#d9e3eb;cursor:pointer;transition:transform .18s,background .18s;display:flex;flex-direction:column;align-items:center;gap:10px;padding:15px 8px;}
+  .lobby-logo-area {padding-top:4px;justify-content:flex-start;gap:2px;}
+  .lobby-logo {font-size:30px;letter-spacing:7px;}.lobby-subtitle{font-size:11px;letter-spacing:2px;}
+  .game-shelf{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:90%;max-width:760px;margin-top:14px;}
+  .game-tile{position:relative;height:132px;border:0;border-radius:16px;background:linear-gradient(150deg,rgba(59,89,94,.35),rgba(12,25,34,.2));color:#d9e3eb;cursor:pointer;transition:transform .18s,background .18s;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 8px;}
   .game-tile:hover{transform:translateY(-4px);background:rgba(100,121,139,.2)}.game-tile:active{transform:scale(.97)}.game-tile.selected{background:linear-gradient(140deg,rgba(180,136,54,.32),rgba(51,72,76,.22));box-shadow:inset 0 -2px #d2b16d;}
-  .tile-art{font:italic 36px Georgia,serif;color:#e4c784;height:55px;}.tile-art span{font-size:25px;margin-left:7px}.game-tile strong{font-size:17px;letter-spacing:2px}.game-tile small{font-size:11px;color:#98a9b6}
+  .tile-art{font:italic 30px Georgia,serif;color:#e4c784;height:44px;}.tile-art span{font-size:21px;margin-left:6px}.game-tile strong{font-size:17px;letter-spacing:2px}.game-tile small{font-size:11px;color:#98a9b6}
+  /* 游戏名称作为大字水印铺在牌块背景层，图标与简介浮在上层 */
+  .tile-bg{position:absolute;left:0;right:0;top:44%;transform:translateY(-50%);font-style:normal;font-weight:800;font-size:26px;line-height:1;letter-spacing:4px;color:#e8dcbd;opacity:.13;white-space:nowrap;pointer-events:none;user-select:none;transition:opacity .18s}
+  .game-tile .tile-art{margin-top:6px}
+  .game-tile small{margin-top:auto;margin-bottom:12px}
+  .game-tile:hover .tile-bg{opacity:.2}
+  .game-tile.selected .tile-bg{opacity:.28}
+  .tile-crown{position:absolute;top:9px;right:11px;font-size:15px;line-height:1;filter:drop-shadow(0 0 7px #e9c76e)}
+  .lobby-crowns{margin-top:9px;font-size:12px;letter-spacing:1px;color:#cdb98a}
   .lobby-bottom{padding-top:4px}.lobby-quickbtns{margin-bottom:8px}
   #arcadeScreen{display:none;position:absolute;inset:0;z-index:5;flex-direction:column;padding:16px 24px;gap:10px;color:#dbe6ec;background:radial-gradient(ellipse at 50% 40%,#173b37,#101c27 75%);overflow:auto;}
   .arc-head{display:flex;align-items:center;gap:18px}.arc-head h2{font-size:21px;margin:0;color:#e6ca90}.arc-head small{color:#9badb9}.arc-head>strong{margin-left:auto;color:#e5c784;font-size:19px}
@@ -893,7 +901,8 @@
   .arc-toolbar{display:flex;gap:12px;align-items:center;font-size:12px;color:#9aabb7}.arc-toolbar select{background:#22343d;color:#eadcc2;border:0;padding:7px;border-radius:6px}#arcStats{margin-left:auto}#arcHelp{font-size:12px;line-height:1.8;padding:12px;background:#172933;border-radius:8px}
   #arcTable{flex:1;min-height:190px;display:flex;align-items:center;justify-content:space-around;gap:10px;flex-wrap:wrap;padding:12px;border-radius:40%;background:radial-gradient(ellipse,rgba(34,105,81,.25),transparent 70%)}.arc-seat{text-align:center;min-width:120px;max-width:210px}.arc-seat h3{font-size:13px;color:#c9d9dc;margin:6px}.arc-seat p{font-size:12px;color:#a1b6b9;margin:6px}.arc-seat.out{opacity:.55}.arc-cards{display:flex;justify-content:center;gap:5px;min-height:68px;align-items:center}.arc-card{display:inline-flex;flex-direction:column;justify-content:space-between;width:42px;height:62px;padding:5px;background:linear-gradient(145deg,#faf7ed,#d7d8cf);color:#1a2934;border-radius:6px;font:bold 20px Georgia;box-shadow:0 4px 8px #0003;}.arc-card.red{color:#af303b}.arc-card.back{background:repeating-linear-gradient(45deg,#253e58,#253e58 4px,#2c4c68 4px,#2c4c68 8px);color:#b7c5d5;justify-content:center}.arc-die{display:inline-flex;align-items:center;justify-content:center;width:68px;height:68px;margin:9px;background:#ece7d7;color:#9f3440;border-radius:14px;font-size:40px;box-shadow:0 5px 0 #a6a99b;}
   #arcMessage{text-align:center;min-height:22px;color:#ebce91;font-size:14px}#arcActions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}#arcActions button.primary{background:linear-gradient(120deg,#b39151,#e1c184);color:#1b2530}#arcHistory{text-align:center;font-size:11px;color:#91a6b1;min-height:16px}#arcExit{position:absolute;inset:35% 14%;padding:25px;background:#152b35;border:1px solid #a08758;border-radius:12px;z-index:10;text-align:center}#arcExit span{display:block;margin-bottom:18px}
-  @media(max-height:460px){.game-tile{height:135px}.game-shelf{margin-top:10px}.lobby-logo{font-size:27px}}
+  @media(max-height:460px){.game-tile{height:100px}.game-shelf{margin-top:10px}.lobby-logo{font-size:25px}.tile-bg{font-size:22px}.tile-art{font-size:25px;height:36px}}
+  @media(max-height:640px){.lobby-logo-area{padding-top:0}.game-shelf{margin-top:10px}.game-tile{height:112px}.lobby-crowns{margin-top:4px;font-size:11px}}
 
   /* 轻量牌馆：功能集中顶部，层次来自光色与留白，而非嵌套描边。 */
   .lobby-top { gap:18px; padding:18px 24px 8px; }
@@ -902,11 +911,11 @@
   .lobby-iconbtn:hover { color:#f0d8a2; background:rgba(224,197,145,.06); }
   .lobby-iconbtn .badge { top:0; right:0; min-width:6px; width:6px; height:6px; padding:0; overflow:hidden; font-size:0; box-shadow:0 0 9px #a6d5b566; }
   .lobby-coins { min-width:58px; }
-  .lobby-logo-area { padding-top:30px; gap:12px; }
-  .lobby-logo { font-size:37px; letter-spacing:10px; filter:none; }
+  .lobby-logo-area { padding-top:4px; gap:2px; }
+  .lobby-logo { font-size:30px; letter-spacing:7px; filter:none; }
   .lobby-subtitle { color:#9faead; font-weight:400; }
-  .game-shelf { margin-top:24px; gap:20px; }
-  .game-tile { height:180px; padding-top:22px; border-radius:24px; background:radial-gradient(ellipse at 50% 15%,rgba(100,141,137,.11),transparent 78%); }
+  .game-shelf { margin-top:12px; gap:12px; }
+  .game-tile { height:132px; padding-top:8px; border-radius:20px; background:radial-gradient(ellipse at 50% 15%,rgba(100,141,137,.11),transparent 78%); }
   .game-tile.selected { background:radial-gradient(ellipse at 50% 20%,rgba(207,168,91,.2),rgba(156,118,61,.035) 75%,transparent); box-shadow:none; }
   .game-tile.selected::after { content:''; width:5px; height:5px; border-radius:50%; background:#e5c789; position:absolute; bottom:5px; box-shadow:0 0 14px #d8b97b80; }
   .game-tile:hover { background:radial-gradient(ellipse at 50% 20%,rgba(174,196,185,.16),transparent 85%); }
@@ -962,7 +971,7 @@
   .dice-result15{color:#d9c791;max-height:55px;overflow:auto;}.assist15{width:100%;text-align:center;color:#aabfb9;font-size:11px;}
 
 
-  .game-shelf{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+  .game-shelf{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
   #gdScreen{position:absolute;inset:0;z-index:80;background:radial-gradient(ellipse at 50% 35%,#254740,#101f24 74%);padding:18px 24px;color:#e6ecdf;overflow:hidden}
   #gdScreen[hidden]{display:none!important}
   .gd-head{display:flex;align-items:center;gap:16px;height:44px}.gd-head h2{font-size:23px;letter-spacing:5px;color:#e9cd8b}.gd-head button,.gd-controls button{border:1px solid #76938955;background:linear-gradient(145deg,#35544c,#1a302c);color:#e4e9da;border-radius:18px;padding:9px 18px;cursor:pointer;font:inherit}.gd-head button:active,.gd-controls button:active{transform:translateY(2px)}#gdLevel{font-size:12px;color:#bacfc3}.gd-head #gdRulesBtn{margin-left:auto}
@@ -1228,15 +1237,16 @@
       <span id="saveText">存档已就绪 · 自动保存</span>
     </div>
     <div class="lobby-logo-area">
-      <div class="lobby-logo">牌友小馆</div>
+      <div class="lobby-logo">赌途</div>
       <div class="lobby-subtitle">一张牌桌，六种乐趣 · 纯单机</div>
+      <div class="lobby-crowns" id="lbCrowns" hidden></div>
       <div class="game-shelf">
-        <button class="game-tile selected" data-game="holdem"><span class="tile-art">A<span>♠</span></span><strong>德州扑克</strong><small>读牌与博弈</small></button>
-        <button class="game-tile" data-game="blackjack"><span class="tile-art">21</span><strong>21点</strong><small>进退之间的判断</small></button>
-        <button class="game-tile" data-game="gold"><span class="tile-art">3<span>♦</span></span><strong>炸金花</strong><small>闷牌与看牌</small></button>
-        <button class="game-tile" data-game="dice"><span class="tile-art">6<span>·</span></span><strong>猜骰子</strong><small>3/5骰 · 多项下注</small></button>
-        <button class="game-tile" data-game="diceduel"><span class="tile-art">⚄</span><strong>骰子比大小</strong><small>你 + 3 AI · 豹子翻倍</small></button>
-        <button class="game-tile" data-game="guandan"><span class="tile-art">对</span><strong>掼蛋</strong><small>四人组队 · 轮流出牌</small></button>
+        <button class="game-tile selected" data-game="holdem"><i class="tile-bg" aria-hidden="true">德州扑克</i><span class="tile-art">A<span>♠</span></span><small>读牌与博弈</small><span class="tile-crown" hidden>👑</span></button>
+        <button class="game-tile" data-game="blackjack"><i class="tile-bg" aria-hidden="true">21点</i><span class="tile-art">21</span><small>进退之间的判断</small><span class="tile-crown" hidden>👑</span></button>
+        <button class="game-tile" data-game="gold"><i class="tile-bg" aria-hidden="true">炸金花</i><span class="tile-art">3<span>♦</span></span><small>闷牌与看牌</small><span class="tile-crown" hidden>👑</span></button>
+        <button class="game-tile" data-game="dice"><i class="tile-bg" aria-hidden="true">猜骰子</i><span class="tile-art">6<span>·</span></span><small>3/5骰 · 多项下注</small><span class="tile-crown" hidden>👑</span></button>
+        <button class="game-tile" data-game="diceduel"><i class="tile-bg" aria-hidden="true">骰子比大小</i><span class="tile-art">⚄</span><small>你 + 3 AI · 豹子翻倍</small><span class="tile-crown" hidden>👑</span></button>
+        <button class="game-tile" data-game="guandan"><i class="tile-bg" aria-hidden="true">掼蛋</i><span class="tile-art">对</span><small>四人组队 · 轮流出牌</small><span class="tile-crown" hidden>👑</span></button>
       </div>
     </div>
     <div class="lobby-bottom">
@@ -2040,7 +2050,15 @@ var TITLES = [
   { id:'tt_hands_100', name:'小馆常客', icon:'🍵', desc:'四馆累计完成 100 局',   check:function(p){ return titleMetricAny(p,'hands') >= 100; } },
   { id:'tt_hands_500', name:'馆中元老', icon:'🏮', desc:'四馆累计完成 500 局',   check:function(p){ return titleMetricAny(p,'hands') >= 500; } },
   { id:'tt_allround',  name:'四艺兼修', icon:'🎴', desc:'四馆各自完成 50 局',    check:function(p){ return GAME_IDS.every(function(g){ return titleMetric(p, g, 'hands') >= 50; }); } },
-  { id:'tt_wins_100',  name:'百胜牌手', icon:'🏆', desc:'四馆累计净赢 100 局',   check:function(p){ return titleMetricAny(p,'wins') >= 100; } }
+  { id:'tt_wins_100',  name:'百胜牌手', icon:'🏆', desc:'四馆累计净赢 100 局',   check:function(p){ return titleMetricAny(p,'wins') >= 100; } },
+  /* 各游戏最高段位封号 + 六冠赌神（达成后为永久称号，可在档案·称号中佩戴） */
+  { id:'tt_top_holdem',    name:'德州王牌',   icon:'♠', desc:'德州扑克排位达到最高段位「德州王牌」',     check:function(p){ return gameIsTopTier(p,'holdem'); } },
+  { id:'tt_top_blackjack', name:'二十一之神', icon:'🃏', desc:'21点排位达到最高段位「二十一之神」',       check:function(p){ return gameIsTopTier(p,'blackjack'); } },
+  { id:'tt_top_gold',      name:'金花炸王',   icon:'♦', desc:'炸金花排位达到最高段位「金花炸王」',       check:function(p){ return gameIsTopTier(p,'gold'); } },
+  { id:'tt_top_dice',      name:'心眼财神',   icon:'🎯', desc:'猜骰子排位达到最高段位「心眼财神」',       check:function(p){ return gameIsTopTier(p,'dice'); } },
+  { id:'tt_top_diceduel',  name:'神手骰王',   icon:'⚄', desc:'骰子比大小排位达到最高段位「神手骰王」',   check:function(p){ return gameIsTopTier(p,'diceduel'); } },
+  { id:'tt_top_guandan',   name:'掼蛋的神',   icon:'🀄', desc:'掼蛋累计获胜 200 局，封顶「掼蛋的神」',    check:function(p){ return gameIsTopTier(p,'guandan'); } },
+  { id:'tt_six_crowns',    name:'六冠赌神',   icon:'👑', desc:'六大游戏全部达到最高段位（德州王牌 · 二十一之神 · 金花炸王 · 心眼财神 · 神手骰王 · 掼蛋的神）', check:function(p){ return crownCount(p) >= 6; } }
 ];
 function titleMetric(p, game, ev) {
   var g = p && p.games ? p.games[game] : null;
@@ -2101,6 +2119,28 @@ var RANKS = [
   { id:5, name:'大师', icon:'🔮', min:1000, reward:10000, points:100 },
   { id:6, name:'传奇', icon:'👑', min:1400, reward:20000, points:200 }
 ];
+
+/* 各游戏最高段位的专属封号：达成后显示于段位面板，并成为可佩戴的永久称号。
+   掼蛋不进排位积分体系，改用胜场计段（同为 7 档），200 胜封顶。 */
+var TOP_TIER_NAMES = {
+  holdem: '德州王牌', blackjack: '二十一之神', gold: '金花炸王',
+  dice: '心眼财神', diceduel: '神手骰王', guandan: '掼蛋的神'
+};
+var CROWN_ORDER = ['holdem', 'blackjack', 'gold', 'dice', 'diceduel', 'guandan'];
+var GUANDAN_TIER_WINS = [0, 10, 25, 50, 85, 130, 200];
+function guandanWinsCount() {
+  try { var s = JSON.parse(localStorage.getItem('poker_guandan_stats_v1'));
+    return (s && Number.isSafeInteger(s.wins) && s.wins > 0) ? s.wins : 0; } catch (e) { return 0; }
+}
+function guandanTierOf(wins) { var t = 0; for (var i = 0; i < GUANDAN_TIER_WINS.length; i++) if (wins >= GUANDAN_TIER_WINS[i]) t = i; return t; }
+function guandanTierName(wins) { var t = guandanTierOf(wins); return t >= RANKS.length - 1 ? TOP_TIER_NAMES.guandan : RANKS[t].name; }
+function gameIsTopTier(p, g) {
+  if (g === 'guandan') return guandanTierOf(guandanWinsCount()) >= RANKS.length - 1;
+  var s = p && p.games ? p.games[g] : null;
+  return !!(s && (s.rankPeak || 0) >= RANKS.length - 1);
+}
+function crownCount(p) { var n = 0; for (var i = 0; i < CROWN_ORDER.length; i++) if (gameIsTopTier(p, CROWN_ORDER[i])) n++; return n; }
+function crownNameOf(g) { return TOP_TIER_NAMES[g] || g; }
 
 /* 每日签到（7 天一轮，连续递增）— 已上调为稳定金币来源 */
 var CHECKIN_REWARDS = [120, 180, 260, 380, 520, 720, 1200];
@@ -4716,7 +4756,12 @@ function rankTierFor(points) {
   }
   return t;
 }
-function rankInfo() { return RANKS[rankTierFor(player ? player.rankPoints : 0)] || RANKS[0]; }
+function rankInfo() {
+  var t = rankTierFor(player ? player.rankPoints : 0), r = RANKS[t] || RANKS[0];
+  /* 德州扑克登顶后，顶栏与结算里显示专属封号 */
+  if (t >= RANKS.length - 1 && TOP_TIER_NAMES.holdem) r = Object.assign({}, r, { name: TOP_TIER_NAMES.holdem });
+  return r;
+}
 function rankProgress() {
   var pts = player ? player.rankPoints : 0;
   var t = rankTierFor(pts);
@@ -6736,7 +6781,9 @@ claimWeekly=function(id){ensureWeekly();var t=getWeeklyTaskById(id);if(!t||playe
   var ok=atomic15(function(){player.weekly.claimed[id]=true;addCoins(t.reward);});if(ok){renderWeekly();renderLobby();updateTasksBadges();}return ok;};
 claimAchievement=function(id){var a=ACHIEVEMENTS.find(function(t){return t.id===id;});if(!a||player.achievementClaims[id]||!achievementReady(a))return false;
   var ok=atomic15(function(){player.achievementClaims[id]=true;player.achievements[id]=true;addCoins(a.reward);});if(ok){renderAchList();renderLobby();}return ok;};
-rankInfo=function(game){return RANKS[rankTierFor(player?profile15(game).rankPoints:0)];};
+rankInfo=function(game){var g=game||hubGame||'holdem',t=rankTierFor(player?profile15(g).rankPoints:0),r=RANKS[t]||RANKS[0];
+ if(t>=RANKS.length-1&&TOP_TIER_NAMES[g])r=Object.assign({},r,{name:TOP_TIER_NAMES[g]});
+ return r;};
 /* 排位只有一种模式：不选手难度，对手强度由玩家当前段位决定 */
 function rankedDifficultyFor(game){
   var t=rankTierFor(player?profile15(game).rankPoints:0);
@@ -6779,7 +6826,26 @@ exitGame=function(){if(G.settling&&!G.handSettled)return;if(G.rankRetry||G.quick
   G.handSettled=true;
  }var ranked=App.mode==='ranked';oldExit15();if(ranked&&$('sessionSummary'))$('sessionSummary').textContent='德州排位已结束 · 金币未参与牌局结算 · 可兑换积分 '+profile15('holdem').redeemPoints+' · 段位分 '+profile15('holdem').rankPoints;};
 var oldRenderLobby15=renderLobby;
-renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}return oldRenderLobby15();};
+/* 大厅：六冠赌神进度 + 各馆封顶皇冠角标 */
+function syncCrowns(){
+  var elc=$('lbCrowns');
+  if(elc){
+    if(!player){elc.hidden=true;}
+    else{
+      var n=crownCount(player);
+      var done=CROWN_ORDER.filter(function(g){return gameIsTopTier(player,g);}).map(crownNameOf);
+      elc.hidden=false;
+      elc.textContent='👑 六冠赌神进度 '+n+' / 6'+(n?' · 已封顶：'+done.join('、'):' · 六大游戏排位全部达到最高段位，可获得永久称号「六冠赌神」');
+    }
+  }
+  document.querySelectorAll('.game-tile').forEach(function(b){
+    var c=b.querySelector('.tile-crown');if(!c)return;
+    var on=player&&gameIsTopTier(player,b.dataset.game);
+    c.hidden=!on;
+    if(on)c.title='已封顶「'+crownNameOf(b.dataset.game)+'」';
+  });
+}
+renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var ret=oldRenderLobby15();try{if(player)syncTitles({silent:false});syncCrowns();}catch(e){}return ret;};
 
 /* 所有游戏共用模式及难度入口。 */
 renderModeCards=function(){if(!player)return;var s=profile15(hubGame),body=$('modeBody');body.innerHTML='';
@@ -7091,11 +7157,13 @@ renderAchList=function(){oldRenderAch15();var host=$('achList');if(!host)return;
  ['all'].concat(GAME_IDS).forEach(function(g){var b=document.createElement('button');b.textContent=g==='all'?'全部游戏':GAME_NAMES[g];b.onclick=function(){achGame15=g;achPage=0;renderAchList();};bar.appendChild(b);});host.prepend(bar);};
 var achGame15='all';
 renderRank=function(){if(!player)return;var s=profile15(hubGame),tier=rankTierFor(s.rankPoints),cur=RANKS[tier],next=RANKS[tier+1];
+ var topName=TOP_TIER_NAMES[hubGame]||'',curName=(tier>=RANKS.length-1&&topName)?topName:cur.name;
  var pct=next?Math.max(0,Math.min(100,100*(s.rankPoints-cur.min)/(next.min-cur.min))):100;
- var html='<div class="rank-row"><div class="mid"><div class="nm">'+GAME_NAMES[hubGame]+' · '+cur.name+'</div><div class="pt">'+s.rankPoints+' 段位分</div><div class="rank-bar"><div class="rank-fill" style="width:'+pct+'%"></div></div></div></div><div class="stat-grid"><div class="stat-box"><div class="v">'+s.rankPoints+'</div><div class="l">段位分（不可兑换）</div></div><div class="stat-box"><div class="v">'+s.redeemPoints+'</div><div class="l">可兑换积分</div></div><div class="stat-box"><div class="v">'+s.rankedWins+' / '+s.rankedHands+'</div><div class="l">排位胜局 / 总局数</div></div></div>';
- html+='<p>四游戏独立计算。金币100:1双向兑换积分，不影响段位。排位不收门票，每局重置比赛筹码，不结算金币。</p><p>新手 / 普通 / 困难 / 冠军：胜局积分 +1/+2/+3/+4；负局 -1/-2/-3/-4。段位胜 +12/+16/+20/+26，负 -5/-7/-9/-12；平局均不变，最低0。中途离开或刷新未完局记负。升段不额外发金币。</p>';
- html+='<p>'+(next?'距 '+next.name+' 还需 '+(next.min-s.rankPoints)+' 段位分':'已到最高段位')+'</p>';
- RANKS.forEach(function(r){html+='<div class="task-item"><div class="info"><div class="t">'+r.name+'</div><div class="pg">'+r.min+' 段位分'+(r.id===tier?' · 当前':'')+'</div></div></div>';});$('rankPanel').innerHTML=html;};
+ var html='<div class="rank-row"><div class="mid"><div class="nm">'+GAME_NAMES[hubGame]+' · '+curName+'</div><div class="pt">'+s.rankPoints+' 段位分</div><div class="rank-bar"><div class="rank-fill" style="width:'+pct+'%"></div></div></div></div><div class="stat-grid"><div class="stat-box"><div class="v">'+s.rankPoints+'</div><div class="l">段位分（不可兑换）</div></div><div class="stat-box"><div class="v">'+s.redeemPoints+'</div><div class="l">可兑换积分</div></div><div class="stat-box"><div class="v">'+s.rankedWins+' / '+s.rankedHands+'</div><div class="l">排位胜局 / 总局数</div></div></div>';
+ html+='<p>各游戏独立计算。金币100:1双向兑换积分，不影响段位。排位不收门票，每局重置比赛筹码，不结算金币。</p><p>新手 / 普通 / 困难 / 冠军：胜局积分 +1/+2/+3/+4；负局 -1/-2/-3/-4。段位胜 +12/+16/+20/+26，负 -5/-7/-9/-12；平局均不变，最低0。中途离开或刷新未完局记负。</p>';
+ html+='<p>'+(next?'距 '+next.name+' 还需 '+(next.min-s.rankPoints)+' 段位分':'已到最高段位 · 专属封号「'+topName+'」')+'</p>';
+ html+='<p>👑 六冠赌神进度 <b>'+crownCount(player)+' / 6</b> · 六大游戏全部达到最高段位可获得永久称号「六冠赌神」</p>';
+ RANKS.forEach(function(r){html+='<div class="task-item"><div class="info"><div class="t">'+r.name+(r.id===RANKS.length-1&&topName?' · '+topName:'')+'</div><div class="pg">'+r.min+' 段位分'+(r.id===tier?' · 当前':'')+'</div></div></div>';});$('rankPanel').innerHTML=html;};
 
 
 /* ============================================================
@@ -7162,10 +7230,10 @@ function draw(){if(!active)return;el('gdLevel').textContent='本局打 '+title(p
  el('gdSelection').textContent=g.done?'本局已结算 · 可继续升级挑战':auto?'托管中 · 可随时取消并接手':selected.size?'已选 '+selected.size+' 张 · '+(legal?labels[shape.t]+'，可以出牌':'组合不合法或无法压过，请调整'):'手牌 '+g.hands[0].length+' 张 · 点选组牌，或使用提示';
  el('gdPlay').disabled=locked||!legal;el('gdClear').disabled=!selected.size;el('gdPass').disabled=locked||!g.last;el('gdHint').disabled=locked;el('gdNext').hidden=!g.done;el('gdAuto').disabled=g.done;el('gdAuto').textContent=auto?'取消托管':'托管';el('gdAuto').setAttribute('aria-pressed',String(auto));
  el('gdHand').querySelectorAll('button').forEach(b=>{b.disabled=locked;});
- el('gdStats').textContent='已完成 '+stats.hands+' 局 · 我方 '+stats.wins+' 胜'+(saveFailed?' · 战绩保存失败，请勿关闭页面':' · 本浏览器战绩自动保存');}
+ el('gdStats').textContent='已完成 '+stats.hands+' 局 · 我方 '+stats.wins+' 胜 · 段位 '+guandanTierName(guandanWinsCount())+(guandanTierOf(guandanWinsCount())>=RANKS.length-1?'（已封顶「掼蛋的神」）':'（'+guandanWinsCount()+'/'+GUANDAN_TIER_WINS[GUANDAN_TIER_WINS.length-1]+' 胜封顶）')+(saveFailed?' · 战绩保存失败，请勿关闭页面':' · 本浏览器战绩自动保存');}
 function paused(){return document.hidden||!el('gdRules').hidden||!el('gdExit').hidden;}
 function schedule(){stop();syncHumanClock();if(!active||!g||g.done||paused()||g.turn===0&&!auto)return;timer=setTimeout(function(){if(!active||paused())return;move(g.turn,choose(g,g.turn));},auto?650:850);}
-function move(seat,ids){if(!active||!g||paused())return false;if(!act(g,seat,ids)){el('gdMessage').textContent='所选牌型不合法或压不过上家，请重新选择。';return false;}humanClock.stop();selected.clear();if(g.done){stats.hands++;if(g.winner===0)stats.wins++;try{localStorage.setItem('poker_guandan_stats_v1',JSON.stringify(stats));saveFailed=false;}catch(e){saveFailed=true;}}draw();schedule();return true;}
+function move(seat,ids){if(!active||!g||paused())return false;if(!act(g,seat,ids)){el('gdMessage').textContent='所选牌型不合法或压不过上家，请重新选择。';return false;}humanClock.stop();selected.clear();if(g.done){stats.hands++;if(g.winner===0){stats.wins++;try{syncTitles();}catch(e){}}try{localStorage.setItem('poker_guandan_stats_v1',JSON.stringify(stats));saveFailed=false;}catch(e){saveFailed=true;}}draw();schedule();return true;}
 function begin(){stop();selected.clear();auto=false;g=create(playing);draw();schedule();}
 function open(){active=true;el('gdRules').hidden=true;el('gdExit').hidden=true;el('gdRulesBtn').setAttribute('aria-expanded','false');el('gdScreen').hidden=false;el('gdScreen').style.display='flex';if(!g)begin();else{draw();schedule();}}
 function close(confirmed){if(g&&!g.done&&confirmed!==true){stop();el('gdExit').hidden=false;el('gdExitNo').focus();return;}stop();humanClock.stop();g=null;selected.clear();active=false;auto=false;el('gdExit').hidden=true;el('gdRules').hidden=true;el('gdScreen').hidden=true;el('gdScreen').style.display='none';el('lbStartBtn').focus();}

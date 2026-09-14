@@ -32,10 +32,10 @@ function fresh() {
 
 /* ---------------- 基础 ---------------- */
 
-test('称号表结构完整：ID 唯一、19 个、均带条件与图标', () => {
+test('称号表结构完整：ID 唯一、26 个、均带条件与图标', () => {
   const ids = w.TITLES.map(t => t.id);
   assert.equal(new Set(ids).size, ids.length, 'ID 应唯一');
-  assert.equal(w.TITLES.length, 19);
+  assert.equal(w.TITLES.length, 26);
   w.TITLES.forEach(t => {
     assert.ok(t.name && t.desc && t.icon, t.id + ' 缺少展示字段');
     assert.equal(typeof t.check, 'function', t.id + ' 缺少判定函数');
@@ -167,7 +167,7 @@ test('称号面板渲染全部条目，已解锁可佩戴、未解锁隐藏名�
   w.syncTitles({ silent: true });
   w.renderTitleList();
   const box = doc.getElementById('titleList');
-  assert.ok(box.textContent.includes('已解锁 1 / 19'), '应显示进度，实际：' + box.textContent.slice(0, 40));
+  assert.ok(box.textContent.includes('已解锁 1 / 26'), '应显示进度，实际：' + box.textContent.slice(0, 40));
   assert.ok(box.textContent.includes('三连捷'));
   assert.ok(box.textContent.includes('未解锁称号'), '未解锁项应隐藏具体名称');
   const btn = box.querySelector('[data-equip-title="tt_streak_3"]');
@@ -181,7 +181,7 @@ test('称号页签切换与待解锁徽标', () => {
   fresh();
   w.renderTitleList();
   const badge = doc.getElementById('titleBadge');
-  assert.equal(badge.textContent, '19');
+  assert.equal(badge.textContent, '26');
   assert.notEqual(badge.style.display, 'none');
   w.switchStatsTab('stitle');
   assert.equal(doc.getElementById('titlePanel').style.display, 'block');
@@ -196,7 +196,7 @@ test('全部解锁后徽标归零', () => {
   w.TITLES.forEach(t => { w.player.titles[t.id] = true; });
   w.renderTitleList();
   assert.equal(doc.getElementById('titleBadge').style.display, 'none');
-  assert.ok(doc.getElementById('titleList').textContent.includes('已解锁 19 / 19'));
+  assert.ok(doc.getElementById('titleList').textContent.includes('已解锁 26 / 26'));
 });
 
 test('大厅静默补解锁：条件达成后回到大厅自动补发', () => {
