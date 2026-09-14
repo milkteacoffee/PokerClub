@@ -869,6 +869,9 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   ok(!ctx.buyRankedPoints(-1) && !ctx.buyRankedPoints(1.5), '拒绝负数和小数兑换');
   ctx.profile15('holdem').redeemPoints = 1; // 积分来自排位
   ok(ctx.exchangePoints('holdem','sell',1) && ctx.player.coins === 600, '1积分可单向兑换100金币');
+  /* 排位积分与赠送都先归零并标记今日已赠送，单独测「门槛 + 门票」两件事 */
+  ctx.player.games.holdem.rankPoints=0;
+  ctx.player.games.holdem.giftDate=ctx.todayStr();
   ctx.player.coins=0;
   ok(!ctx.tryEnterGame('champion') && started===0, '金币为 0 时连门票都付不起，拒绝进入排位');
   ctx.player.coins=ctx.ENTRY_FEE.champion;

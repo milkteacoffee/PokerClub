@@ -1808,9 +1808,10 @@ function migratePlayer(p) {
   if (!p.inventory) { p.inventory = {}; changed = true; }
   /* 排位积分兑换额度（每天重置）：存档里只保存日期与已用次数 */
   if (!p.rankExchange || typeof p.rankExchange !== 'object' || !Number.isSafeInteger(p.rankExchange.used)) {
-    p.rankExchange = { date: p.rankExchange && p.rankExchange.date ? p.rankExchange.date : todayStr(), used: 0 };
+    p.rankExchange = { date: p.rankExchange && p.rankExchange.date ? p.rankExchange.date : todayStr(), used: 0, gained: 0 };
     changed = true;
   }
+  if (!Number.isSafeInteger(p.rankExchange.gained) || p.rankExchange.gained < 0) { p.rankExchange.gained = 0; changed = true; }
   [['rankPoints', 0], ['rankTier', 0], ['rankPeak', p.rankTier || 0],
    ['rankedPoints', 100], ['rankedMatches', 0], ['rankedWins', 0],
    ['volMaster', 0.8], ['volSfx', 0.9], ['volMusic', 0.5]].forEach(function (pair) {
@@ -2162,40 +2163,49 @@ var RANK_STEP = 1000;
 /* 排位单局段位分增减（按难度：新手 / 普通 / 困难 / 冠军），输赢都在 5~10 之间 */
 var RANK_POINT_WIN  = [5, 7, 9, 10];
 var RANK_POINT_LOSS = [5, 7, 9, 10];
-/* 排位入场门槛：所有游戏排位积分从 0 开始，攒够 100 分才能开始排位对局；掉到 0 就打不了 */
-var RANKED_ENTRY_MIN = 100;
-/* 排位积分兑换：只在积分为 0 时可换，每次最多 100 分，每天最多 3 次，100 金币 = 1 分 */
-var RANK_EXCHANGE = { perTime: 100, timesPerDay: 3, coinPerPoint: 100 };
+/* 排位入场门槛：所有游戏排位积分从 0 开始，攒够 10 分才能开始排位对局。
+   低于门槛（1~9 分）视为「输光」，直接归零，这样只会落进「0 分」这一个状态：
+   0 分时每天可领取系统赠送的 10 分，或使用每日 1 次、上限 100 分的兑换。 */
+var RANKED_ENTRY_MIN = 10;
+var RANK_DAILY_GIFT = 10;
+/* 排位积分兑换：只在积分为 0 时可换，每天 1 次，单次与每日上限都是 100 分，100 金币 = 1 分 */
+var RANK_EXCHANGE = { perTime: 100, dailyCap: 100, timesPerDay: 1, coinPerPoint: 100 };
 function ensureRankExchange() {
-  if (!player) return { date: todayStr(), used: 0 };
+  if (!player) return { date: todayStr(), used: 0, gained: 0 };
   var today = todayStr();
-  if (!player.rankExchange || player.rankExchange.date !== today) player.rankExchange = { date: today, used: 0 };
+  if (!player.rankExchange || player.rankExchange.date !== today) player.rankExchange = { date: today, used: 0, gained: 0 };
   if (!Number.isSafeInteger(player.rankExchange.used) || player.rankExchange.used < 0) player.rankExchange.used = 0;
+  if (!Number.isSafeInteger(player.rankExchange.gained) || player.rankExchange.gained < 0) player.rankExchange.gained = 0;
   return player.rankExchange;
 }
 function rankExchangeLeft() { return Math.max(0, RANK_EXCHANGE.timesPerDay - ensureRankExchange().used); }
+function rankExchangeQuota() { return Math.max(0, RANK_EXCHANGE.dailyCap - ensureRankExchange().gained); }
 function rankExchangeCost(n) { return n * RANK_EXCHANGE.coinPerPoint; }
-/* 兑换条件：该游戏排位积分为 0、今天还有次数、金币足够、单次不超过 100 */
+/* 兑换条件：该游戏排位积分为 0、今天还有次数、还有每日额度、金币足够、单次不超过上限 */
 function rankExchangeBlockedReason(game, n) {
   if (!player) return '尚未载入存档';
-  var s = profile15(game), want = (n === undefined || n === null) ? RANK_EXCHANGE.perTime : n;
+  var s = profile15(game), ex = ensureRankExchange();
+  var want = (n === undefined || n === null) ? Math.min(RANK_EXCHANGE.perTime, rankExchangeQuota()) : n;
   if (s.rankPoints !== 0) return '仅排位积分为 0 时可兑换（当前 ' + s.rankPoints + ' 分）';
-  if (!Number.isSafeInteger(want) || want <= 0) return '兑换数量必须是正整数';
-  if (want > RANK_EXCHANGE.perTime) return '单次最多兑换 ' + RANK_EXCHANGE.perTime + ' 积分';
   if (rankExchangeLeft() <= 0) return '今日兑换次数已用完（每天 ' + RANK_EXCHANGE.timesPerDay + ' 次）';
+  if (rankExchangeQuota() <= 0) return '今日兑换额度已用完（每天上限 ' + RANK_EXCHANGE.dailyCap + ' 分）';
+  if (!Number.isSafeInteger(want) || want <= 0) return '兑换数量必须是正整数';
+  if (want > RANK_EXCHANGE.perTime || want > rankExchangeQuota()) return '单次最多兑换 ' + Math.min(RANK_EXCHANGE.perTime, rankExchangeQuota()) + ' 积分';
   if (player.coins < rankExchangeCost(want)) return '金币不足，需要 ' + fmt(rankExchangeCost(want)) + ' 金币';
   return '';
 }
 function exchangeRankedPoints(game, n) {
   if (!GAME_IDS.includes(game)) return false;
-  var want = (n === undefined || n === null) ? RANK_EXCHANGE.perTime : n;
+  var ex = ensureRankExchange();
+  var want = (n === undefined || n === null) ? Math.min(RANK_EXCHANGE.perTime, rankExchangeQuota()) : n;
   var why = rankExchangeBlockedReason(game, want);
   if (why) { showToast('💱 ' + why, 2400, true); return false; }
-  var s = profile15(game), ex = ensureRankExchange();
+  var s = profile15(game);
   var ok = atomic15(function () {
     if (!spendCoins(rankExchangeCost(want))) throw Error('金币不足');
     s.rankPoints += want;
     ex.used++;
+    ex.gained += want;
   });
   if (ok) {
     showToast('💱 兑换 ' + want + ' 排位积分 · 花费 ' + fmt(rankExchangeCost(want)) + ' 金币 · 今日剩余 ' + rankExchangeLeft() + ' 次', 2600, false, 'success');
@@ -2203,6 +2213,28 @@ function exchangeRankedPoints(game, n) {
     try { renderRank(); } catch (e) {}
   }
   return ok;
+}
+/* 每日赠送：只有当该游戏排位积分为 0 时，才发放当天的 10 分（每天一次） */
+function rankGiftDate(game) {
+  var s = profile15(game);
+  return s && typeof s.giftDate === 'string' ? s.giftDate : '';
+}
+function rankGiftAvailable(game) {
+  if (!player) return false;
+  return profile15(game).rankPoints === 0 && rankGiftDate(game) !== todayStr();
+}
+function ensureRankGift(game, opts) {
+  if (!player || !rankGiftAvailable(game)) return 0;
+  var s = profile15(game), today = todayStr();
+  var ok = atomic15(function () { s.rankPoints += RANK_DAILY_GIFT; s.giftDate = today; });
+  if (!ok) return 0;
+  if (!(opts && opts.silent)) showToast('🎁 排位积分已输光 · 系统赠送今日 ' + RANK_DAILY_GIFT + ' 分', 2600, false, 'success');
+  return RANK_DAILY_GIFT;
+}
+function ensureRankGiftAll(opts) {
+  var n = 0;
+  for (var i = 0; i < GAME_IDS.length; i++) n += ensureRankGift(GAME_IDS[i], opts);
+  return n;
 }
 /* 小段位：III(下) → II → I(上)，返回当前小段位与段内进度 */
 function subTierInfo(points) {
@@ -5151,6 +5183,7 @@ function refreshPeriodic(opts) {
   ensureMonthly();
   ensureRelief();
   ensureRankExchange();
+  var giftN = ensureRankGiftAll({ silent: true });   /* 新的一天：0 分的馆各补 10 分 */
   var c1 = player.checkin ? player.checkin.date + '|' + (player.checkin.claimed ? 1 : 0) : '';
   /* 只有「之前已有记录且周期键发生变化」才算刷新：
      首次进入游戏做初始化不该弹提示，领取救济金改变次数也不该算跨天。 */
@@ -5161,6 +5194,7 @@ function refreshPeriodic(opts) {
     || (r0 && (player.relief ? player.relief.date : '') !== r0)
     || (x0 && (player.rankExchange ? player.rankExchange.date : '') !== x0);
   lastDaySeen = todayStr();
+  /* 赠送不改变周期键：只有周期真的翻篇才算刷新（赠送本身已在上面落盘） */
   if (!changed) return false;
   try {
     updateTasksBadges();
@@ -5169,7 +5203,7 @@ function refreshPeriodic(opts) {
     if ($('ovTasks') && $('ovTasks').classList.contains('show')) renderTasks();
     if ($('ovAchieve') && $('ovAchieve').classList.contains('show')) renderAchList();
   } catch (e) {}
-  if (!opts || opts.toast !== false) showToast('🔄 新的一天到了 · 签到与任务已刷新', 2400, false, 'success');
+  if (!opts || opts.toast !== false) showToast('🔄 新的一天到了 · 签到与任务已刷新' + (giftN ? ' · 排位积分已赠送 ' + giftN + ' 个馆各 ' + RANK_DAILY_GIFT + ' 分' : ''), 2600, false, 'success');
   return true;
 }
 
@@ -6826,7 +6860,7 @@ var ACH_REWARD_BUDGET = ACHIEVEMENTS.reduce(function(n,a){return n+a.reward;},0)
 var V14_WEEKLY = WEEKLY_TASKS.map(function(t){return Object.assign({},t);});
 var V14_ACH = ACHIEVEMENTS.map(function(a){return Object.assign({},a);});
 var oldCreatePlayer15 = createNewPlayer;
-function newGameProfile15(){return {redeemPoints:0,rankPoints:0,rankPeak:0,tierReward:0,rankedHands:0,rankedWins:0,rankedStreak:0,metrics:{},levels:{}};}
+function newGameProfile15(){return {redeemPoints:0,rankPoints:0,rankPeak:0,tierReward:0,rankedHands:0,rankedWins:0,rankedStreak:0,giftDate:'',metrics:{},levels:{}};}
 function safeCount15(v){return Number.isSafeInteger(v)&&v>=0?v:0;}
 function ensureGames15(p){
   if(!p.games||typeof p.games!=='object'||Array.isArray(p.games))p.games={};
@@ -6904,6 +6938,8 @@ function exchangePoints(game,direction,n){
 buyRankedPoints=function(n){return false;};
 function applyRankResult15(game,key,net){var s=profile15(game),i=level15(key),sign=Math.sign(net),before=s.redeemPoints,rank=s.rankPoints;
   s.redeemPoints=Math.max(0,s.redeemPoints+sign*(i+1));s.rankPoints=Math.max(0,s.rankPoints+(sign>0?RANK_POINT_WIN[i]:sign<0?-RANK_POINT_LOSS[i]:0));
+  /* 低于开局门槛视为输光，直接归零：只会落在「0 分」这一个状态，等系统每日赠送或兑换 */
+  if(s.rankPoints>0&&s.rankPoints<RANKED_ENTRY_MIN)s.rankPoints=0;
   if(!Number.isSafeInteger(s.redeemPoints)||!Number.isSafeInteger(s.rankPoints))throw Error('积分超出范围');
   s.rankPeak=Math.max(s.rankPeak,rankTierFor(s.rankPoints));s.rankedHands++;if(sign>0){s.rankedWins++;s.rankedStreak++;}else s.rankedStreak=0;
   if(game==='holdem'){player.rankPoints=s.rankPoints;player.rankTier=rankTierFor(s.rankPoints);player.rankPeak=s.rankPeak;}
@@ -7007,10 +7043,10 @@ function syncCrowns(){
 renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var ret=oldRenderLobby15();try{if(player)syncTitles({silent:false});syncCrowns();}catch(e){}return ret;};
 
 /* 所有游戏共用模式及难度入口。 */
-renderModeCards=function(){if(!player)return;var s=profile15(hubGame),body=$('modeBody');body.innerHTML='';
+renderModeCards=function(){if(!player)return;ensureRankGift(hubGame);var s=profile15(hubGame),body=$('modeBody');body.innerHTML='';
  var canRanked=s.rankPoints>=RANKED_ENTRY_MIN;
  ['quick','ranked'].forEach(function(mode){var card=document.createElement('button');card.className='mode-card '+mode+(mode==='ranked'&&!canRanked?' dim':'');
-  card.innerHTML='<div class="mode-name">'+(mode==='quick'?'自由匹配':'独立排位')+'</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>'+(mode==='quick'?'金币对局 · 本地AI或庄家<br>四档挑战，自主选择<br>门票 '+ENTRY_FEE_TEXT+'（按场次）':'段位 '+rankInfo(hubGame).name+' · 对手 '+LEVEL_NAMES[level15(rankedDifficultyFor(hubGame))]+'级<br>排位积分 <b>'+s.rankPoints+'</b> / 门槛 '+RANKED_ENTRY_MIN+'<br>'+(canRanked?'已达标，可以开始排位':'积分不足 '+RANKED_ENTRY_MIN+'，暂时无法开始排位')+'<br>单局 胜 +'+RANK_POINT_WIN[0]+'~+'+RANK_POINT_WIN[RANK_POINT_WIN.length-1]+' / 负 -'+RANK_POINT_LOSS[0]+'~-'+RANK_POINT_LOSS[RANK_POINT_LOSS.length-1]+'<br>对手强度随段位变化 · 门票 '+ENTRY_FEE_TEXT)+'</p></div>';
+  card.innerHTML='<div class="mode-name">'+(mode==='quick'?'自由匹配':'独立排位')+'</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>'+(mode==='quick'?'金币对局 · 本地AI或庄家<br>四档挑战，自主选择<br>门票 '+ENTRY_FEE_TEXT+'（按场次）':'段位 '+rankInfo(hubGame).name+' · 对手 '+LEVEL_NAMES[level15(rankedDifficultyFor(hubGame))]+'级<br>排位积分 <b>'+s.rankPoints+'</b> / 门槛 '+RANKED_ENTRY_MIN+'<br>'+(canRanked?'已达标，可以开始排位':'积分不足 '+RANKED_ENTRY_MIN+'，暂时无法开始排位')+'<br>单局 胜 +'+RANK_POINT_WIN[0]+'~+'+RANK_POINT_WIN[RANK_POINT_WIN.length-1]+' / 负 -'+RANK_POINT_LOSS[0]+'~-'+RANK_POINT_LOSS[RANK_POINT_LOSS.length-1]+'<br>0 分时每天赠送 '+RANK_DAILY_GIFT+' 分 · 兑换每日 '+RANK_EXCHANGE.timesPerDay+' 次上限 '+RANK_EXCHANGE.dailyCap+' 分<br>对手强度随段位变化 · 门票 '+ENTRY_FEE_TEXT)+'</p></div>';
   card.onclick=function(){App.mode=mode;
     if(mode==='ranked'){var d=rankedDifficultyFor(hubGame);App.difficulty=d;tryEnterGame(d);return;}
     renderDifficultyCards();showScreen('difficulty');};body.appendChild(card);
@@ -7029,8 +7065,8 @@ function renderModeRankBar(){
  host.innerHTML='<div class="mr-line">🏅 排位积分 <b>'+s.rankPoints+'</b> / 门槛 '+RANKED_ENTRY_MIN
   +' · 单局 胜 +'+RANK_POINT_WIN[0]+'~+'+RANK_POINT_WIN[RANK_POINT_WIN.length-1]+' / 负 -'+RANK_POINT_LOSS[0]+'~-'+RANK_POINT_LOSS[RANK_POINT_LOSS.length-1]
   +' · 今日兑换 '+ex.used+' / '+RANK_EXCHANGE.timesPerDay+' 次</div>'
-  +'<button id="rankedExchangeBtn"'+(why?' disabled':'')+'>兑换 '+RANK_EXCHANGE.perTime+' 排位积分（'+fmt(rankExchangeCost(RANK_EXCHANGE.perTime))+' 金币）</button>'
-  +'<small class="mr-tip">积分为 0 时可兑换，每次最多 '+RANK_EXCHANGE.perTime+' 分，每天最多 '+RANK_EXCHANGE.timesPerDay+' 次 · '+tip+'</small>';
+  +'<button id="rankedExchangeBtn"'+(why?' disabled':'')+'>兑换排位积分（最多 '+Math.min(RANK_EXCHANGE.perTime,rankExchangeQuota())+' 分 / '+fmt(rankExchangeCost(Math.min(RANK_EXCHANGE.perTime,rankExchangeQuota())))+' 金币）</button>'
+  +'<small class="mr-tip">积分为 0 时可兑换，每天 '+RANK_EXCHANGE.timesPerDay+' 次、每日上限 '+RANK_EXCHANGE.dailyCap+' 分 · 积分为 0 时每天系统赠送 '+RANK_DAILY_GIFT+' 分 · '+tip+'</small>';
  var btn=$('rankedExchangeBtn');
  if(btn)btn.onclick=function(){sfx('click');exchangeRankedPoints(hubGame);};
 }
@@ -7044,8 +7080,9 @@ tryEnterGame=function(key){if(!GAME_LEVELS.includes(key)||G.active||(Arcade.roun
  var fee=entryFeeFor(key);
  /* 排位门槛：排位积分从 0 起，攒够 RANKED_ENTRY_MIN 才能开始排位对局 */
  if(App.mode==='ranked'){
+  ensureRankGift(hubGame);   /* 0 分时先发当天的系统赠送 */
   var pts=profile15(hubGame).rankPoints;
-  if(pts<RANKED_ENTRY_MIN){showToast('🏅 排位需要 '+RANKED_ENTRY_MIN+' 排位积分（当前 '+pts+'），可用金币兑换补足',2800,true);return false;}
+  if(pts<RANKED_ENTRY_MIN){showToast('🏅 排位需要 '+RANKED_ENTRY_MIN+' 排位积分（当前 '+pts+'）· 积分为 0 时每天赠送 '+RANK_DAILY_GIFT+' 分，或用金币兑换',3000,true);return false;}
  }
  if(hubGame!=='holdem'){App.difficulty=key;Arcade.difficulty=key;Arcade.mode=App.mode==='ranked'?'ranked':'coins';return openArcade(hubGame);}
  if(App.mode!=='ranked'){
@@ -7106,7 +7143,7 @@ var oldOpenArcade15=openArcade;
 openArcade=function(game){if(!GAME_IDS.includes(game)||game==='holdem'||G.active||(Arcade.round&&!Arcade.round.done)||player.rankedPending)return false;arcadeRecover();if(arcadeData().pending)return false;
  var fee=entryFeeFor(Arcade.difficulty||App.difficulty);
  /* 排位门槛在入口处再兜一次：不论从哪里进来，积分不够都不开局 */
- if(Arcade.mode==='ranked'&&profile15(game).rankPoints<RANKED_ENTRY_MIN){showToast('🏅 排位需要 '+RANKED_ENTRY_MIN+' 排位积分（当前 '+profile15(game).rankPoints+'），可用金币兑换补足',2800,true);return false;}
+ if(Arcade.mode==='ranked'){ensureRankGift(game);if(profile15(game).rankPoints<RANKED_ENTRY_MIN){showToast('🏅 排位需要 '+RANKED_ENTRY_MIN+' 排位积分（当前 '+profile15(game).rankPoints+'）',2800,true);return false;}}
  if(Arcade.mode!=='practice'){
   if(player.coins<fee){showToast('💸 门票 '+fmt(fee)+' 金币，余额不足',2400,true);return false;}
   if(!atomic15(function(){if(!spendCoins(fee))throw Error('门票扣款失败');}))return false;
@@ -7362,15 +7399,16 @@ var oldRenderAch15=renderAchList;
 renderAchList=function(){oldRenderAch15();var host=$('achList');if(!host)return;var bar=document.createElement('div');bar.className='game-filter15';
  ['all'].concat(GAME_IDS).forEach(function(g){var b=document.createElement('button');b.textContent=g==='all'?'全部游戏':GAME_NAMES[g];b.onclick=function(){achGame15=g;achPage=0;renderAchList();};bar.appendChild(b);});host.prepend(bar);};
 var achGame15='all';
-renderRank=function(){if(!player)return;var s=profile15(hubGame),info=subTierInfo(s.rankPoints),tier=info.tier,cur=RANKS[tier],next=RANKS[tier+1];
+renderRank=function(){if(!player)return;ensureRankGift(hubGame);var s=profile15(hubGame),info=subTierInfo(s.rankPoints),tier=info.tier,cur=RANKS[tier],next=RANKS[tier+1];
  var base=tierDisplayName(hubGame,tier),full=base+' '+info.label,pct=info.pct;
  var nextLabel=info.idx>0?(cur.name+' '+SUB_TIER_LABELS[info.idx-1]):((next?next.name:cur.name)+' III');
  var html='<div class="rank-row"><div class="mid"><div class="nm">'+GAME_NAMES[hubGame]+' · '+full+'</div><div class="pt">'+s.rankPoints+' 段位分 · 本小段 '+info.got+' / '+info.span+'</div><div class="rank-bar"><div class="rank-fill" style="width:'+pct+'%"></div></div></div></div><div class="stat-grid"><div class="stat-box"><div class="v">'+s.rankPoints+'</div><div class="l">段位分（不可兑换）</div></div><div class="stat-box"><div class="v">'+s.redeemPoints+'</div><div class="l">可兑换积分</div></div><div class="stat-box"><div class="v">'+s.rankedWins+' / '+s.rankedHands+'</div><div class="l">排位胜局 / 总局数</div></div></div>';
  html+='<p>段位只靠段位分晋级：每 1000 段位分升一个大段位，每个大段位再分 III → II → I 三个小段位（约 333 分一小段）。青铜 0 起步 → 白银 1000 → 黄金 2000 → 铂金 3000 → 钻石 4000 → 大师 5000 → 传奇 6000。金币场与排位都要门票，每局重置比赛筹码，不结算金币。</p>';
- html+='<p>排位积分从 0 开始，攒够 <b>'+RANKED_ENTRY_MIN+'</b> 分才能开始排位对局；单局 胜 +'+RANK_POINT_WIN[0]+'~+'+RANK_POINT_WIN[RANK_POINT_WIN.length-1]+'，负 -'+RANK_POINT_LOSS[0]+'~-'+RANK_POINT_LOSS[RANK_POINT_LOSS.length-1]+'（按对手档位），平局不变，最低 0。可兑换积分另算（胜 +1 ~ +4，负 -1 ~ -4），100 积分可换 100 金币，与段位互不影响。</p>';
- html+='<p>🏅 当前排位积分 <b>'+s.rankPoints+'</b> / '+RANKED_ENTRY_MIN+' · '+(s.rankPoints>=RANKED_ENTRY_MIN?'已达标，可以开始排位':'不足 '+RANKED_ENTRY_MIN+'，暂时无法开始排位')
-  +' · 今日兑换 '+ensureRankExchange().used+' / '+RANK_EXCHANGE.timesPerDay+' 次</p>';
- html+='<p><button class="mini-btn15" id="rankExchangeBtn15"'+(rankExchangeBlockedReason(hubGame)?' disabled':'')+'>兑换 '+RANK_EXCHANGE.perTime+' 排位积分（'+fmt(rankExchangeCost(RANK_EXCHANGE.perTime))+' 金币）</button> <span class="mini-tip15">'+(rankExchangeBlockedReason(hubGame)||('今天还可兑换 '+rankExchangeLeft()+' 次'))+'</span></p>';
+ html+='<p>排位积分从 0 开始，攒够 <b>'+RANKED_ENTRY_MIN+'</b> 分才能开始排位对局；单局 胜 +'+RANK_POINT_WIN[0]+'~+'+RANK_POINT_WIN[RANK_POINT_WIN.length-1]+'，负 -'+RANK_POINT_LOSS[0]+'~-'+RANK_POINT_LOSS[RANK_POINT_LOSS.length-1]+'（按对手档位），平局不变。低于 '+RANKED_ENTRY_MIN+' 分视为输光直接归零，只能等第二天的系统赠送或使用每日兑换。</p>';
+ html+='<p>🏅 当前排位积分 <b>'+s.rankPoints+'</b> / '+RANKED_ENTRY_MIN+' · '+(s.rankPoints>=RANKED_ENTRY_MIN?'已达标，可以开始排位':'不足 '+RANKED_ENTRY_MIN+'，今天先等系统赠送或兑换')
+  +' · 今日兑换 '+ensureRankExchange().used+' / '+RANK_EXCHANGE.timesPerDay+' 次 · 今日已兑换 '+ensureRankExchange().gained+' / '+RANK_EXCHANGE.dailyCap+' 分'
+  +' · '+(rankGiftAvailable(hubGame)?('可领取今日赠送 '+RANK_DAILY_GIFT+' 分'):(rankGiftDate(hubGame)===todayStr()?'今日赠送已领取':'积分不为 0，今日无赠送'))+'</p>';
+ html+='<p><button class="mini-btn15" id="rankExchangeBtn15"'+(rankExchangeBlockedReason(hubGame)?' disabled':'')+'>兑换排位积分（最多 '+Math.min(RANK_EXCHANGE.perTime,rankExchangeQuota())+' 分 / '+fmt(rankExchangeCost(Math.min(RANK_EXCHANGE.perTime,rankExchangeQuota())))+' 金币）</button> <span class="mini-tip15">'+(rankExchangeBlockedReason(hubGame)||('今天还可兑换 '+rankExchangeLeft()+' 次，剩余额度 '+rankExchangeQuota()+' 分'))+'</span></p>';
  html+='<p>'+(info.nextMin>s.rankPoints?'距下一小段位「'+nextLabel+'」还需 <b>'+(info.nextMin-s.rankPoints)+'</b> 段位分':'已达最高段位')+(tier>=RANKS.length-1?' · 专属封号「'+base+'」':'')+'</p>';
  html+='<p>👑 六冠赌神进度 <b>'+crownCount(player)+' / 6</b> · 六大游戏全部达到最高段位可获得永久称号「六冠赌神」</p>';
  RANKS.forEach(function(r){html+='<div class="task-item"><div class="info"><div class="t">'+r.name+(r.id===RANKS.length-1&&TOP_TIER_NAMES[hubGame]?' · '+TOP_TIER_NAMES[hubGame]:'')+'</div><div class="pg">'+r.min+' 分起 · '+['III','II','I'].map(function(l){return r.name+' '+l;}).join(' → ')+(r.id===tier?' · 当前 '+full:'')+'</div></div></div>';});$('rankPanel').innerHTML=html;var eb=$('rankExchangeBtn15');if(eb)eb.onclick=function(){sfx('click');exchangeRankedPoints(hubGame);};};
