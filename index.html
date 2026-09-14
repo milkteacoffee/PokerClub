@@ -3204,7 +3204,7 @@ function renderArcade(){if(!$('arcTable')||!player)return;var r=Arcade.round,liv
     else table='<div class="arc-seat"><h3>接近21，不要超过</h3><p>天然21点净赢1.5倍，庄家软17停牌</p></div>';
     if(live)actions=arcButton('要牌','hit')+arcButton('停牌','stand',false,true)+arcButton('加倍','double',r.hand.length!==2||arcadeBalance()<r.base||r.stake+r.base>arcadeRoundLimit15());else actions=arcButton((r&&r.done?'再来一局 · ':'发牌 · ')+bet,'start',arcadeBalance()<bet,true);
   }else if(Arcade.game==='gold'){
-    if(r){var gCost=r.unit*(r.seats[0].seen?2:1),gCap=r.stake+gCost>arcadeLimit15();table='<div class="gold-layout">'+r.seats.map(function(p,i){var canCmp=live&&i>0&&!p.folded&&r.turn>=3&&arcadeBalance()>=gCost&&!gCap;return '<div class="arc-seat gold-seat-'+i+(p.folded?' out':'')+(live&&r.turn===i?' acting':'')+'"><h3>'+escapeHTML(p.name)+(i===0?' · 你':' · AI')+'</h3>'+arcCards(p.hand,live&&(i!==0||!p.seen))+'<p>'+(p.folded?'已弃牌':p.seen?'已看牌':'闷牌')+' · 投入 '+p.paid+'</p><p>'+((r.done||(i===0&&p.seen))?goldLabel(p.hand):'')+'</p>'+(canCmp?'<button class="arc-compare" data-arc="compare-'+i+'">比牌 '+gCost+'</button>':'')+'</div>';}).join('')+'<div class="gold-pot"><strong>底池 '+r.pot+'</strong><span>第 '+r.turn+' / 10 轮</span><small>闷牌单注 '+r.unit+'</small></div></div>';}
+    if(r){var gCost=r.unit*(r.seats[0].seen?2:1),gCap=r.stake+gCost>arcadeLimit15();table='<div class="gold-layout">'+r.seats.map(function(p,i){var canCmp=live&&i>0&&!p.folded&&r.turn>=3&&arcadeBalance()>=gCost&&!gCap;return '<div class="arc-seat gold-seat gold-seat-'+i+(p.folded?' out':'')+(live&&r.turn===i?' acting':'')+'"><h3>'+escapeHTML(p.name)+(i===0?' · 你':' · AI')+'</h3>'+arcCards(p.hand,live&&(i!==0||!p.seen))+'<p>'+(p.folded?'已弃牌':p.seen?'已看牌':'闷牌')+' · 投入 '+p.paid+'</p><p>'+((r.done||(i===0&&p.seen))?goldLabel(p.hand):'')+'</p>'+(canCmp?'<button class="arc-compare" data-arc="compare-'+i+'">比牌 '+gCost+'</button>':'')+'</div>';}).join('')+'<div class="gold-pot"><strong>底池 '+r.pot+'</strong><span>第 '+r.turn+' / 10 轮</span><small>闷牌单注 '+r.unit+'</small></div></div>';}
     else table='<div class="arc-seat"><h3>三张牌，一场心理较量</h3><p>四人桌 · 每人底注 '+bet+' · 最多十轮</p></div>';
     if(live){var cost=gCost,capBlocked=r.stake+cost>arcadeLimit15();actions=arcButton('看牌','peek',r.seats[0].seen)+arcButton('跟注 '+cost,'call',arcadeBalance()<cost||capBlocked,true)+arcButton('加注','raise',r.unit>=r.base*4||arcadeBalance()<(r.unit+r.base)*(r.seats[0].seen?2:1)||r.stake+(r.unit+r.base)*(r.seats[0].seen?2:1)>arcadeLimit15())+(capBlocked?arcButton('达到上限·摊牌','cap',false,true):'')+arcButton('弃牌','fold');}
     else actions=arcButton((r&&r.done?'再来一局 · 底注 ':'开局 · 底注 ')+bet,'start',arcadeBalance()<bet,true);
@@ -5695,7 +5695,7 @@ function renderCheckin() {
   var wkReadyN = weeklyClaimableCount();
   var allN = (c.claimed ? 0 : 1) + wkReadyN;
   var html = rewardBarHTML('签到 + 周常 · 待领取 <b>' + allN + '</b> 项 <i>· 本周周常 ' + WEEKLY_TASKS.length + ' 项</i>',
-    'data-claim-all="checkin"', allN ? '一键领取 ' + allN + ' 项' : '今日已领完', allN, wkReadyN === 0);
+    'data-claim-all="checkin"', allN ? '一键领取 ' + allN + ' 项' : '今日已领完', allN);
   html += '<div style="font-size:12px;color:#8fa0b4;margin-bottom:12px;">';
   html += '已连续签到 <b style="color:#f2c14e;">' + c.streak + '</b> 天 · 7 天一轮，断签重新从第 1 天开始';
   html += '</div><div class="checkin-grid">';

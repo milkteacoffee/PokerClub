@@ -124,9 +124,27 @@ test('签到面板一键领取签到与周常', () => {
   assert.equal(w.player.coins, 500 + expect);
   assert.equal(w.player.checkin.claimed, true);
   assert.equal(w.player.weekly.claimed[t1.id], true);
-  /* 周常无可领时隐藏合并按钮，只留签到自己的按钮 */
-  assert.equal(w.document.querySelector('#ciPanel [data-claim-all]'), null);
+  /* 全部领完后按钮保留在位上并转为禁用态（不隐藏，避免布局跳动） */
+  const after = w.document.querySelector('#ciPanel [data-claim-all]');
+  assert(after, '按钮保留显示');
+  assert.equal(after.disabled, true, '无可领取时禁用');
+  assert.equal(after.textContent, '今日已领完');
   assert.equal(w.document.querySelector('#ciPanel .reward-bar .sum').textContent.includes('待领取 0 项'), true);
+});
+
+test('仅签到可领、周常无可领时，合并按钮仍能一键领签到', () => {
+  reset();
+  w.ensureCheckin();
+  w.ensureWeekly();
+  w.renderCheckin();
+  const bar = w.document.querySelector('#ciPanel [data-claim-all]');
+  assert(bar, '按钮必须存在');
+  assert.equal(bar.disabled, false, '签到可领时按钮可用');
+  assert.equal(bar.textContent, '一键领取 1 项');
+  const expect = w.checkinRewardOf(w.player.checkin.streak);
+  bar.click();
+  assert.equal(w.player.coins, 500 + expect);
+  assert.equal(w.player.checkin.claimed, true);
 });
 
 test('成就一键领取覆盖未翻到的分页，且不改动未达成项', () => {

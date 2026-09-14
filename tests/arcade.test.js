@@ -50,6 +50,9 @@ test('炸金花比牌按钮落在座位内，底部只留四个主操作',()=>{f
  w.renderArcade();const seats=w.document.querySelectorAll('.gold-layout .arc-seat');assert.equal(seats.length,4);
  assert.equal(w.document.querySelectorAll('#arcActions [data-arc^="compare-"]').length,0,'底部不再堆积比牌按钮');
  const inSeat=w.document.querySelectorAll('.gold-layout [data-arc^="compare-"]');assert(inSeat.length>=1,'座位内可比牌');
+ const seatOf=inSeat[0].closest('.gold-seat');
+ assert(seatOf,'比牌按钮必须落在带 .gold-seat 的座位内，否则 .gold-seat .arc-compare 样式不生效');
+ assert.equal(w.document.querySelectorAll('.gold-seat .arc-compare').length,inSeat.length,'样式选择器必须真正命中按钮');
  assert.equal(w.document.querySelectorAll('#arcActions [data-arc]').length,4,'底部保留看牌/跟注/加注/弃牌');});
 test('一局结束后主按钮提示再来一局',()=>{fresh();const done=rig([card(14),card(13),card(9),card(8)]);w.blackjackStart(10);done();
  assert.equal(w.Arcade.round.done,true);assert(/再来一局/.test(w.document.querySelector('[data-arc="start"]').textContent));});
