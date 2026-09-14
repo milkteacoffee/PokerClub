@@ -870,7 +870,9 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   ctx.profile15('holdem').redeemPoints = 1; // 积分来自排位
   ok(ctx.exchangePoints('holdem','sell',1) && ctx.player.coins === 600, '1积分可单向兑换100金币');
   ctx.player.coins=0;
-  ok(ctx.tryEnterGame('champion') && started===1 && ctx.player.coins===0, '排位零金币零积分也可进入，不收门票');
+  ok(!ctx.tryEnterGame('champion') && started===0, '金币为 0 时连门票都付不起，拒绝进入排位');
+  ctx.player.coins=ctx.ENTRY_FEE.champion;
+  ok(ctx.tryEnterGame('champion') && started===1 && ctx.player.coins===0, '排位同样收门票（冠军档 '+ctx.ENTRY_FEE.champion+'）');
   ok(!ctx.tryEnterGame('easy') && !ctx.buyRankedPoints(1), '在牌桌拒绝重复入场及兑换');
   ctx.startGame = realStart; ctx.G.active = false;
   ctx.player.rankPoints = 0; ctx.player.rankPeak = 0;

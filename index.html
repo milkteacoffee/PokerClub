@@ -481,6 +481,7 @@
     font-family:inherit; display:flex; align-items:center;
     justify-content:center; gap:4px; white-space:nowrap; }
   .panel .closebtn:hover { background:rgba(224,197,145,.14); color:#ecd9a8; }
+  .fee-warn { color:#f2a06b; font-weight:800; }
   .panel .closebtn:active { background:rgba(255,255,255,.16); }
   /* 信息类弹窗底部统一返回条，点面板外也能关闭 */
   .ov-back { display:flex; justify-content:center; margin-top:16px; }
@@ -1271,10 +1272,10 @@
   </section>
 
   <section id="arcadeScreen" aria-label="单机游戏牌桌">
-    <header class="arc-head"><button id="arcBack" class="arc-btn">返回大厅</button><div><h2 id="arcTitle">21点</h2><small id="arcModeLabel"></small></div><strong id="arcBalance"></strong><button id="arcSettings" class="arc-btn" title="设置当前游戏的音乐和音量">音乐设置</button><button id="arcRules" class="arc-btn">规则</button></header>
+    <header class="arc-head"><button id="arcBack" class="arc-btn">返回模式选择</button><div><h2 id="arcTitle">21点</h2><small id="arcModeLabel"></small></div><strong id="arcBalance"></strong><button id="arcSettings" class="arc-btn" title="设置当前游戏的音乐和音量">音乐设置</button><button id="arcRules" class="arc-btn">规则</button></header>
     <div class="arc-toolbar"><label>模式 <select id="arcMode"><option value="coins">金币场</option><option value="practice">免费练习</option></select></label><label>下注 <select id="arcBet"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option></select></label><div class="arc-chips" id="arcChips" role="radiogroup" aria-label="下注金额"></div><button id="arcRefill" class="arc-btn">补满练习筹码</button><span id="arcStats"></span></div>
     <div id="arcHelp" hidden></div><div id="arcTable" aria-live="polite"></div><div id="arcMessage" role="status"></div><div id="arcActions"></div><div id="arcHistory"></div>
-    <div id="arcExit" hidden><span>当前局尚未结束，返回将放弃已投入筹码。</span><button id="arcExitYes" class="arc-btn">确认离桌</button><button id="arcExitNo" class="arc-btn">继续本局</button></div>
+    <div id="arcExit" hidden><span>本轮对局尚未结算。离开会按「主动离桌」结算，未中奖的投入不退；已完成的战绩保留。</span><button id="arcExitYes" class="arc-btn">返回模式选择</button><button id="arcExitNo" class="arc-btn">继续本局</button></div>
   </section>
   <div id="modeScreen">
     <div class="diff-header">
@@ -1425,14 +1426,14 @@
   <div class="overlay" id="ovGameOver">
     <div class="panel" style="max-width:420px;">
       <div class="go-title">筹码用尽</div>
-      <div class="go-sub">你的筹码已用完，可以领取补充金或返回大厅换新档</div>
+      <div class="go-sub">你的筹码已用完：领取补充金会回到大厅重新开始，结束本轮对局则返回模式选择</div>
       <div class="go-stats">
         <div class="go-stat"><div class="v" id="goHands">0</div><div class="l">手 数</div></div>
         <div class="go-stat"><div class="v" id="goWins">0</div><div class="l">胜 局</div></div>
       </div>
       <div class="go-btns">
-        <button class="again" id="goAgain">领取补充金</button>
-        <button class="back" id="goBackLobby">返回大厅</button>
+        <button class="again" id="goAgain">领取补充金并回大厅</button>
+        <button class="back" id="goBackLobby">结束本轮对局</button>
       </div>
     </div>
   </div>
@@ -1453,12 +1454,12 @@
     <div class="panel confirm-panel">
       <div class="confirm-title">退出牌桌</div>
       <div class="confirm-msg">
-        确定要离开当前牌桌吗？<br>
-        你的筹码和进度将自动保存。
+        确定要离开本轮对局吗？<br>
+        筹码与进度会自动保存，返回后可以重新选择模式或场次。
       </div>
       <div class="confirm-btns">
         <button class="no" data-close="ovExitConfirm">继续游戏</button>
-        <button class="yes" id="exitConfirmYes">退出并保存</button>
+        <button class="yes" id="exitConfirmYes">返回选择模式</button>
       </div>
     </div>
   </div>
@@ -1512,7 +1513,7 @@
     <div class="panel" style="max-width:520px;">
       <h2>本次离桌汇总 <button class="closebtn" data-close="ovSession">✕</button></h2>
       <p id="sessionSummary" style="line-height:2;color:#cfdae5;"></p>
-      <div class="go-btns"><button class="again" data-close="ovSession">返回大厅</button></div>
+      <div class="go-btns"><button class="again" id="sessionBack">返回选择模式</button></div>
     </div>
   </div>
 
@@ -1649,30 +1650,34 @@ var MODE_CONFIG = {
 };
 
 /* ========== 场次配置 ========== */
+/* 所有正式场次统一门票（金币场与排位同价，练习场免费），按难度递增 */
+var ENTRY_FEE = { easy: 50, normal: 200, hard: 800, champion: 3000 };
+var ENTRY_FEE_TEXT = [ENTRY_FEE.easy, ENTRY_FEE.normal, ENTRY_FEE.hard, ENTRY_FEE.champion].join(' / ');
+function entryFeeFor(key) { return ENTRY_FEE[key] || 0; }
 var DIFFICULTY_CONFIG = {
   easy: {
     key:'easy', name:'简单', tag:'新手', icon:'🌱',
-    sb:10, bb:20, buyIn:500, minCoins:500, entryFee:0,
+    sb:10, bb:20, buyIn:500, minCoins:500, entryFee:ENTRY_FEE.easy,
     minRaiseUnit:20, thinkTime:30, aiBonus:-0.18,
-    desc:['盲注 10 / 20','每手开局至少 $500','入场免费','⏰ 思考 30 秒','加注 ≥20','AI 温和 · 适合练手']
+    desc:['盲注 10 / 20','每手开局至少 $500','门票 $50','⏰ 思考 30 秒','加注 ≥20','AI 温和 · 适合练手']
   },
   normal: {
     key:'normal', name:'普通', tag:'标准', icon:'🎯',
-    sb:50, bb:100, buyIn:5000, minCoins:5000, entryFee:200,
+    sb:50, bb:100, buyIn:5000, minCoins:5000, entryFee:ENTRY_FEE.normal,
     minRaiseUnit:100, thinkTime:20, aiBonus:0,
-    desc:['盲注 50 / 100','带入 $5,000','入场费 $200','⏰ 思考 20 秒','加注 ≥100','AI 平衡 · 标准玩法']
+    desc:['盲注 50 / 100','带入 $5,000','门票 $200','⏰ 思考 20 秒','加注 ≥100','AI 平衡 · 标准玩法']
   },
   hard: {
     key:'hard', name:'困难', tag:'高手', icon:'🔥',
-    sb:250, bb:500, buyIn:20000, minCoins:20000, entryFee:1000,
+    sb:250, bb:500, buyIn:20000, minCoins:20000, entryFee:ENTRY_FEE.hard,
     minRaiseUnit:500, thinkTime:15, aiBonus:0.16,
-    desc:['盲注 250 / 500','带入 $20,000','入场费 $1,000','⏰ 思考 15 秒','加注 ≥500','AI 激进 · 高手对决']
+    desc:['盲注 250 / 500','带入 $20,000','门票 $800','⏰ 思考 15 秒','加注 ≥500','AI 激进 · 高手对决']
   },
   champion: {
     key:'champion', name:'冠军', tag:'传奇', icon:'👑',
-    sb:500, bb:1000, buyIn:100000, minCoins:100000, entryFee:5000,
+    sb:500, bb:1000, buyIn:100000, minCoins:100000, entryFee:ENTRY_FEE.champion,
     minRaiseUnit:1000, thinkTime:12, aiBonus:0.28,
-    desc:['盲注 500 / 1000','带入 $100,000','入场费 $5,000','⏰ 思考 12 秒','加注 ≥1,000','AI 顶级 · 冠军荣耀']
+    desc:['盲注 500 / 1000','带入 $100,000','门票 $3,000','⏰ 思考 12 秒','加注 ≥1,000','AI 顶级 · 冠军荣耀']
   }
 };
 
@@ -3255,6 +3260,11 @@ var Timer = {
   }
 };
 
+/* 对局内「返回」统一回到「选择模式」界面，而不是直接甩回大厅 */
+function goModeScreen() {
+  try { renderModeCards(); } catch (e) {}
+  showScreen('mode');
+}
 /* 弹窗：同一时刻只保留一个，避免两个 ✕ 叠在一起；
    信息类弹窗支持「点击面板外」与 Esc 关闭，其余确认类弹窗仍走各自按钮。 */
 var OV_CLOSE_ON_BACKDROP = ['ovAchieve', 'ovTasks', 'ovHelp', 'ovShop', 'ovStats', 'ovCheckin', 'ovSettings', 'ovStorage'];
@@ -3465,7 +3475,7 @@ function arcadeDispatch(action){if(Arcade.busy||!$('arcExit').hidden||document.q
   else if(action.indexOf('compare-')===0)goldAction('compare',Number(action.split('-')[1]));else goldAction(action);
  }finally{Arcade.busy=false;}}
 function arcadeLeave(confirm){var r=Arcade.round;if(r&&!r.done&&!confirm){$('arcExit').hidden=false;return;}if(r&&!r.done){if(r.retry){Arcade.message='请先重试保存结算';renderArcade();return;}if(!arcadeSettle(0,'主动离桌'))return;}
-  $('arcExit').hidden=true;Arcade.round=null;showScreen('lobby');renderLobby();}
+  $('arcExit').hidden=true;Arcade.round=null;goModeScreen();}
 function initArcade(){document.querySelectorAll('[data-game]').forEach(function(b){b.addEventListener('click',function(){guandanSelected=b.dataset.game==='guandan';if(!guandanSelected)hubGame=b.dataset.game;document.querySelectorAll('.game-tile').forEach(function(x){x.classList.toggle('selected',x===b);x.setAttribute('aria-pressed',String(x===b));});var hints={holdem:'德州扑克 · 两张底牌与五张公共牌 · 可选自由匹配或排位',blackjack:'21点 · 要牌或停牌，尽量接近21 · 支持免费练习',gold:'炸金花 · 四人对局，第三轮起可比牌 · 支持免费练习',dice:'猜骰子 · 先选押法并加入清单，再统一开奖 · 支持免费练习',diceduel:'骰子比大小 · 你与 3 位AI各掷 3 骰，豹子翻倍 · 支持免费练习',guandan:'掼蛋 · 对座是队友，轮流出牌 · 不扣金币，支持托管'};$('hubHint').textContent=hints[b.dataset.game];$('lbStartBtn').textContent='开始'+(guandanSelected?'掼蛋':hubGame==='holdem'?'游戏':ARCADE_NAMES[hubGame]);});});
   $('arcActions').addEventListener('click',function(e){var b=e.target.closest('[data-arc]');if(b&&!b.disabled)arcadeDispatch(b.dataset.arc);});$('arcBet').addEventListener('change',renderArcade);
   $('arcSettings').addEventListener('click',function(){initAudio();sfx('click');openSettings();});
@@ -5677,7 +5687,7 @@ function exitGame() {
   G.players = [];
   render();
   renderLobby();
-  showScreen('lobby');
+  goModeScreen();
   showToast('💾 已保存并离开牌桌', 1600);
   if (session) {
     $('sessionSummary').textContent = '本次 ' + session.hands + ' 手 · 胜手 ' + session.wins
@@ -5685,6 +5695,8 @@ function exitGame() {
       + ' 金币 · 奖励及其他收支 ' + (player.coins - session.coins - session.net)
       + ' 金币 · 段位变化 ' + (player.rankPoints - session.rank) + ' 分';
     openOverlay('ovSession');
+    var sb = $('sessionBack');
+    if (sb) sb.onclick = function () { sfx('click'); closeOverlay('ovSession'); };
     G.session = null;
   }
 }
@@ -6905,7 +6917,7 @@ function finishHoldemRank15(winnings,potTotal,net){
 var oldPlay15=playHand;
 playHand=async function(){if(App.mode==='ranked'){
   if(player.rankedPending||G.rankRetry)return;
-  if(!atomic15(function(){player.rankedPending={id:Date.now()+'-'+randomInt(1000000000),game:'holdem',difficulty:App.difficulty};})){G.active=false;showScreen('lobby');return;}
+  if(!atomic15(function(){player.rankedPending={id:Date.now()+'-'+randomInt(1000000000),game:'holdem',difficulty:App.difficulty};})){G.active=false;G.players=[];goModeScreen();return;}
   G.players.forEach(function(p){p.chips=G.buyIn;});
  }G.growthStart15=G.players[0].chips;return oldPlay15();};
 var oldNext15=nextHand;
@@ -6940,7 +6952,7 @@ renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var r
 /* 所有游戏共用模式及难度入口。 */
 renderModeCards=function(){if(!player)return;var s=profile15(hubGame),body=$('modeBody');body.innerHTML='';
  ['quick','ranked'].forEach(function(mode){var card=document.createElement('button');card.className='mode-card '+mode;
-  card.innerHTML='<div class="mode-name">'+(mode==='quick'?'自由匹配':'独立排位')+'</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>'+(mode==='quick'?'金币对局 · 本地AI或庄家<br>四档挑战，自主选择':'单一模式 · 不挑选难度<br>对手强度随你的段位变化<br>'+rankInfo(hubGame).name+' · 当前对手 '+LEVEL_NAMES[level15(rankedDifficultyFor(hubGame))]+'级<br>可兑换积分 '+s.redeemPoints+'<br>胜 +50 ~ +120 · 负 -18 ~ -40<br>平局不变 · 段位只靠积分晋级')+'</p></div>';
+  card.innerHTML='<div class="mode-name">'+(mode==='quick'?'自由匹配':'独立排位')+'</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>'+(mode==='quick'?'金币对局 · 本地AI或庄家<br>四档挑战，自主选择<br>门票 '+ENTRY_FEE_TEXT+'（按场次）':'单一模式 · 不挑选难度<br>对手强度随你的段位变化<br>'+rankInfo(hubGame).name+' · 当前对手 '+LEVEL_NAMES[level15(rankedDifficultyFor(hubGame))]+'级<br>可兑换积分 '+s.redeemPoints+'<br>胜 +50 ~ +120 · 负 -18 ~ -40<br>门票 '+ENTRY_FEE_TEXT+'（按对手档位）')+'</p></div>';
   card.onclick=function(){App.mode=mode;
     if(mode==='ranked'){var d=rankedDifficultyFor(hubGame);App.difficulty=d;tryEnterGame(d);return;}
     renderDifficultyCards();showScreen('difficulty');};body.appendChild(card);
@@ -6949,15 +6961,21 @@ renderModeCards=function(){if(!player)return;var s=profile15(hubGame),body=$('mo
  body.appendChild(bar);$('sellPoints15').onclick=function(){if(!exchangePoints(hubGame,'sell',Number($('exchangeAmount15').value)))showToast('兑换未完成：请检查积分、数量或未结束的对局',2500,true);};
 };
 renderDifficultyCards=function(){var body=$('diffBody');body.innerHTML='';GAME_LEVELS.forEach(function(key,i){var cfg=DIFFICULTY_CONFIG[key],locked=hubGame==='holdem'&&App.mode!=='ranked'&&player.coins<cfg.minCoins,card=document.createElement('button');card.className='diff-card '+key+(locked?' locked':'');
- var lines=hubGame==='holdem'?'盲注 '+cfg.sb+'/'+cfg.bb+'<br>AI策略强度递增':hubGame==='gold'?'AI看牌与加注策略逐档加强':hubGame==='blackjack'?'公平洗牌 · 庄家软17停牌<br>'+(i<2?'显示点数与辅助提示':'显示点数，自主决策'):hubGame==='diceduel'?'公平六面骰 · 对手同样随机<br>难度只改变单轮投入上限':'公平六面骰 · 不改变中奖概率<br>3骰 / 5骰 · 多项下注';
- card.innerHTML='<div class="diff-name">'+LEVEL_NAMES[i]+'</div><div class="diff-info">'+lines+'<p>'+(App.mode==='ranked'?'胜 +'+(i+1)+' / 负 -'+(i+1)+' 积分<br>独立比赛筹码':hubGame==='holdem'?'最低金币 '+cfg.minCoins+' · 入场 '+cfg.entryFee:(hubGame==='blackjack'?'初始下注上限 ':'单轮总投入上限 ')+[100,500,2000,10000][i]+(hubGame==='blackjack'?' · 加倍可达2倍':''))+'</p><small>纯单机，无真人联机</small></div>';
+ var lim=[100,500,2000,10000][i],fee=entryFeeFor(key),feeShort=player.coins<fee;
+ var lines=hubGame==='holdem'?'盲注 '+cfg.sb+'/'+cfg.bb+'<br>AI策略强度递增':hubGame==='gold'?'AI看牌与加注策略逐档加强':hubGame==='blackjack'?'公平洗牌 · 庄家软17停牌<br>'+(i<2?'显示点数与辅助提示':'显示点数，自主决策'):hubGame==='diceduel'?'公平六面骰 · 对手同样随机<br>难度只改变投入上限':'公平六面骰 · 不改变中奖概率<br>3骰 / 5骰 · 可同轮多押';
+ var foot=App.mode==='ranked'?'段位分 胜 +'+RANK_POINT_WIN[i]+' / 负 -'+RANK_POINT_LOSS[i]+'<br>门票 '+fmt(fee)+' 金币 · 独立比赛筹码':hubGame==='holdem'?'最低金币 '+fmt(cfg.minCoins)+' · 门票 '+fmt(fee):(hubGame==='blackjack'?'初始下注上限 '+lim+' · 加倍可达 2 倍':hubGame==='dice'?'单注上限 '+lim+' / 单轮总投入上限 '+(lim*DICE_ROUND_FACTOR):'单轮投入上限 '+lim)+'<br>门票 '+fmt(fee)+' 金币';
+ card.innerHTML='<div class="diff-name">'+LEVEL_NAMES[i]+'</div><div class="diff-info">'+lines+'<p>'+foot+(feeShort?'<br><b class="fee-warn">余额不足门票</b>':'')+'</p><small>纯单机，无真人联机</small></div>';
  card.onclick=function(){tryEnterGame(key);};body.appendChild(card);});};
 tryEnterGame=function(key){if(!GAME_LEVELS.includes(key)||G.active||(Arcade.round&&!Arcade.round.done)||player.rankedPending||arcadeData().pending)return false;var cfg=DIFFICULTY_CONFIG[key];
+ var fee=entryFeeFor(key);
  if(hubGame!=='holdem'){App.difficulty=key;Arcade.difficulty=key;Arcade.mode=App.mode==='ranked'?'ranked':'coins';return openArcade(hubGame);}
  if(App.mode!=='ranked'){
-  if(player.coins<cfg.minCoins){showToast('自由场至少需要 '+cfg.minCoins+' 金币',2000,true);return false;}
-  if(!atomic15(function(){if(!spendCoins(cfg.entryFee))throw Error('金币不足');}))return false;
+  if(player.coins<cfg.minCoins){showToast('自由场至少需要 '+fmt(cfg.minCoins)+' 金币',2000,true);return false;}
  }
+ /* 金币场与排位都要付门票 */
+ if(player.coins<fee){showToast('💸 门票 '+fmt(fee)+' 金币，余额不足',2400,true);return false;}
+ if(!atomic15(function(){if(!spendCoins(fee))throw Error('门票扣款失败');}))return false;
+ Arcade.entryFeePaid=fee;showToast('💸 扣除门票 '+fmt(fee)+' 金币',1600);
  App.difficulty=key;startGame(key);return true;
 };
 
@@ -6965,11 +6983,17 @@ tryEnterGame=function(key){if(!GAME_LEVELS.includes(key)||G.active||(Arcade.roun
 Arcade.rankedBank=500;Arcade.difficulty='easy';Arcade.diceCount=3;Arcade.basket=[];
 function arcadeLimit15(){return [100,500,2000,10000][level15(Arcade.difficulty)];}
 function arcadeRoundLimit15(){return arcadeLimit15()*(Arcade.game==='blackjack'?2:1);}
+/* 猜骰子可以同时押多个结果：单注上限仍是 arcadeLimit15，单轮总投入上限放宽到 5 倍。
+   中奖档按含本金倍数返还，未中的档位本金不退。 */
+var DICE_ROUND_FACTOR=5;
+function arcadeDiceRoundLimit(){return arcadeLimit15()*DICE_ROUND_FACTOR;}
+function arcadeStakeLimit15(){return Arcade.game==='dice'?arcadeDiceRoundLimit():arcadeLimit15();}
+function arcadeStakeLimitText(){return Arcade.game==='dice'?'单注上限 '+arcadeLimit15()+' / 单轮总投入上限 '+arcadeDiceRoundLimit():Arcade.game==='blackjack'?'初始下注上限 '+arcadeLimit15()+' / 加倍总投入上限 '+arcadeRoundLimit15():'单轮投入上限 '+arcadeLimit15();}
 function blackjackDoubleReason(){var r=Arcade.round;return !r||r.done?'当前没有可加倍的牌局':r.retry?'请先重试保存结算':r.hand.length!==2?'要牌后不能加倍，仅限起手两张':arcadeBalance()<r.base?'剩余筹码不足，需再补 '+r.base:r.stake+r.base>arcadeRoundLimit15()?'已达到加倍总投入上限':'';}
 function arcadeBank15(){return [500,2000,10000,50000][level15(Arcade.difficulty)];}
 arcadeBalance=function(){return Arcade.mode==='practice'?Arcade.practice:Arcade.mode==='ranked'?Arcade.rankedBank:player.coins;};
 arcadePay=function(n){if(!Number.isSafeInteger(n)||n<0||n>arcadeBalance())return false;if(Arcade.mode==='practice')Arcade.practice-=n;else if(Arcade.mode==='ranked')Arcade.rankedBank-=n;else return spendCoins(n);return true;};
-arcadeBegin=function(bet){if(G.active||(Arcade.round&&!Arcade.round.done)||!Number.isSafeInteger(bet)||bet<=0||bet%10||bet>arcadeLimit15())return false;
+arcadeBegin=function(bet){if(G.active||(Arcade.round&&!Arcade.round.done)||!Number.isSafeInteger(bet)||bet<=0||bet%10||bet>arcadeStakeLimit15())return false;
  arcadeRecover();if(arcadeData().pending)return false;
  if(Arcade.mode==='ranked')Arcade.rankedBank=arcadeBank15();
  var bank=arcadeBalance(),r={id:Date.now()+'-'+randomInt(1000000000),game:Arcade.game,mode:Arcade.mode,difficulty:Arcade.difficulty,stake:bet,base:bet,done:false};
@@ -6999,7 +7023,15 @@ arcadeSettle=function(payout,label){var r=Arcade.round;if(!r||r.done||!Number.is
 arcadeRecover=function(){var p=arcadeData().pending;if(!p||(Arcade.round&&!Arcade.round.done&&Arcade.round.id===p.id))return;
  atomic15(function(){if(p.mode==='ranked')applyRankResult15(p.game,p.difficulty,-1);arcadeRecord(p.game,p.stake,0,'未完局离开');arcadeData().history[0].mode=p.mode||'coins';arcadeData().history[0].unit=p.mode==='ranked'?'比赛筹码':'金币';arcadeData().pending=null;});};
 var oldOpenArcade15=openArcade;
-openArcade=function(game){if(!GAME_IDS.includes(game)||game==='holdem'||G.active||(Arcade.round&&!Arcade.round.done)||player.rankedPending)return false;arcadeRecover();if(arcadeData().pending)return false;Arcade.basket=[];Arcade.rankedBank=arcadeBank15();var ok=oldOpenArcade15(game);if(ok){Arcade.message='四档单机挑战 · '+(Arcade.mode==='ranked'?'排位仅结算积分，金币不参与比赛':'自由金币对局；练习不计成长奖励');renderArcade();}return ok;};
+/* 进入小游戏牌桌 = 进场：金币场与排位都要付门票，练习场免费 */
+openArcade=function(game){if(!GAME_IDS.includes(game)||game==='holdem'||G.active||(Arcade.round&&!Arcade.round.done)||player.rankedPending)return false;arcadeRecover();if(arcadeData().pending)return false;
+ var fee=entryFeeFor(Arcade.difficulty||App.difficulty);
+ if(Arcade.mode!=='practice'){
+  if(player.coins<fee){showToast('💸 门票 '+fmt(fee)+' 金币，余额不足',2400,true);return false;}
+  if(!atomic15(function(){if(!spendCoins(fee))throw Error('门票扣款失败');}))return false;
+  Arcade.entryFeePaid=fee;
+ }else Arcade.entryFeePaid=0;
+ Arcade.basket=[];Arcade.rankedBank=arcadeBank15();var ok=oldOpenArcade15(game);if(ok){Arcade.message='四档单机挑战 · '+(Arcade.mode==='ranked'?'排位仅结算积分，金币不参与比赛':'自由金币对局')+' · 门票 '+fmt(Arcade.entryFeePaid)+'，练习场免门票';if(Arcade.entryFeePaid>0)showToast('💸 扣除门票 '+fmt(Arcade.entryFeePaid)+' 金币',1600);renderArcade();}return ok;};
 
 /* 公平骰子：总点数分布通过枚举生成，赔率为含本金总返还倍数。 */
 var diceDistribution15={};
@@ -7014,7 +7046,10 @@ diceResult=function(values,choice){var count=values.length,sum=values.reduce(fun
 function diceChoiceName15(choice){return choice==='small'?'小':choice==='big'?'大':choice==='any'?'任意豹子':choice.indexOf('sum')===0?'总点数 '+choice.slice(3):'全 '+choice.slice(6)+' 豹子';}
 function diceAddBet(choice,n){if((Arcade.round&&!Arcade.round.done)||!Number.isSafeInteger(n)||n<=0||n%10||!diceMultiplier(Arcade.diceCount,choice))return false;
  var total=Arcade.basket.reduce(function(a,b){return a+b.amount;},0)+n,bank=Arcade.mode==='ranked'?arcadeBank15():arcadeBalance();
- if(total>bank||total>arcadeLimit15())return false;var b=Arcade.basket.find(function(x){return x.choice===choice;});if(b)b.amount+=n;else Arcade.basket.push({choice:choice,amount:n});renderArcade();return true;}
+ var cur=Arcade.basket.find(function(x){return x.choice===choice;}),next=(cur?cur.amount:0)+n;
+ if(next>arcadeLimit15())return false;                 /* 单个结果档位上限 */
+ if(total>bank||total>arcadeDiceRoundLimit())return false;  /* 单轮总投入上限：骰子可同轮多押 */
+ var b=cur;if(b)b.amount+=n;else Arcade.basket.push({choice:choice,amount:n});renderArcade();return true;}
 function diceRollBasket(){if(!Arcade.basket.length)return false;var bets=Arcade.basket.map(function(b){return Object.assign({},b);}),bet=bets.reduce(function(a,b){return a+b.amount;},0),r=arcadeBegin(bet);if(!r)return false;
  r.bets=bets;r.dice=Array.from({length:Arcade.diceCount},function(){return 1+randomInt(6);});var payout=0;
  bets.forEach(function(b){b.multiplier=diceMultiplier(r.dice.length,b.choice);b.payout=diceResult(r.dice,b.choice).win?b.amount*b.multiplier:0;payout+=b.payout;});
@@ -7099,7 +7134,7 @@ function renderDice15(){
  var result=r&&r.bets?'<div class="dice-result15">'+r.bets.map(function(b){return diceChoiceName15(b.choice)+'：押'+b.amount+'，返'+b.payout+'，净'+(b.payout-b.amount);}).join('； ')+'</div>':'';
  $('arcTable').innerHTML='<div class="dice-layout15">'
   +'<div class="dice-head15"><div class="dice-faces15">'+(r?r.dice:Array(count).fill(null)).map(function(v){return '<span class="arc-die">'+(v?diceFace(v):'?')+'</span>';}).join('')+'</div>'
-  +'<div class="dice-headtext"><span>点格子即按当前金额下注，同轮多项命中分别返还</span><label>骰子数 <select id="diceCount15"'+(live?' disabled':'')+'><option value="3"'+(count===3?' selected':'')+'>3 颗</option><option value="5"'+(count===5?' selected':'')+'>5 颗</option></select></label></div></div>'
+  +'<div class="dice-headtext"><span><b>同轮可押多个结果</b>：点格子按当前金额下注，中奖档按倍数返还（含本金），未中的档位本金扣除</span><label>骰子数 <select id="diceCount15"'+(live?' disabled':'')+'><option value="3"'+(count===3?' selected':'')+'>3 颗</option><option value="5"'+(count===5?' selected':'')+'>5 颗</option></select></label></div></div>'
   +'<div class="dice-betgrid main">'+main+'</div>'
   +'<div class="dice-betsub">精确总点数 '+(count===3?'小 4–10 / 大 11–17':'小 6–17 / 大 18–29')+' · 全同为豹子，大小均输</div>'
   +'<div class="dice-betgrid sums">'+sums+'</div>'
@@ -7117,7 +7152,7 @@ renderArcade=function(){oldRenderArcade15();if(!player)return;var live=Arcade.ro
  var selectedBet=Number($('arcBet').value),ladder=arcBetLadder();
  $('arcBet').innerHTML=ladder.map(function(n){return '<option value="'+n+'">'+n+'</option>';}).join('');
  $('arcBet').value=String(pickBet15(ladder,selectedBet));
- $('arcModeLabel').textContent=LEVEL_NAMES[level15(Arcade.difficulty)]+' · '+(Arcade.mode==='ranked'?'独立排位，比赛筹码不兑换':Arcade.mode==='practice'?'免费练习，不计任务成就':'自由匹配，结算金币')+(Arcade.game==='blackjack'?' · 初始下注上限 '+arcadeLimit15()+' / 加倍总投入上限 '+arcadeRoundLimit15():' · 单轮投入上限 '+arcadeLimit15());
+ $('arcModeLabel').textContent=LEVEL_NAMES[level15(Arcade.difficulty)]+' · '+(Arcade.mode==='ranked'?'独立排位，比赛筹码不兑换':Arcade.mode==='practice'?'免费练习，免门票，不计任务成就':'自由匹配，结算金币')+' · 门票 '+fmt(Arcade.mode==='practice'?0:(Arcade.entryFeePaid||0))+' · '+arcadeStakeLimitText();
  $('arcBalance').textContent=fmt(arcadeBalance())+(Arcade.mode==='ranked'?' 比赛筹码':Arcade.mode==='practice'?' 练习筹码':' 金币');
  $('arcMode').innerHTML='<option value="coins">自由匹配</option><option value="ranked">独立排位</option><option value="practice">免费练习</option>';$('arcMode').value=Arcade.mode;
  if(!$('arcDifficulty15')){var sel=document.createElement('select');sel.id='arcDifficulty15';sel.setAttribute('aria-label','游戏难度');$('arcMode').parentNode.after(sel);}

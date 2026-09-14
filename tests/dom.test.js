@@ -221,8 +221,8 @@ function click(el) {
   ok($('gameScreen').classList.contains('active'), '进入游戏界面');
   ok($('lobbyScreen').style.display === 'none', '大厅已隐藏');
   ok($('topbar').querySelector('#pLevel').textContent === 'Lv.1', '顶栏等级正常');
-  ok($('pCoins').textContent === String(Number(coinBefore) + ci1),
-     '顶栏金币与大厅一致（签到后 新签到首档，实际 ' + $('pCoins').textContent + '）');
+  ok($('pCoins').textContent === String(Number(coinBefore) + ci1 - 50) /* 新手门票 50（ENTRY_FEE.easy） */,
+     '顶栏金币 = 签到后余额 - 新手门票（实际 ' + $('pCoins').textContent + '）');
   const seats = [0,1,2,3].map(i => $('seat' + i));
   ok(seats.every(s => s.querySelector('.chips')), '4 个座位均渲染了筹码');
 
@@ -255,7 +255,11 @@ function click(el) {
   ok($('ovExitConfirm').classList.contains('show'), '弹出退出确认');
   click($('exitConfirmYes'));
   await tick(120);
-  ok($('lobbyScreen').style.display === 'flex', '退出后回到大厅');
+  ok($('modeScreen').classList.contains('active'), '退出对局后回到选择模式界面');
+  ok($('lobbyScreen').style.display === 'none', '退出后不直接回大厅');
+  click($('modeBack'));
+  await tick(60);
+  ok($('lobbyScreen').style.display === 'flex', '从选择模式可以返回大厅');
 
   /* 存档持久化 */
   const raw = window.localStorage.getItem('texas_poker_device_saves_v2');
@@ -277,7 +281,7 @@ function click(el) {
   await tick(30);
   click($('exitConfirmYes'));
   await tick(600);
-  ok($('lobbyScreen').style.display === 'flex', '发牌途中离桌可正常返回大厅');
+  ok($('modeScreen').classList.contains('active'), '发牌途中离桌回到选择模式界面');
   ok(errors.length === 0, '发牌途中离桌无未捕获异常'
      + (errors.length ? '：' + errors.slice(0, 3).join(' | ') : '') + '（离桌时' + (dealing ? '正在发牌' : '已进入下注') + '）');
 
