@@ -434,22 +434,23 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   /* ---- 段位 ---- */
   ctx.createNewSaveAt(1);
   ok(ctx.player.rankPoints === 0 && ctx.player.rankTier === 0, '新档段位从青铜 0 分开始');
-  ok(ctx.player.rankedPoints === 100, '新档初始排位积分为 100');
+  ok(ctx.player.rankedPoints === 0 && ctx.player.games && ctx.player.games.holdem.redeemPoints === 0, '新档不预发排位兑换积分，四游戏资产独立');
   ctx.player.name = '自定义牌手';
   ok(ctx.player.name === '自定义牌手', '用户名称可自定义并写入玩家存档');
   ctx.player.coins = 500; // 单机初始余额
   var rankCoins = ctx.player.coins;
-  ok(ctx.spendCoins(100) === true, '100 金币可兑换排位积分的金币扣除接口可用');
-  ctx.player.rankedPoints++;
-  ok(ctx.player.coins === rankCoins - 100, '兑换 1 排位积分消耗 100 金币');
+  ok(ctx.spendCoins(100) === true, '金币扣除底层接口可用');
+  ctx.player.coins = rankCoins;
+  ok(ctx.exchangePoints('holdem','buy',1) === true && ctx.player.coins === rankCoins - 100 && ctx.player.games.holdem.redeemPoints === 1, '100金币兑换1个德州排位积分');
+  ok(ctx.exchangePoints('holdem','sell',1) === true && ctx.player.coins === rankCoins && ctx.player.games.holdem.redeemPoints === 0, '1个排位积分兑换100金币');
   ctx.addRankPoints(120);
   ok(ctx.rankTierFor(ctx.player.rankPoints) === 1, '积分 120 晋升白银');
   ok(ctx.rankInfo().name === '白银', 'rankInfo 返回白银');
   var coinsBeforeRank = ctx.player.coins;
   ctx.addRankPoints(150);                       // 270 → 黄金
   ok(ctx.rankTierFor(ctx.player.rankPoints) === 2, '积分 270 晋升黄金');
-  ok(ctx.player.coins > coinsBeforeRank,
-     '升段发放奖励（' + coinsBeforeRank + ' → ' + ctx.player.coins + '）');
+  ok(ctx.player.coins === coinsBeforeRank,
+     '升段不直接发放金币（' + coinsBeforeRank + ' → ' + ctx.player.coins + '）');
   ctx.addRankPoints(-1000);
   ok(ctx.player.rankPoints === 0, '积分不会低于 0');
   ok(ctx.rankTierFor(0) === 0, '0 分回落青铜');
@@ -478,14 +479,16 @@ const sleepTick = () => new Promise(r => setImmediate(r));
      '周常已初始化，周键 = ' + (ctx.player.weekly && ctx.player.weekly.week));
   ok(ctx.weekKeyOf('2026-09-13') === '2026-09-07', '2026-09-13（周日）归属周键 2026-09-07');
   ok(ctx.weekKeyOf('2026-09-14') === '2026-09-14', '2026-09-14（周一）开启新周');
-  ctx.bumpWeeklyProgress('w_play_30', 10);
-  ok(ctx.player.weekly.progress['w_play_30'] === 10, '周常进度累加');
-  for (var wi2 = 0; wi2 < 25; wi2++) ctx.bumpWeeklyProgress('w_play_30', 1);
-  ok(ctx.checkWeeklyHasClaimable() === true, '达标后出现可领取项');
+  var weeklyTask = ctx.WEEKLY_TASKS.find(function(t){return t.game==='holdem'&&t.event==='hands';});
+  ctx.recordGrowth15('holdem',{hands:10},'easy');
+  ok(ctx.player.weekly.progress[weeklyTask.id] === 10, '德州周常准确累计10局');
+  ok(ctx.checkWeeklyHasClaimable() === false, '未达15局不可领取');
+  ctx.recordGrowth15('holdem',{hands:5},'easy');
+  ok(ctx.checkWeeklyHasClaimable() === true, '达到15局出现可领取提醒');
   var cWeekly = ctx.player.coins;
-  ctx.claimWeekly('w_play_30');
-  ok(ctx.player.coins === cWeekly + 20, '领取周常首阶段奖励 20');
-  ok(ctx.claimWeekly('w_play_30') === false, '周常不可重复领取');
+  ok(ctx.claimWeekly(weeklyTask.id) === true, '达标周常领取成功');
+  ok(ctx.player.coins === cWeekly + weeklyTask.reward, '周常奖励金额准确');
+  ok(ctx.claimWeekly(weeklyTask.id) === false, '周常不可重复领取');
 
   /* ---- 商城与道具 ---- */
   ctx.createNewSaveAt(1);
@@ -842,7 +845,7 @@ const sleepTick = () => new Promise(r => setImmediate(r));
     achievements: {}, newbieTasks: {}, newbieProgress: {}
   };
   var mg = ctx.migratePlayer(legacy);
-  ok(mg.version === 14, '迁移后版本号升级到 14');
+  ok(mg.version === 15, '迁移后版本号升级到 15');
   ok(mg.coins === 4242 && mg.level === 7, '迁移保留原有金币与等级');
   ok(mg.rankPoints === 0 && typeof mg.musicOn === 'boolean', '迁移补齐段位与音乐字段');
   ok(!!mg.stats && mg.stats.vpip === 0, '迁移补齐统计结构');
@@ -852,18 +855,16 @@ const sleepTick = () => new Promise(r => setImmediate(r));
 
   /* ---- 排位资格、兑换与首次升段奖励 ---- */
   ctx.G.active = false; ctx.G.players = [];
-  ctx.createNewSaveAt(1); ctx.App.mode = 'ranked';
-  ctx.player.coins = 10000; ctx.player.rankedPoints = 3;
+  ctx.createNewSaveAt(1); ctx.App.mode = 'ranked'; ctx.hubGame='holdem';
+  ctx.player.coins = 500;
   const realStart = ctx.startGame;
   let started = 0; ctx.startGame = () => { started++; ctx.G.active = true; };
-  ok(ctx.tryEnterGame('champion') === false && ctx.player.rankedPoints === 3, '不够场次门槛不扣排位积分');
-  ctx.player.rankedPoints = 0;
-  ok(ctx.tryEnterGame('easy') === false && ctx.player.coins === 10000, '门票不足不自动兑换');
-  ok(ctx.buyRankedPoints(1) && ctx.player.coins === 9900 && ctx.player.rankedPoints === 1, '兑换调用真实函数并同步扣金币');
+  ok(ctx.buyRankedPoints(1) && ctx.player.coins === 400 && ctx.profile15('holdem').redeemPoints === 1, '100金币兑换1德州积分');
+  ok(ctx.profile15('holdem').rankPoints === 0, '兑换不购买段位分');
   ok(!ctx.buyRankedPoints(-1) && !ctx.buyRankedPoints(1.5), '拒绝负数和小数兑换');
-  ok(!ctx.tryEnterGame('easy') && ctx.player.rankedPoints === 1, '兑换后资产不足一万禁止入场且不扣票');
-  ctx.player.coins = 10000;
-  ok(ctx.tryEnterGame('easy') && started === 1 && ctx.player.rankedPoints === 0, '合法入场只扣一次门票');
+  ok(ctx.exchangePoints('holdem','sell',1) && ctx.player.coins === 500, '1积分可反向兑换100金币');
+  ctx.player.coins=0;
+  ok(ctx.tryEnterGame('champion') && started===1 && ctx.player.coins===0, '排位零金币零积分也可进入，不收门票');
   ok(!ctx.tryEnterGame('easy') && !ctx.buyRankedPoints(1), '在牌桌拒绝重复入场及兑换');
   ctx.startGame = realStart; ctx.G.active = false;
   ctx.player.rankPoints = 0; ctx.player.rankPeak = 0;
@@ -928,7 +929,8 @@ const sleepTick = () => new Promise(r => setImmediate(r));
 
   // 隔离验证离桌：投入计入亏损，结算后退出不重复扣分。
   ctx.createNewSaveAt(1); ctx.App.mode = 'ranked';
-  ctx.player.rankPoints = 3; ctx.player.coins = 1000;
+  ctx.player.rankPoints = 3; ctx.profile15('holdem').rankPoints=3; ctx.profile15('holdem').redeemPoints=2; ctx.player.coins = 1000;
+  ctx.player.rankedPending={id:'exit-test',game:'holdem',difficulty:'easy'};
   ctx.G.players = [ctx.makePlayer(0, '测试', '', true, 'human', 950, '')];
   ctx.G.players[0].totalBet = 50;
   ctx.G.active = true; ctx.G.handOver = false; ctx.G.handSettled = false; ctx.G.settling = false;
@@ -936,10 +938,10 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   let actionReleased = false; ctx.humanResolve = () => { actionReleased = true; };
   ctx.exitGame();
   ok(actionReleased && !ctx.G.active && ctx.G.players.length === 0, '离桌释放待操作Promise并清空牌桌');
-  ok(ctx.player.coins === 950 && ctx.player.stats.totalNet === -50 && ctx.player.rankPoints === 0, '离桌正确记录投入亏损及实际扣分');
+  ok(ctx.player.coins === 1000 && ctx.player.stats.totalNet === 0 && ctx.player.rankPoints === 0 && ctx.profile15('holdem').redeemPoints===1, '排位离桌扣本游戏积分，不扣金币不混入金币盈亏');
   ok(doc.getElementById('ovSession').classList.contains('show'), '离桌显示本次汇总');
   const exitCoins = ctx.player.coins; ctx.exitGame();
-  ok(ctx.player.coins === exitCoins && ctx.player.stats.totalNet === -50, '重复离桌不重复扣款或统计');
+  ok(ctx.player.coins === exitCoins && ctx.player.stats.totalNet === 0 && ctx.profile15('holdem').redeemPoints===1, '重复离桌不重复扣款或统计');
 
   // ---- 汇总 ----
   console.log('\n============================');

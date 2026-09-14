@@ -944,6 +944,22 @@
   #arcBack, #arcRules, #arcRefill { background:transparent; }
   button:focus-visible, select:focus-visible { outline:2px solid #d8c08b; outline-offset:3px; }
   @media(prefers-reduced-motion:reduce) { *, *::before, *::after { animation:none!important; transition:none!important; } }
+
+  #modeBody{position:relative;padding-bottom:80px;}
+  #modeBody .mode-card{height:300px;}
+  .exchange15{position:absolute;bottom:12px;left:3%;width:94%;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;color:#c7ba99;font-size:12px;}
+  .exchange15 input{width:65px;}
+  .exchange15 small{width:100%;text-align:center;color:#92a6b0;}
+  .exchange15 button,.game-filter15 button,.dice-order15 button{border:0;border-radius:8px;background:#cbb17322;color:#e5d1a9;padding:8px 10px;cursor:pointer;}
+  .exchange15 input,.dice-order15 select,#arcDifficulty15{border:0;border-radius:6px;background:#24313e;color:#e3d6b8;padding:6px;}
+  .game-filter15{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;}
+  .dice-layout15{width:100%;display:flex;gap:18px;align-items:center;}
+  .dice-faces15{flex:0 0 28%;display:flex;flex-wrap:wrap;justify-content:center;}
+  .dice-faces15 .arc-die{width:52px;height:52px;margin:5px;}.dice-faces15 svg{width:44px;height:44px;}
+  .dice-order15{flex:1;font-size:12px;line-height:1.8;}.dice-order15 label{margin-right:10px;}.dice-order15 p{margin:6px 0;color:#aebcc5;}
+  .dice-basket15{display:flex;gap:6px;flex-wrap:wrap;max-height:80px;overflow:auto;color:#e0c791;}.dice-basket15 span{background:#fff1;padding:2px 8px;border-radius:8px;}
+  .dice-result15{color:#d9c791;max-height:55px;overflow:auto;}.assist15{width:100%;text-align:center;color:#aabfb9;font-size:11px;}
+
 </style>
 </head>
 <body>
@@ -1002,7 +1018,7 @@
         <button class="game-tile selected" data-game="holdem"><span class="tile-art">A<span>♠</span></span><strong>德州扑克</strong><small>读牌与博弈</small></button>
         <button class="game-tile" data-game="blackjack"><span class="tile-art">21</span><strong>21点</strong><small>进退之间的判断</small></button>
         <button class="game-tile" data-game="gold"><span class="tile-art">3<span>♦</span></span><strong>炸金花</strong><small>闷牌与看牌</small></button>
-        <button class="game-tile" data-game="dice"><span class="tile-art">6<span>·</span></span><strong>猜骰子</strong><small>三骰猜大小</small></button>
+        <button class="game-tile" data-game="dice"><span class="tile-art">6<span>·</span></span><strong>猜骰子</strong><small>3/5骰 · 多项下注</small></button>
       </div>
     </div>
     <div class="lobby-bottom">
@@ -1126,7 +1142,7 @@
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">💾 多存档</p>
         <p>共 3 个存档槽，每个独立记录金币、等级、成就与任务。金币用完后可以开新档重玩新手场。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎁 任务与成就</p>
-        <p>小馆内含德州扑克、21点、炸金花、三骰猜大小。大厅选择游戏再点击开始；新游戏提供金币场与免费练习，练习筹码可补满但不可兑换。任务、成就和排位仍为德州专属，新游戏战绩在各自牌桌查看。新游戏未完局刷新或离桌视为放弃已投入筹码。</p>
+        <p>小馆内含德州扑克、21点、炸金花、3/5骰 · 多项下注。大厅选择游戏再点击开始；新游戏提供金币场与免费练习，练习筹码可补满但不可兑换。任务、成就和排位仍为德州专属，新游戏战绩在各自牌桌查看。新游戏未完局刷新或离桌视为放弃已投入筹码。</p>
         <p>每日5项，每项20金币，每天最多100；每周一刷新25项，按阶段奖励20至60金币，每周最多910。成就共1000项，按进阶目标解锁，单项10至2000金币，需在成就页领取。日周刷新以北京时间为准。</p>
         <p>新手场每手开局至少500金币。电脑对手低于500时在下一手前离桌，由新昵称对手带入500补位；玩家不足500会保留余额返回大厅。对手昵称随机生成，仍全部为本地电脑AI，不是真人联机。</p>
         <p>每手使用全新52张牌，安全随机洗牌，不按输赢安排牌型；正常随机可能连续出现相同点数或弱牌。</p>
@@ -1419,7 +1435,7 @@ var activeSlot = 1;
 var allSaves = null;
 
 /* 存档结构版本：11 = 加入音乐 / 段位 / 商城 / 签到 / 周常 / 统计 / 图鉴 */
-var SAVE_VERSION = 14;
+var SAVE_VERSION = 15;
 var WEEK_START_DAY = 1;   // 0=周日, 1=周一
 
 /* 创建新玩家默认状态 */
@@ -1628,6 +1644,7 @@ function timeAgo(ts) {
 
 /* 切换到指定槽位 */
 function switchToSlot(slotNum) {
+  if (G.active) return false;
   if (Arcade && Arcade.round && !Arcade.round.done) return false;
   if (!allSaves.slots[slotNum]) return false;
   // 先保存当前
@@ -1757,7 +1774,7 @@ var ACHIEVEMENTS = [
 var ACH_ROUTES = [
   ['hands','牌桌历练',10,function(p){return p.totalHands;}],
   ['wins','胜局积累',5,function(p){return p.totalWins;}],
-  ['wager','筹码投入',1000,function(p){return p.stats.totalWagered;}],
+  ['wager','筹码投入',1000,function(p){return p.stats ? (p.stats.totalWagered || 0) : 0;}],
   ['showdown','摊牌经验',5,function(p){return p.stats.showdowns;}],
   ['allin','全下行动',3,function(p){return p.stats.allIns;}],
   ['allinwin','全下胜手',2,function(p){return p.stats.allInWins;}],
@@ -2883,7 +2900,7 @@ var ARCADE_NAMES = {blackjack:'21点', gold:'炸金花', dice:'猜骰子'};
 var Arcade = {game:'blackjack', mode:'coins', practice:500, round:null, message:'选择下注后开始', busy:false};
 var ARCADE_RULES = {
   blackjack:'一副52张牌，每局重洗。A按1或11；庄家软17停牌。天然21点净赢下注的1.5倍，普通赢净赢1倍，平局退本金。仅首两张允许加倍，加倍后只补一张。首版不含分牌和保险。未完局离开或刷新视为放弃。',
-  gold:'四人三张牌：豹子 > 顺金 > 金花 > 顺子 > 对子 > 单张；A23为最小顺子，QKA最大；不含235特殊规则。看牌后跟注/加注/比牌费用为闷牌的2倍。第三轮起可比牌，每次比牌支付本人的跟注额；同牌比牌发起者输。第十轮剩余玩家摊牌，完全相同则平分，余数按座位顺序分配。每位AI带入500，每轮新对手；只按自己的牌与公开行为决策。',
+  gold:'四人三张牌：豹子 > 顺金 > 金花 > 顺子 > 对子 > 单张；A23为最小顺子，QKA最大；不含235特殊规则。看牌后跟注/加注/比牌费用为闷牌的2倍。第三轮起可比牌，每次比牌支付本人的跟注额；同牌比牌发起者输。第十轮剩余玩家摊牌，完全相同则平分，余数按座位顺序分配。AI按新手/普通/困难/冠军分别带入500/2000/10000/50000；每轮新对手，只按自己的牌与公开行为决策。',
   dice:'三颗公平六面骰：4–10为小，11–17为大；任意豹子（包括111和666）大小都输。猜中返还本金并净赢1倍下注，否则失去下注。每次下注确认后即时结算，不自动连投。中奖概率105/216，非稳赚玩法。'
 };
 function arcadeData() {
@@ -2954,23 +2971,23 @@ function goldValue(cards){var v=cards.map(function(c){return c.r;}).sort(functio
 function goldCompare(a,b){return cmpHand(goldValue(a),goldValue(b));}
 function goldLabel(cards){return ['单张','对子','顺子','金花','顺金','豹子'][goldValue(cards)[0]];}
 function goldStart(bet){var r=arcadeBegin(bet);if(!r)return;r.deck=shuffle(makeDeck());r.unit=bet;r.turn=1;r.pot=bet*4;r.log=[];r.seats=[];
-  for(var i=0;i<4;i++)r.seats.push({name:i===0?player.name:randomAIName(r.seats.map(function(p){return p.name;})),hand:[r.deck.pop(),r.deck.pop(),r.deck.pop()],seen:false,folded:false,stack:i===0?0:500-bet,paid:bet});Arcade.message='第1轮 · 你可以闷牌跟注，或先看牌';renderArcade();}
+  for(var i=0;i<4;i++)r.seats.push({name:i===0?player.name:randomAIName(r.seats.map(function(p){return p.name;})),hand:[r.deck.pop(),r.deck.pop(),r.deck.pop()],seen:false,folded:false,stack:i===0?0:arcadeBank15()-bet,paid:bet});Arcade.message='第1轮 · 你可以闷牌跟注，或先看牌';renderArcade();}
 function goldResolve(force){var r=Arcade.round,live=r.seats.filter(function(p){return !p.folded;});if(!force&&live.length>1)return false;
   var winners=[live[0]];live.slice(1).forEach(function(p){var c=goldCompare(p.hand,winners[0].hand);if(c>0)winners=[p];else if(c===0)winners.push(p);});
   var human=r.seats[0],idx=winners.indexOf(human),share=idx<0?0:Math.floor(r.pot/winners.length)+(idx<r.pot%winners.length?1:0);
   arcadeSettle(share,winners.map(function(p){return p.name;}).join('、')+' 获胜 · 底池 '+r.pot);return true;}
 function goldAITurns(){var r=Arcade.round;for(var i=1;i<4&&!r.done;i++){var p=r.seats[i];if(p.folded)continue;
-  if(!p.seen&&randomInt(100)<55)p.seen=true;var strength=p.seen?goldValue(p.hand)[0]:-1,cost=r.unit*(p.seen?2:1);
-  if(p.stack<cost||(p.seen&&strength===0&&randomInt(100)<38)){p.folded=true;r.log.push(p.name+' 弃牌');continue;}
-  if(p.seen&&strength>=1&&r.unit<r.base*4&&p.stack>=cost*2&&randomInt(100)<22){r.unit+=r.base;cost=r.unit*2;r.log.push(p.name+' 加注');}
+  if(!p.seen&&randomInt(100)<[30,55,80,95][level15(Arcade.difficulty)])p.seen=true;var strength=p.seen?goldValue(p.hand)[0]:-1,cost=r.unit*(p.seen?2:1);
+  if(p.stack<cost||(p.seen&&strength===0&&randomInt(100)<[15,30,45,60][level15(Arcade.difficulty)])){p.folded=true;r.log.push(p.name+' 弃牌');continue;}
+  if(p.seen&&strength>=1&&r.unit<r.base*4&&p.stack>=cost*2&&randomInt(100)<[10,22,36,50][level15(Arcade.difficulty)]){r.unit+=r.base;cost=r.unit*2;r.log.push(p.name+' 加注');}
   p.stack-=cost;p.paid+=cost;r.pot+=cost;
   if(r.turn>=3&&randomInt(100)<25){var candidates=r.seats.filter(function(q){return q!==p&&!q.folded;});if(candidates.length){var target=candidates[randomInt(candidates.length)];if(p.stack>=cost){p.stack-=cost;p.paid+=cost;r.pot+=cost;var loser=goldCompare(p.hand,target.hand)>0?target:p;loser.folded=true;r.log.push(p.name+' 比牌，'+loser.name+' 出局');}}}
   if(goldResolve(false))return;
  }if(r.seats[0].folded){goldResolve(true);return;}if(goldResolve(false))return;r.turn++;if(r.turn>10){goldResolve(true);return;}Arcade.message='第'+r.turn+'轮 · '+r.log.slice(-2).join('；');renderArcade();}
 function goldAction(action,target){var r=Arcade.round;if(!r||r.done||r.retry)return;var p=r.seats[0];if(action==='peek'){p.seen=true;Arcade.message='已看牌：'+goldLabel(p.hand)+' · 跟注费用翻倍';renderArcade();return;}if(action==='fold'){p.folded=true;goldResolve(true);return;}
   if(action==='compare'&&(r.turn<3||!r.seats[target]||r.seats[target].folded||target===0))return;
-  var unit=r.unit+(action==='raise'?r.base:0);if(unit>r.base*4)return;var cost=unit*(p.seen?2:1);if(!arcadeExtra(cost)){Arcade.message='余额不足，请弃牌或结束后切换练习';renderArcade();return;}
-  r.unit=unit;p.paid+=cost;r.pot+=cost;if(action==='compare'){var other=r.seats[target];(goldCompare(p.hand,other.hand)>0?other:p).folded=true;}
+  var unit=r.unit+(action==='raise'?r.base:0);if(unit>r.base*4)return;var cost=unit*(p.seen?2:1);if(!arcadeExtra(cost)){Arcade.message='余额不足或已达本档投入上限，请弃牌；下一局可选择更高档位';renderArcade();return;}
+  r.unit=unit;p.paid+=cost;r.pot+=cost;if(action==='compare'){var other=r.seats[target];var wonCompare=goldCompare(p.hand,other.hand)>0;(wonCompare?other:p).folded=true;if(wonCompare)r.compareWins=(r.compareWins||0)+1;}
   if(p.folded){goldResolve(true);return;}if(!goldResolve(false))goldAITurns();}
 function diceResult(values,choice){var sum=values.reduce(function(a,b){return a+b;},0),triple=values[0]===values[1]&&values[1]===values[2];return {sum:sum,triple:triple,win:!triple&&(choice==='small'?sum>=4&&sum<=10:sum>=11&&sum<=17)};}
 function dicePlay(bet,choice){if(!['small','big'].includes(choice))return;var r=arcadeBegin(bet);if(!r)return;r.dice=[1+randomInt(6),1+randomInt(6),1+randomInt(6)];var result=diceResult(r.dice,choice);r.choice=choice;arcadeSettle(result.win?bet*2:0,result.triple?'豹子，大小都输':'总点数 '+result.sum+' · '+(result.win?'猜中了':'未猜中'));}
@@ -2986,11 +3003,11 @@ function renderArcade(){if(!$('arcTable')||!player)return;var r=Arcade.round,liv
   if(Arcade.game==='blackjack'){
     if(r){table='<div class="arc-seat"><h3>庄家</h3>'+arcCards(r.dealer,function(i){return live&&i===1;})+'<p>'+(live?'暗牌待揭晓':blackjackValue(r.dealer).total+' 点')+'</p></div><div class="arc-seat"><h3>'+escapeHTML(player.name)+'</h3>'+arcCards(r.hand,false)+'<p>'+blackjackValue(r.hand).total+' 点 · 投入 '+r.stake+'</p></div>';}
     else table='<div class="arc-seat"><h3>接近21，不要超过</h3><p>天然21点净赢1.5倍，庄家软17停牌</p></div>';
-    if(live)actions=arcButton('要牌','hit')+arcButton('停牌','stand',false,true)+arcButton('加倍','double',r.hand.length!==2||arcadeBalance()<r.base);else actions=arcButton('发牌 · '+bet,'start',arcadeBalance()<bet,true);
+    if(live)actions=arcButton('要牌','hit')+arcButton('停牌','stand',false,true)+arcButton('加倍','double',r.hand.length!==2||arcadeBalance()<r.base||r.stake+r.base>arcadeLimit15());else actions=arcButton('发牌 · '+bet,'start',arcadeBalance()<bet,true);
   }else if(Arcade.game==='gold'){
     if(r){table=r.seats.map(function(p,i){return '<div class="arc-seat'+(p.folded?' out':'')+'"><h3>'+escapeHTML(p.name)+(i===0?' · 你':' · AI')+'</h3>'+arcCards(p.hand,!r.done&&(i!==0||!p.seen))+'<p>'+(p.folded?'已弃牌':p.seen?'已看牌':'闷牌')+' · 投入 '+p.paid+'</p><p>'+((r.done||i===0&&p.seen)?goldLabel(p.hand):'')+'</p></div>';}).join('');table+='<p style="width:100%;text-align:center;margin:0;color:#ddc68d">底池 '+r.pot+' · 第 '+r.turn+' / 10 轮 · 闷牌单注 '+r.unit+'</p>';}
     else table='<div class="arc-seat"><h3>三张牌，一场心理较量</h3><p>四人桌 · 每人底注 '+bet+' · 最多十轮</p></div>';
-    if(live){var cost=r.unit*(r.seats[0].seen?2:1);actions=arcButton('看牌','peek',r.seats[0].seen)+arcButton('跟注 '+cost,'call',arcadeBalance()<cost,true)+arcButton('加注','raise',r.unit>=r.base*4||arcadeBalance()<(r.unit+r.base)*(r.seats[0].seen?2:1))+arcButton('弃牌','fold');for(var i=1;i<4;i++)if(!r.seats[i].folded)actions+=arcButton('比 '+escapeHTML(r.seats[i].name),'compare-'+i,r.turn<3||arcadeBalance()<cost);}
+    if(live){var cost=r.unit*(r.seats[0].seen?2:1);actions=arcButton('看牌','peek',r.seats[0].seen)+arcButton('跟注 '+cost,'call',arcadeBalance()<cost||r.stake+cost>arcadeLimit15(),true)+arcButton('加注','raise',r.unit>=r.base*4||arcadeBalance()<(r.unit+r.base)*(r.seats[0].seen?2:1)||r.stake+(r.unit+r.base)*(r.seats[0].seen?2:1)>arcadeLimit15())+arcButton('弃牌','fold');for(var i=1;i<4;i++)if(!r.seats[i].folded)actions+=arcButton('比 '+escapeHTML(r.seats[i].name),'compare-'+i,r.turn<3||arcadeBalance()<cost||r.stake+cost>arcadeLimit15());}
     else actions=arcButton('开局 · 底注 '+bet,'start',arcadeBalance()<bet,true);
   }else{
     table='<div style="text-align:center"><div>'+[0,1,2].map(function(i){return '<span class="arc-die">'+(r?diceFace(r.dice[i]):'?')+'</span>';}).join('')+'</div><p>小：4–10　大：11–17　豹子通杀</p></div>';
@@ -3009,7 +3026,7 @@ function arcadeDispatch(action){if(Arcade.busy)return;Arcade.busy=true;try{initA
 function arcadeLeave(confirm){var r=Arcade.round;if(r&&!r.done&&!confirm){$('arcExit').hidden=false;return;}if(r&&!r.done){if(r.retry){Arcade.message='请先重试保存结算';renderArcade();return;}if(!arcadeSettle(0,'主动离桌'))return;}
   $('arcExit').hidden=true;Arcade.round=null;showScreen('lobby');renderLobby();}
 function initArcade(){document.querySelectorAll('[data-game]').forEach(function(b){b.addEventListener('click',function(){hubGame=b.dataset.game;document.querySelectorAll('[data-game]').forEach(function(x){x.classList.toggle('selected',x===b);});$('hubHint').textContent='已选'+(hubGame==='holdem'?'德州扑克':ARCADE_NAMES[hubGame])+' · 纯单机';$('lbStartBtn').textContent='开始'+(hubGame==='holdem'?'游戏':ARCADE_NAMES[hubGame]);});});
-  $('arcActions').addEventListener('click',function(e){var b=e.target.closest('[data-arc]');if(b&&!b.disabled)arcadeDispatch(b.dataset.arc);});$('arcMode').addEventListener('change',function(){if(Arcade.round&&!Arcade.round.done)return;Arcade.mode=this.value==='practice'?'practice':'coins';Arcade.round=null;renderArcade();});$('arcBet').addEventListener('change',renderArcade);
+  $('arcActions').addEventListener('click',function(e){var b=e.target.closest('[data-arc]');if(b&&!b.disabled)arcadeDispatch(b.dataset.arc);});$('arcBet').addEventListener('change',renderArcade);
   $('arcSettings').addEventListener('click',function(){initAudio();sfx('click');openSettings();});
   $('arcRules').addEventListener('click',function(){$('arcHelp').hidden=!$('arcHelp').hidden;});$('arcRefill').addEventListener('click',function(){if(Arcade.mode==='practice'&&(!Arcade.round||Arcade.round.done)){Arcade.practice=500;renderArcade();}});
   $('arcBack').addEventListener('click',function(){arcadeLeave(false);});$('arcExitYes').addEventListener('click',function(){arcadeLeave(true);});$('arcExitNo').addEventListener('click',function(){$('arcExit').hidden=true;});}
@@ -3105,8 +3122,8 @@ function buildSettleData(winnings, potTotal, rpDelta) {
     pot: potTotal,
     rows: rows,
     rpDelta: typeof rpDelta === 'number' ? rpDelta : 0,
-    rankEntryCost: App.mode === 'ranked' ? 1 : 0,
-    rankedPointsLeft: player ? (player.rankedPoints || 0) : 0,
+    rankEntryCost: 0,
+    rankedPointsLeft: player ? profile15('holdem').redeemPoints : 0,
     ranked: App.mode === 'ranked'
   };
 }
@@ -3164,7 +3181,7 @@ function renderSettle(data) {
   }
   if (data.ranked) {
     var d = data.rpDelta;
-    foot += '<br>入场消耗 <b>1 排位积分</b> · 剩余 <b>' + fmt(data.rankedPointsLeft) + '</b> 积分';
+    foot += '<br>比赛筹码不兑换，金币不参与结算 · 可兑换积分 <b>' + fmt(data.rankedPointsLeft) + '</b>';
     foot += '<br>排位赛段位积分 <b class="' + (d > 0 ? 'pos' : (d < 0 ? 'neg' : 'zero')) + '">'
          +  (d > 0 ? '+' : '') + d + '</b>'
          +  ' · 当前 <b>' + fmt(player.rankPoints) + '</b> 分（'
@@ -3393,6 +3410,8 @@ function renderTable() {
 }
 
 function renderControls() {
+  if(G.quickRetry){var retryBar=$('bottomBar');retryBar.innerHTML='';var retryBtn=document.createElement('button');retryBtn.className='abtn start';retryBtn.textContent='重试保存结算';retryBtn.onclick=function(){if(G.quickRetry&&G.quickRetry()){render();if(G.lastSettleData)showSettle(G.lastSettleData);}};retryBar.appendChild(retryBtn);return;}
+  if (G.rankRetry) { $('bottomBar').innerHTML='<button class="btn-primary" id="retryRank15">重试保存结算</button>'; $('retryRank15').onclick=function(){var x=G.rankRetry; if(finishHoldemRank15(x.winnings,x.pot,x.net)&&nextHandResolve){var done=nextHandResolve;nextHandResolve=null;done();}}; return; }
   var el = $('bottomBar');
   if (!el) return;
 
@@ -3944,7 +3963,7 @@ function refreshLowStackOpponents() {
 }
 function initPlayers() {
   var opps = pickOpponents();
-  G.players = [makePlayer(0, player.name || '玩家', '🧑', true, 'human', player.coins, '')];
+  G.players = [makePlayer(0, player.name || '玩家', '🧑', true, 'human', App.mode === 'ranked' ? G.buyIn : player.coins, '')];
   for (var i = 0; i < 3; i++) {
     G.players.push(newAIOpponent(i + 1, opps[i], G.players.map(function(p){ return p.name; })));
   }
@@ -3956,6 +3975,7 @@ async function playHand() {
   G.handOver = false;
   G.handSettled = false;
   G.settling = false;
+  G.lastSettleData = null;
   G.skipFlag = false;
   G.bluffAttempt = false;
   hideSettle();
@@ -4524,6 +4544,7 @@ function titleText() {
 }
 /* 透视卡：翻牌后公开一位对手底牌 */
 function maybeApplyPeek() {
+  if (App.mode === 'ranked') return;
   if (!player || !player.buffs || player.buffs.peek <= 0) return;
   if (!G.players || !G.players.length) return;
   var cands = [];
@@ -4673,6 +4694,12 @@ async function finishHand() {
     }
   }
 
+  if (App.mode === 'ranked') { finishHoldemRank15(winnings, potTotal, humanWinAmount - human.totalBet); return; }
+
+  /* 金币结算、成长进度与奖励同次持久化；失败只重试提交，不再分配底池。 */
+  function commitQuick15() {
+  var rpDelta=0;
+  var ok=atomic15(function(){
   /* ---- 统计与奖励 ---- */
     if (humanWon) {
       if (App.mode === 'ranked') player.rankedWins = (player.rankedWins || 0) + 1;
@@ -4733,7 +4760,6 @@ async function finishHand() {
   }
 
   /* ---- 段位积分（仅排位赛生效） ---- */
-  var rpDelta = 0;
   if (App.mode === 'ranked') {
     if (humanWon) {
       rpDelta = 12 + Math.min(14, Math.floor(humanWinAmount / (G.bb * 15)));
@@ -4758,7 +4784,10 @@ async function finishHand() {
   // 同步筹码回存档
   player.coins = G.players[0].chips;
   if (player.coins < 0) player.coins = 0;
-  saveAllSaves(true);
+  recordGrowth15('holdem',{hands:1,wins:humanWinAmount>human.totalBet?1:0,pair:hv&&hv[0]>=1?1:0,straight:hv&&hv[0]>=4?1:0,allinwin:humanAllIn&&humanWinAmount>human.totalBet?1:0},App.difficulty);
+  });
+  if(!ok){G.quickRetry=commitQuick15;G.settling=false;G.handOver=true;render();return false;}
+  G.quickRetry=null;
   renderTopbar();
   updateTasksBadges();
 
@@ -4772,6 +4801,9 @@ async function finishHand() {
     G.session.net += humanWinAmount - (human.totalBet || 0);
   }
   // 弹窗由主循环建立下一手等待器后打开，避免快速点击丢失。
+  return true;
+  }
+  commitQuick15();
 }
 
 /* ============================================================
@@ -4787,7 +4819,8 @@ function startGame(diffKey) {
   humanResolve = null; nextHandResolve = null;
   G.lastSettleData = null;
   G.session = { hands:0, wins:0, net:0, coins:player.coins, rank:player.rankPoints,
-    fee:cfg.entryFee, mode:App.mode };
+    fee:App.mode === 'ranked' ? 0 : cfg.entryFee, mode:App.mode };
+  G.rankRetry = null; G.quickRetry = null;
   initPlayers();
     showScreen('game');
     renderTopbar();
@@ -4798,6 +4831,7 @@ function startGame(diffKey) {
 
 async function runGameLoop() {
   while (G.active) {
+    if (App.mode === 'ranked' && G.players[0] && !G.rankRetry) G.players.forEach(function(p){p.chips=G.buyIn;});
     if (!G.players[0] || G.players[0].chips <= 0) {
       player.coins = G.players[0] ? G.players[0].chips : 0;
       G.active = false;
@@ -4806,7 +4840,7 @@ async function runGameLoop() {
       showGameOver();
       return;
     }
-    if (App.difficulty === 'easy' && G.players[0].chips < 500) {
+    if (App.mode !== 'ranked' && App.difficulty === 'easy' && G.players[0].chips < 500) {
       exitGame();
       showToast('新手场开局需500金币，余额已保留；可领取任务奖励后再入场。', 3000);
       return;
@@ -4868,7 +4902,7 @@ function exitGame() {
     if (session) { session.hands++; session.net -= lost; }
     G.handSettled = true;
   }
-  if (G.active && G.players[0]) {
+  if (G.active && G.players[0] && App.mode !== 'ranked') {
     player.coins = G.players[0].chips;
     if (player.coins < 0) player.coins = 0;
   }
@@ -4968,6 +5002,7 @@ function renderAchList() {
   $('stStreak').textContent = fmt(player.maxStreak);
   $('stMaxWin').textContent = '$' + fmt(player.maxWin);
   var filtered = ACHIEVEMENTS.filter(function(a){
+    if (achGame15 !== 'all' && a.game !== achGame15) return false;
     if (achFilter === 'ready') return achievementReady(a) && !player.achievementClaims[a.id];
     if (achFilter === 'claimed') return !!player.achievementClaims[a.id];
     return true;
@@ -5531,7 +5566,7 @@ function bindEvents() {
   initArcade();
   $('lbStartBtn').addEventListener('click', function(){
     initAudio(); sfx('click');
-    if(hubGame !== 'holdem'){openArcade(hubGame);return;}
+    if(hubGame!=='holdem'){renderModeCards();showScreen('mode');return;}
     renderModeCards();
     showScreen('mode');
   });
@@ -5696,6 +5731,273 @@ function bindEvents() {
     }
   });
 }
+
+/* v15 四游戏成长与独立排位。所有资产均为本地虚拟积分。 */
+var GAME_IDS = ['holdem','blackjack','gold','dice'];
+var GAME_NAMES = {holdem:'德州扑克',blackjack:'21点',gold:'炸金花',dice:'猜骰子'};
+var GAME_LEVELS = ['easy','normal','hard','champion'];
+var LEVEL_NAMES = ['新手','普通','困难','冠军'];
+var GROWTH_ROUTES = {
+  holdem:[['hands','完成牌局',5],['wins','净赢牌局',2],['pair','一对以上',2],['straight','顺子以上',1],['allinwin','全下获胜',1]],
+  blackjack:[['hands','完成牌局',5],['wins','净赢牌局',2],['natural','天然21点',1],['standwin','停牌获胜',2],['doublewin','加倍获胜',1]],
+  gold:[['hands','完成牌局',5],['wins','净赢牌局',2],['blindwin','闷牌获胜',1],['comparewin','比牌获胜',1],['pair','对子以上',2]],
+  dice:[['hands','完成开奖',5],['wins','本轮净赢',2],['five','五骰开奖',3],['multi','多项下注开奖',3],['exactwin','点数或豹子押中',1]]
+};
+var ACH_REWARD_BUDGET = ACHIEVEMENTS.reduce(function(n,a){return n+a.reward;},0);
+var V14_WEEKLY = WEEKLY_TASKS.map(function(t){return Object.assign({},t);});
+var V14_ACH = ACHIEVEMENTS.map(function(a){return Object.assign({},a);});
+var oldCreatePlayer15 = createNewPlayer;
+function newGameProfile15(){return {redeemPoints:0,rankPoints:0,rankPeak:0,rankedHands:0,rankedWins:0,rankedStreak:0,metrics:{},levels:{}};}
+function safeCount15(v){return Number.isSafeInteger(v)&&v>=0?v:0;}
+function ensureGames15(p){
+  if(!p.games||typeof p.games!=='object'||Array.isArray(p.games))p.games={};
+  GAME_IDS.forEach(function(g){var s=p.games[g];if(!s||typeof s!=='object'||Array.isArray(s))s=p.games[g]=newGameProfile15();
+    ['redeemPoints','rankPoints','rankPeak','rankedHands','rankedWins','rankedStreak'].forEach(function(k){s[k]=safeCount15(s[k]);});
+    if(!s.metrics||typeof s.metrics!=='object')s.metrics={};if(!s.levels||typeof s.levels!=='object')s.levels={};});
+}
+createNewPlayer = function(name){var p=oldCreatePlayer15(name);p.games={};ensureGames15(p);p.growthVersion=15;p.rankedPoints=0;p.rankedPending=null;return p;};
+var oldMigrate15=migratePlayer;
+migratePlayer=function(p){
+  if(!p)return p;
+  var old=!p.growthVersion;
+  if(old){
+    p.achievements=p.achievements||{};
+    V14_ACH.forEach(function(a){try{if(a.metric&&a.metric(p)>=a.target)p.achievements[a.id]=true;}catch(e){}});
+  }
+  oldMigrate15(p);ensureGames15(p);
+  if(old){
+    var h=p.games.holdem;h.rankPoints=safeCount15(p.rankPoints);h.rankPeak=safeCount15(p.rankPeak);h.rankedWins=safeCount15(p.rankedWins);
+    h.metrics.hands=safeCount15(p.totalHands);h.metrics.wins=safeCount15(p.totalWins);
+    Object.keys(p.handDex||{}).forEach(function(c){if(+c>=1)h.metrics.pair=(h.metrics.pair||0)+safeCount15(p.handDex[c]);if(+c>=4)h.metrics.straight=(h.metrics.straight||0)+safeCount15(p.handDex[c]);});
+    h.metrics.allinwin=safeCount15(p.stats.allInWins);
+    ['blackjack','gold','dice'].forEach(function(g){var s=p.arcade.stats&&p.arcade.stats[g];if(s){p.games[g].metrics.hands=safeCount15(s.hands);p.games[g].metrics.wins=safeCount15(s.wins);}});
+    p.legacyEntryCredits=safeCount15(p.rankedPoints);
+    if(p.dailyTasks&&p.dailyTasks.date===todayStr()){
+      var claimed=p.dailyClaimed||{},paid=Object.keys(claimed).filter(function(id){return claimed[id];}).length*20;
+      p.dailyTasks={date:todayStr(),ids:TASK_POOL.map(function(t){return t.id;}),schema:15};p.dailyProgress={};p.dailyClaimed={};
+      TASK_POOL.slice(0,Math.min(5,Math.floor(paid/20))).forEach(function(t){p.dailyClaimed[t.id]=true;});
+    }
+    if(p.weekly&&p.weekly.week===weekKeyOf(todayStr())){
+      var wc=p.weekly.claimed||{},wp=p.weekly.progress||{};
+      V14_WEEKLY.forEach(function(t,i){if(wc[t.id])p.weekly.claimed[t.id]=true;else wp[t.id]=0;});
+      p.weekly.schema=15;
+    }
+    p.growthVersion=15;
+  }
+  return p;
+};
+TASK_POOL=GAME_IDS.map(function(g){return {id:'d15_'+g,name:GAME_NAMES[g]+' · 完成3局',game:g,event:'hands',target:3,reward:20};});
+TASK_POOL.push({id:'d15_any',name:'小馆常客 · 任意游戏净赢2局',game:'any',event:'wins',target:2,reward:20});
+WEEKLY_TASKS=V14_WEEKLY.map(function(t,i){var g=GAME_IDS[Math.floor(i/6)],j=i%6,route=g?GROWTH_ROUTES[g][j%5]:null;
+  return {id:t.id,reward:t.reward,game:g||'any',event:route?route[0]:'hands',target:route?(j===5?50:route[2]*3):80,name:g?GAME_NAMES[g]+' · '+route[1]+' '+(j===5?50:route[2]*3)+'次':'四馆巡游 · 累计完成80局'};});
+ACHIEVEMENTS=V14_ACH.map(function(a,i){var g=GAME_IDS[Math.floor(i/250)],index=i%250,route=GROWTH_ROUTES[g][index%5],tier=Math.floor(index/5)+1;
+  return {id:a.id,reward:a.reward,game:g,route:g+'_'+route[0],event:route[0],target:route[2]*tier*tier,icon:'',name:GAME_NAMES[g]+' · '+route[1]+' '+tier+'阶',desc:'累计 '+route[2]*tier*tier+' 次',metric:function(p){return p.games&&p.games[g]?(p.games[g].metrics[route[0]]||0):0;}};});
+var transaction15=false;
+function restorePlayer15(snapshot){Object.keys(player).forEach(function(k){delete player[k];});Object.assign(player,JSON.parse(snapshot));}
+function atomic15(fn){
+  if(transaction15)return false;var snapshot=JSON.stringify(player),chips=G.players[0]&&G.players[0].chips;
+  transaction15=true;
+  try{fn();localStorage.setItem(SAVE_KEY_ALL,JSON.stringify(allSaves));updateSaveIndicator('saved');return true;}
+  catch(e){restorePlayer15(snapshot);if(G.players[0]&&chips!==undefined)G.players[0].chips=chips;updateSaveIndicator('error');showToast('保存失败，操作未完成；请勿刷新，可重试',3000,true);return false;}
+  finally{transaction15=false;}
+}
+var oldSave15=saveAllSaves;
+saveAllSaves=function(silent){if(transaction15)return Promise.resolve(true);return oldSave15(silent);};
+function profile15(game){ensureGames15(player);return player.games[game||hubGame||'holdem'];}
+function level15(key){var i=GAME_LEVELS.indexOf(key||App.difficulty);return i<0?0:i;}
+function roundLocked15(){return G.active||!!(Arcade.round&&!Arcade.round.done)||!!player.rankedPending||!!arcadeData().pending;}
+function exchangePoints(game,direction,n){
+  if(!GAME_IDS.includes(game)||!['buy','sell'].includes(direction)||roundLocked15()||!Number.isSafeInteger(n)||n<=0||!Number.isSafeInteger(n*100))return false;
+  var s=profile15(game),cost=n*100;
+  if(direction==='buy'&&(player.coins<cost||!Number.isSafeInteger(s.redeemPoints+n)))return false;
+  if(direction==='sell'&&(s.redeemPoints<n||!Number.isSafeInteger(player.coins+cost)))return false;
+  var ok=atomic15(function(){if(direction==='buy'){player.coins-=cost;s.redeemPoints+=n;}else{s.redeemPoints-=n;player.coins+=cost;}});
+  if(ok){renderLobby();renderModeCards();showToast('兑换成功 · 段位分不变',1500);}return ok;
+}
+buyRankedPoints=function(n){return exchangePoints(hubGame,'buy',n);};
+function applyRankResult15(game,key,net){var s=profile15(game),i=level15(key),sign=Math.sign(net),before=s.redeemPoints,rank=s.rankPoints;
+  s.redeemPoints=Math.max(0,s.redeemPoints+sign*(i+1));s.rankPoints=Math.max(0,s.rankPoints+(sign>0?[12,16,20,26][i]:sign<0?-[5,7,9,12][i]:0));
+  if(!Number.isSafeInteger(s.redeemPoints)||!Number.isSafeInteger(s.rankPoints))throw Error('积分超出范围');
+  s.rankPeak=Math.max(s.rankPeak,rankTierFor(s.rankPoints));s.rankedHands++;if(sign>0){s.rankedWins++;s.rankedStreak++;}else s.rankedStreak=0;
+  if(game==='holdem'){player.rankPoints=s.rankPoints;player.rankTier=rankTierFor(s.rankPoints);player.rankPeak=s.rankPeak;}
+  return {points:s.redeemPoints-before,rank:s.rankPoints-rank};
+}
+function recoverRanked15(){var p=player.rankedPending;if(!p||G.active)return true;return atomic15(function(){applyRankResult15(p.game,p.difficulty,-1);player.rankedPending=null;});}
+function recordGrowth15(game,events,key){
+  ensureDailyTasks();ensureWeekly();var s=profile15(game);
+  Object.keys(events).forEach(function(ev){var n=events[ev];if(!Number.isSafeInteger(n)||n<=0)return;
+    s.metrics[ev]=Math.min(Number.MAX_SAFE_INTEGER,(s.metrics[ev]||0)+n);
+    TASK_POOL.forEach(function(t){if((t.game===game||t.game==='any')&&t.event===ev&&!player.dailyClaimed[t.id])player.dailyProgress[t.id]=Math.min(t.target,(player.dailyProgress[t.id]||0)+n);});
+    WEEKLY_TASKS.forEach(function(t){if((t.game===game||t.game==='any')&&t.event===ev&&!player.weekly.claimed[t.id])player.weekly.progress[t.id]=Math.min(t.target,(player.weekly.progress[t.id]||0)+n);});
+  });if(events.hands)s.levels[key||'easy']=(s.levels[key||'easy']||0)+1;
+}
+ensureDailyTasks=function(){if(!player)return;if(!player.dailyTasks||player.dailyTasks.date!==todayStr()){
+  player.dailyTasks={date:todayStr(),ids:TASK_POOL.map(function(t){return t.id;}),schema:15};player.dailyProgress={};player.dailyClaimed={};}};
+bumpDailyProgress=function(){};bumpWeeklyProgress=function(){};
+checkAchievement=function(){}; // 旧德州触发器不能解锁重新分配给其他游戏的目标。
+claimDaily=function(id){ensureDailyTasks();var t=getDailyTaskById(id);if(!t||player.dailyClaimed[id]||(player.dailyProgress[id]||0)<t.target)return false;
+  var ok=atomic15(function(){player.dailyClaimed[id]=true;addCoins(t.reward);});if(ok){renderTasks();renderLobby();}return ok;};
+claimWeekly=function(id){ensureWeekly();var t=getWeeklyTaskById(id);if(!t||player.weekly.claimed[id]||(player.weekly.progress[id]||0)<t.target)return false;
+  var ok=atomic15(function(){player.weekly.claimed[id]=true;addCoins(t.reward);});if(ok){renderWeekly();renderLobby();updateTasksBadges();}return ok;};
+claimAchievement=function(id){var a=ACHIEVEMENTS.find(function(t){return t.id===id;});if(!a||player.achievementClaims[id]||!achievementReady(a))return false;
+  var ok=atomic15(function(){player.achievementClaims[id]=true;player.achievements[id]=true;addCoins(a.reward);});if(ok){renderAchList();renderLobby();}return ok;};
+rankInfo=function(game){return RANKS[rankTierFor(player?profile15(game).rankPoints:0)];};
+var oldRankProgress15=rankProgress;
+rankProgress=function(){var pts=player.rankPoints;player.rankPoints=profile15().rankPoints;try{return oldRankProgress15();}finally{player.rankPoints=pts;}};
+addRankPoints=function(delta){var s=profile15('holdem');s.rankPoints=Math.max(0,s.rankPoints+delta);s.rankPeak=Math.max(s.rankPeak,rankTierFor(s.rankPoints));player.rankPoints=s.rankPoints;player.rankPeak=s.rankPeak;player.rankTier=rankTierFor(s.rankPoints);};
+addCoins=function(n){if(!player||!Number.isSafeInteger(n)||n<0||!Number.isSafeInteger(player.coins+n))throw Error('金币金额无效');player.coins+=n;if(G.active&&App.mode!=='ranked'&&G.players[0])G.players[0].chips+=n;};
+spendCoins=function(n){if(!player||!Number.isSafeInteger(n)||n<0||player.coins<n)return false;
+  var h=G.active&&App.mode!=='ranked'&&G.players[0];if(h&&h.chips<n)return false;player.coins-=n;if(h)h.chips-=n;return true;};
+function finishHoldemRank15(winnings,potTotal,net){
+  var pending=player.rankedPending;if(!pending){G.settling=false;return false;}
+  var delta,events={hands:1,wins:net>0?1:0},h=G.players[0],hv=h._v;
+  if(hv){events.pair=hv[0]>=1?1:0;events.straight=hv[0]>=4?1:0;}events.allinwin=h.allIn&&net>0?1:0;
+  if(!atomic15(function(){delta=applyRankResult15('holdem',pending.difficulty,net);recordGrowth15('holdem',events,pending.difficulty);player.rankedPending=null;})){
+    G.rankRetry={winnings:winnings,pot:potTotal,net:net};G.settling=false;G.handOver=true;
+    $('bottomBar').innerHTML='<button class="btn-primary" id="retryRank15">重试保存结算</button>';
+    $('retryRank15').onclick=function(){if(finishHoldemRank15(winnings,potTotal,net)&&nextHandResolve){var done=nextHandResolve;nextHandResolve=null;done();}};return false;
+  }
+  G.rankRetry=null;G.handSettled=true;G.settling=false;G.handOver=true;
+  G.lastSettleData=buildSettleData(winnings,potTotal,delta.rank);
+  G.session.hands++;G.session.wins+=net>0?1:0;
+  showToast('排位结算：积分 '+(delta.points>=0?'+':'')+delta.points+' · 段位 '+(delta.rank>=0?'+':'')+delta.rank,2500);
+  render();return true;
+}
+// 自由场成长在 finishHand 的金币事务中结算，禁止二次触发。
+var oldPlay15=playHand;
+playHand=async function(){if(App.mode==='ranked'){
+  if(player.rankedPending||G.rankRetry)return;
+  if(!atomic15(function(){player.rankedPending={id:Date.now()+'-'+randomInt(1000000000),game:'holdem',difficulty:App.difficulty};})){G.active=false;showScreen('lobby');return;}
+  G.players.forEach(function(p){p.chips=G.buyIn;});
+ }G.growthStart15=G.players[0].chips;return oldPlay15();};
+var oldNext15=nextHand;
+nextHand=function(){if(G.rankRetry||G.quickRetry)return;return oldNext15();};
+var oldExit15=exitGame;
+exitGame=function(){if(G.settling&&!G.handSettled)return;if(G.rankRetry||G.quickRetry){showToast('请先重试保存结算，勿刷新',2000,true);return;}if(App.mode==='ranked'&&player.rankedPending){
+  if(!atomic15(function(){applyRankResult15('holdem',player.rankedPending.difficulty,-1);player.rankedPending=null;}))return;
+  G.handSettled=true;
+ }var ranked=App.mode==='ranked';oldExit15();if(ranked&&$('sessionSummary'))$('sessionSummary').textContent='德州排位已结束 · 金币未参与牌局结算 · 可兑换积分 '+profile15('holdem').redeemPoints+' · 段位分 '+profile15('holdem').rankPoints;};
+var oldRenderLobby15=renderLobby;
+renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}return oldRenderLobby15();};
+
+/* 所有游戏共用模式及难度入口。 */
+renderModeCards=function(){if(!player)return;var s=profile15(hubGame),body=$('modeBody');body.innerHTML='';
+ ['quick','ranked'].forEach(function(mode){var card=document.createElement('button');card.className='mode-card '+mode;
+  card.innerHTML='<div class="mode-name">'+(mode==='quick'?'自由匹配':'独立排位')+'</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>'+(mode==='quick'?'金币对局 · 本地AI或庄家<br>四档挑战，自主选择':'比赛筹码不兑换，不动金币<br>'+rankInfo(hubGame).name+' · 段位 '+s.rankPoints+'<br>可兑换积分 '+s.redeemPoints+'<br>胜加、负扣，平局不变')+'</p></div>';
+  card.onclick=function(){App.mode=mode;renderDifficultyCards();showScreen('difficulty');};body.appendChild(card);
+ });
+ var bar=document.createElement('div');bar.className='exchange15';bar.innerHTML='<span>'+GAME_NAMES[hubGame]+'：100金币 ⇄ 1积分 · 兑换不改变段位</span><input id="exchangeAmount15" type="number" min="1" step="1" value="1" aria-label="兑换积分数量"><button id="buyPoints15">金币换积分</button><button id="sellPoints15">积分换金币</button><small>旧版门票已退役，不作为可兑换资产；四馆积分不互通。</small>';
+ body.appendChild(bar);$('buyPoints15').onclick=function(){if(!exchangePoints(hubGame,'buy',Number($('exchangeAmount15').value)))showToast('兑换未完成：请检查余额、数量或未结束的对局',2500,true);};$('sellPoints15').onclick=function(){if(!exchangePoints(hubGame,'sell',Number($('exchangeAmount15').value)))showToast('兑换未完成：请检查积分、数量或未结束的对局',2500,true);};
+};
+renderDifficultyCards=function(){var body=$('diffBody');body.innerHTML='';GAME_LEVELS.forEach(function(key,i){var cfg=DIFFICULTY_CONFIG[key],locked=hubGame==='holdem'&&App.mode!=='ranked'&&player.coins<cfg.minCoins,card=document.createElement('button');card.className='diff-card '+key+(locked?' locked':'');
+ var lines=hubGame==='holdem'?'盲注 '+cfg.sb+'/'+cfg.bb+'<br>AI策略强度递增':hubGame==='gold'?'AI看牌与加注策略逐档加强':hubGame==='blackjack'?'公平洗牌 · 庄家软17停牌<br>'+(i<2?'显示点数与辅助提示':'显示点数，自主决策'):'公平六面骰 · 不改变中奖概率<br>3骰 / 5骰 · 多项下注';
+ card.innerHTML='<div class="diff-name">'+LEVEL_NAMES[i]+'</div><div class="diff-info">'+lines+'<p>'+(App.mode==='ranked'?'胜 +'+(i+1)+' / 负 -'+(i+1)+' 积分<br>独立比赛筹码':hubGame==='holdem'?'最低金币 '+cfg.minCoins+' · 入场 '+cfg.entryFee:'单轮总投入上限 '+[100,500,2000,10000][i])+'</p><small>纯单机，无真人联机</small></div>';
+ card.onclick=function(){tryEnterGame(key);};body.appendChild(card);});};
+tryEnterGame=function(key){if(!GAME_LEVELS.includes(key)||G.active||(Arcade.round&&!Arcade.round.done)||player.rankedPending||arcadeData().pending)return false;var cfg=DIFFICULTY_CONFIG[key];
+ if(hubGame!=='holdem'){App.difficulty=key;Arcade.difficulty=key;Arcade.mode=App.mode==='ranked'?'ranked':'coins';return openArcade(hubGame);}
+ if(App.mode!=='ranked'){
+  if(player.coins<cfg.minCoins){showToast('自由场至少需要 '+cfg.minCoins+' 金币',2000,true);return false;}
+  if(!atomic15(function(){if(!spendCoins(cfg.entryFee))throw Error('金币不足');}))return false;
+ }
+ App.difficulty=key;startGame(key);return true;
+};
+
+/* 小游戏资产与持久化 */
+Arcade.rankedBank=500;Arcade.difficulty='easy';Arcade.diceCount=3;Arcade.basket=[];
+function arcadeLimit15(){return [100,500,2000,10000][level15(Arcade.difficulty)];}
+function arcadeBank15(){return [500,2000,10000,50000][level15(Arcade.difficulty)];}
+arcadeBalance=function(){return Arcade.mode==='practice'?Arcade.practice:Arcade.mode==='ranked'?Arcade.rankedBank:player.coins;};
+arcadePay=function(n){if(!Number.isSafeInteger(n)||n<0||n>arcadeBalance())return false;if(Arcade.mode==='practice')Arcade.practice-=n;else if(Arcade.mode==='ranked')Arcade.rankedBank-=n;else return spendCoins(n);return true;};
+arcadeBegin=function(bet){if(G.active||(Arcade.round&&!Arcade.round.done)||!Number.isSafeInteger(bet)||bet<=0||bet%10||bet>arcadeLimit15())return false;
+ arcadeRecover();if(arcadeData().pending)return false;
+ if(Arcade.mode==='ranked')Arcade.rankedBank=arcadeBank15();
+ var bank=arcadeBalance(),r={id:Date.now()+'-'+randomInt(1000000000),game:Arcade.game,mode:Arcade.mode,difficulty:Arcade.difficulty,stake:bet,base:bet,done:false};
+ if(bank<bet){Arcade.message='余额不足';renderArcade();return false;}
+ var ok=Arcade.mode==='practice'?arcadePay(bet):atomic15(function(){if(!arcadePay(bet))throw Error('余额不足');arcadeData().pending=Object.assign({},r);});
+ if(!ok){if(Arcade.mode==='ranked')Arcade.rankedBank=bank;return false;}Arcade.round=r;return r;};
+arcadeExtra=function(n){var r=Arcade.round;if(!r||r.done||r.retry||!Number.isSafeInteger(n)||n<0||r.stake+n>arcadeLimit15()||n>arcadeBalance())return false;
+ var bank=arcadeBalance(),stake=r.stake,ok=r.mode==='practice'?arcadePay(n):atomic15(function(){if(!arcadePay(n))throw Error('余额不足');arcadeData().pending.stake=stake+n;});
+ if(!ok){if(r.mode==='ranked')Arcade.rankedBank=bank;return false;}r.stake+=n;return true;};
+function arcadeEvents15(r,payout){var win=payout>r.stake,e={hands:1,wins:win?1:0};if(r.game==='blackjack'&&r.hand){e.natural=r.hand.length===2&&blackjackValue(r.hand).total===21?1:0;e.doublewin=win&&r.stake>r.base?1:0;e.standwin=win&&!e.natural?1:0;}
+ if(r.game==='gold'&&r.seats){e.blindwin=win&&!r.seats[0].seen?1:0;e.comparewin=r.compareWins||0;e.pair=goldValue(r.seats[0].hand)[0]>=1?1:0;}
+ if(r.game==='dice'&&r.dice){e.five=r.dice.length===5?1:0;e.multi=r.bets&&r.bets.length>1?1:0;e.exactwin=r.bets&&r.bets.some(function(b){return !['small','big'].includes(b.choice)&&diceResult(r.dice,b.choice).win;})?1:0;}return e;}
+arcadeSettle=function(payout,label){var r=Arcade.round;if(!r||r.done||!Number.isSafeInteger(payout)||payout<0)return false;var delta=null;
+ if(r.mode!=='practice'){
+  if(!arcadeData().pending||arcadeData().pending.id!==r.id)return false;
+  if(!atomic15(function(){if(r.mode==='ranked')delta=applyRankResult15(r.game,r.difficulty,payout-r.stake);else addCoins(payout);
+    arcadeRecord(r.game,r.stake,payout,label);var h=arcadeData().history[0];h.mode=r.mode;h.unit=r.mode==='ranked'?'比赛筹码':'金币';h.points=delta?delta.points:0;
+    if(label!=='主动离桌'&&label!=='未完局离开')recordGrowth15(r.game,arcadeEvents15(r,payout),r.difficulty);
+    arcadeData().pending=null;})){r.retry={payout:payout,label:label};Arcade.message='保存失败，请重试结算，勿刷新';renderArcade();return false;}
+ }else Arcade.practice+=payout;
+ if(r.mode==='ranked')Arcade.rankedBank+=payout;
+ r.done=true;r.payout=payout;r.label=label;r.retry=null;r.rankDelta=delta;
+ Arcade.message=label+' · '+(delta?'积分 '+(delta.points>=0?'+':'')+delta.points+' / 段位 '+(delta.rank>=0?'+':'')+delta.rank:'净 '+(payout-r.stake)+' '+(r.mode==='practice'?'练习筹码':'金币'));
+ renderArcade();return true;};
+arcadeRecover=function(){var p=arcadeData().pending;if(!p||(Arcade.round&&!Arcade.round.done&&Arcade.round.id===p.id))return;
+ atomic15(function(){if(p.mode==='ranked')applyRankResult15(p.game,p.difficulty,-1);arcadeRecord(p.game,p.stake,0,'未完局离开');arcadeData().history[0].mode=p.mode||'coins';arcadeData().history[0].unit=p.mode==='ranked'?'比赛筹码':'金币';arcadeData().pending=null;});};
+var oldOpenArcade15=openArcade;
+openArcade=function(game){if(!GAME_IDS.includes(game)||game==='holdem'||G.active||(Arcade.round&&!Arcade.round.done)||player.rankedPending)return false;arcadeRecover();if(arcadeData().pending)return false;Arcade.basket=[];Arcade.rankedBank=arcadeBank15();var ok=oldOpenArcade15(game);if(ok){Arcade.message='四档单机挑战 · '+(Arcade.mode==='ranked'?'排位仅结算积分，金币不参与比赛':'自由金币对局；练习不计成长奖励');renderArcade();}return ok;};
+
+/* 公平骰子：总点数分布通过枚举生成，赔率为含本金总返还倍数。 */
+var diceDistribution15={};
+function diceDistribution(count){if(![3,5].includes(count))throw Error('只支持3或5骰');if(diceDistribution15[count])return diceDistribution15[count];
+ var out={total:Math.pow(6,count),hits:{small:0,big:0,any:0}};
+ function walk(a){if(a.length<count){for(var i=1;i<=6;i++)walk(a.concat(i));return;}var sum=a.reduce(function(x,y){return x+y;},0),same=a.every(function(v){return v===a[0];});out.hits['sum'+sum]=(out.hits['sum'+sum]||0)+1;if(same){out.hits.any++;out.hits['triple'+a[0]]=(out.hits['triple'+a[0]]||0)+1;}else if(sum<=(count===3?10:17))out.hits.small++;else out.hits.big++;}walk([]);diceDistribution15[count]=out;return out;}
+function diceMultiplier(count,choice){var d=diceDistribution(count),hits=d.hits[choice];if(!hits)return 0;return ['small','big'].includes(choice)?2:Math.max(1,Math.floor(d.total*95/(hits*100)));}
+diceResult=function(values,choice){var count=values.length,sum=values.reduce(function(a,b){return a+b;},0),same=values.every(function(v){return v===values[0];});var win=false;
+ if([3,5].includes(count)&&values.every(function(v){return Number.isInteger(v)&&v>=1&&v<=6;})){
+  if(choice==='small')win=!same&&sum<=(count===3?10:17);else if(choice==='big')win=!same&&sum>=(count===3?11:18);else if(choice==='any')win=same;else if(/^sum\d+$/.test(choice))win=sum===Number(choice.slice(3));else if(/^triple[1-6]$/.test(choice))win=same&&values[0]===Number(choice.slice(6));}
+ return {sum:sum,triple:same,win:win};};
+function diceChoiceName15(choice){return choice==='small'?'小':choice==='big'?'大':choice==='any'?'任意豹子':choice.indexOf('sum')===0?'总点数 '+choice.slice(3):'全 '+choice.slice(6)+' 豹子';}
+function diceAddBet(choice,n){if((Arcade.round&&!Arcade.round.done)||!Number.isSafeInteger(n)||n<=0||n%10||!diceMultiplier(Arcade.diceCount,choice))return false;
+ var total=Arcade.basket.reduce(function(a,b){return a+b.amount;},0)+n,bank=Arcade.mode==='ranked'?arcadeBank15():arcadeBalance();
+ if(total>bank||total>arcadeLimit15())return false;var b=Arcade.basket.find(function(x){return x.choice===choice;});if(b)b.amount+=n;else Arcade.basket.push({choice:choice,amount:n});renderArcade();return true;}
+function diceRollBasket(){if(!Arcade.basket.length)return false;var bets=Arcade.basket.map(function(b){return Object.assign({},b);}),bet=bets.reduce(function(a,b){return a+b.amount;},0),r=arcadeBegin(bet);if(!r)return false;
+ r.bets=bets;r.dice=Array.from({length:Arcade.diceCount},function(){return 1+randomInt(6);});var payout=0;
+ bets.forEach(function(b){b.multiplier=diceMultiplier(r.dice.length,b.choice);b.payout=diceResult(r.dice,b.choice).win?b.amount*b.multiplier:0;payout+=b.payout;});
+ Arcade.basket=[];return arcadeSettle(payout,'总点数 '+r.dice.reduce(function(a,b){return a+b;},0)+(diceResult(r.dice,'any').triple?' · 豹子':'')+' · 投入 '+bet+' / 返还 '+payout);}
+dicePlay=function(bet,choice){Arcade.basket=[];if(!diceAddBet(choice,bet))return false;return diceRollBasket();};
+function renderDice15(){var r=Arcade.round,count=Arcade.diceCount,live=r&&!r.done,d=diceDistribution(count),choices=['small','big','any'];for(var n=count;n<=count*6;n++)choices.push('sum'+n);for(var k=1;k<=6;k++)choices.push('triple'+k);
+ var option=choices.map(function(c){var m=diceMultiplier(count,c);return '<option value="'+c+'">'+diceChoiceName15(c)+' · 返还'+m+'倍</option>';}).join('');
+ var basket=Arcade.basket.map(function(b,i){return '<span>'+diceChoiceName15(b.choice)+' / '+b.amount+' / '+diceMultiplier(count,b.choice)+'倍 <button data-remove15="'+i+'" aria-label="移除此注">移除</button></span>';}).join('');
+ var result=r&&r.bets?'<div class="dice-result15">'+r.bets.map(function(b){return diceChoiceName15(b.choice)+'：押'+b.amount+'，返'+b.payout+'，净'+(b.payout-b.amount);}).join('； ')+'</div>':'';
+ $('arcTable').innerHTML='<div class="dice-layout15"><div class="dice-faces15">'+(r?r.dice:Array(count).fill(null)).map(function(v){return '<span class="arc-die">'+(v?diceFace(v):'?')+'</span>';}).join('')+'</div><div class="dice-order15"><label>骰子数 <select id="diceCount15" '+(live?'disabled':'')+'><option value="3" '+(count===3?'selected':'')+'>3颗</option><option value="5" '+(count===5?'selected':'')+'>5颗</option></select></label><label>押法 <select id="diceChoice15" '+(live?'disabled':'')+'>'+option+'</select></label><button id="diceAdd15" '+(live?'disabled':'')+'>按上方金额加一注</button><p>小 '+(count===3?'4–10 / 大11–17':'6–17 / 大18–29')+'；全同为豹子，大小均输。同轮多项命中分别返还。</p><div class="dice-basket15">'+(basket||'尚未下注，添加押法后统一开奖')+'</div><p id="diceOdds15"></p>'+result+'</div></div>';
+ var total=Arcade.basket.reduce(function(a,b){return a+b.amount;},0);
+ $('arcActions').innerHTML=r&&r.retry?arcButton('重试保存结算','retry',false,true):arcButton('确认下注 '+total+' · 开奖','roll15',!total,true)+arcButton('清空本轮','clear15',!total);
+ $('diceCount15').onchange=function(){Arcade.diceCount=Number(this.value);Arcade.basket=[];Arcade.round=null;Arcade.message='已切换骰子数量并清空待下注清单';renderArcade();};
+ $('diceAdd15').onclick=function(){if(!diceAddBet($('diceChoice15').value,Number($('arcBet').value)))showToast('超出可用余额或本档单轮限额',2000,true);};
+ function odds(){var c=$('diceChoice15').value,h=d.hits[c],m=diceMultiplier(count,c);$('diceOdds15').textContent='中奖 '+h+'/'+d.total+' · 含本金返还 '+m+' 倍 · 理论返还率 '+(100*h*m/d.total).toFixed(2)+'%（不是保证收益）';}
+ $('diceChoice15').onchange=odds;odds();$('arcTable').querySelectorAll('[data-remove15]').forEach(function(b){b.onclick=function(){if(live)return;Arcade.basket.splice(Number(b.dataset.remove15),1);renderArcade();};});
+}
+var oldRenderArcade15=renderArcade;
+renderArcade=function(){oldRenderArcade15();if(!player)return;var live=Arcade.round&&!Arcade.round.done;
+ var selectedBet=Number($('arcBet').value);$('arcBet').innerHTML=[10,20,50,100,200,500,1000,2000,5000,10000].filter(function(n){return n<=arcadeLimit15();}).map(function(n){return '<option value="'+n+'">'+n+'</option>';}).join('');$('arcBet').value=String(Math.min(selectedBet||10,arcadeLimit15()));
+ $('arcModeLabel').textContent=LEVEL_NAMES[level15(Arcade.difficulty)]+' · '+(Arcade.mode==='ranked'?'独立排位，比赛筹码不兑换':Arcade.mode==='practice'?'免费练习，不计任务成就':'自由匹配，结算金币')+' · 单轮投入上限 '+arcadeLimit15();
+ $('arcBalance').textContent=fmt(arcadeBalance())+(Arcade.mode==='ranked'?' 比赛筹码':Arcade.mode==='practice'?' 练习筹码':' 金币');
+ $('arcMode').innerHTML='<option value="coins">自由匹配</option><option value="ranked">独立排位</option><option value="practice">免费练习</option>';$('arcMode').value=Arcade.mode;
+ if(!$('arcDifficulty15')){var sel=document.createElement('select');sel.id='arcDifficulty15';sel.setAttribute('aria-label','游戏难度');$('arcMode').parentNode.after(sel);}
+ $('arcDifficulty15').innerHTML=GAME_LEVELS.map(function(k,i){return '<option value="'+k+'">'+LEVEL_NAMES[i]+'</option>';}).join('');$('arcDifficulty15').value=Arcade.difficulty;$('arcDifficulty15').disabled=!!live;
+ $('arcDifficulty15').onchange=function(){if(live)return;Arcade.difficulty=this.value;App.difficulty=this.value;Arcade.round=null;Arcade.basket=[];Arcade.rankedBank=arcadeBank15();renderArcade();};
+ $('arcMode').onchange=function(){if(live)return;Arcade.mode=this.value;App.mode=this.value==='ranked'?'ranked':'quick';Arcade.round=null;Arcade.basket=[];Arcade.rankedBank=arcadeBank15();renderArcade();};
+ var s=profile15(Arcade.game);$('arcStats').textContent='段位 '+s.rankPoints+' · 可兑换积分 '+s.redeemPoints;
+ $('arcHistory').textContent=Arcade.mode==='practice'?'练习不计金币、任务和成就':arcadeData().history.filter(function(h){return h.game===Arcade.game;}).slice(0,3).map(function(h){return h.label+' / '+(h.mode==='ranked'?'积分 '+h.points:'金币净 '+h.net);}).join(' · ');
+ if(Arcade.game==='dice')renderDice15();
+ else if(Arcade.game==='blackjack'&&level15(Arcade.difficulty)<2){var note=document.createElement('p');note.className='assist15';note.textContent='辅助：A自动按1或11计算；要牌后不能加倍；庄家软17停牌，难度不改变牌概率。';$('arcTable').appendChild(note);}
+};
+var oldDispatch15=arcadeDispatch;
+arcadeDispatch=function(action){if(action==='roll15'){if(Arcade.busy)return;Arcade.busy=true;try{return diceRollBasket();}finally{Arcade.busy=false;}}if(action==='clear15'){Arcade.basket=[];renderArcade();return;}return oldDispatch15(action);};
+ARCADE_RULES.dice='可选3或5颗公平骰子；小/大：3骰4–10/11–17，5骰6–17/18–29；全同为豹子，大小均输。可押大小、精确总点数、任意豹子或指定点数豹子。同轮各押法独立赔付，可叠加；赔率显示为含本金返还倍数。非大小赔率按真实概率折算向下取整，不保证收益。四档仅改变下注上限和排位积分，不暗改概率。';
+var oldRenderAch15=renderAchList;
+renderAchList=function(){oldRenderAch15();var host=$('achList');if(!host)return;var bar=document.createElement('div');bar.className='game-filter15';
+ ['all'].concat(GAME_IDS).forEach(function(g){var b=document.createElement('button');b.textContent=g==='all'?'全部游戏':GAME_NAMES[g];b.onclick=function(){achGame15=g;achPage=0;renderAchList();};bar.appendChild(b);});host.prepend(bar);};
+var achGame15='all';
+renderRank=function(){if(!player)return;var s=profile15(hubGame),tier=rankTierFor(s.rankPoints),cur=RANKS[tier],next=RANKS[tier+1];
+ var pct=next?Math.max(0,Math.min(100,100*(s.rankPoints-cur.min)/(next.min-cur.min))):100;
+ var html='<div class="rank-row"><div class="mid"><div class="nm">'+GAME_NAMES[hubGame]+' · '+cur.name+'</div><div class="pt">'+s.rankPoints+' 段位分</div><div class="rank-bar"><div class="rank-fill" style="width:'+pct+'%"></div></div></div></div><div class="stat-grid"><div class="stat-box"><div class="v">'+s.rankPoints+'</div><div class="l">段位分（不可兑换）</div></div><div class="stat-box"><div class="v">'+s.redeemPoints+'</div><div class="l">可兑换积分</div></div><div class="stat-box"><div class="v">'+s.rankedWins+' / '+s.rankedHands+'</div><div class="l">排位胜局 / 总局数</div></div></div>';
+ html+='<p>四游戏独立计算。金币100:1双向兑换积分，不影响段位。排位不收门票，每局重置比赛筹码，不结算金币。</p><p>新手 / 普通 / 困难 / 冠军：胜局积分 +1/+2/+3/+4；负局 -1/-2/-3/-4。段位胜 +12/+16/+20/+26，负 -5/-7/-9/-12；平局均不变，最低0。中途离开或刷新未完局记负。升段不额外发金币。</p>';
+ html+='<p>'+(next?'距 '+next.name+' 还需 '+(next.min-s.rankPoints)+' 段位分':'已到最高段位')+'</p>';
+ RANKS.forEach(function(r){html+='<div class="task-item"><div class="info"><div class="t">'+r.name+'</div><div class="pg">'+r.min+' 段位分'+(r.id===tier?' · 当前':'')+'</div></div></div>';});$('rankPanel').innerHTML=html;};
+
 
 /* ============================================================
    初始化
