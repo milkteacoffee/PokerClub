@@ -1014,6 +1014,33 @@
   .gd-selection{min-height:24px}#gdClear{min-height:24px}#gdHand{height:144px;min-height:144px;row-gap:8px}#gdHand .gd-card{height:62px}
   #stage.touch-compact .lobby-iconbtn{min-height:44px}.touch-compact .arc-btn,.touch-compact #arcActions button,.touch-compact .gd-controls button{min-height:48px;font-size:15px}
   .touch-compact .arc-toolbar select,.touch-compact .dice-order15 select,.touch-compact .dice-order15 button{min-height:42px;font-size:14px}
+  /* 牌桌方位：自己的手牌始终在下方，庄家或对座在上方。 */
+  #arcadeScreen[data-game="blackjack"] #arcTable,#arcadeScreen[data-game="gold"] #arcTable{display:flex;flex-direction:column;flex-wrap:nowrap;gap:4px;padding:2px 10px;min-height:292px}
+  .blackjack-layout{width:100%;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .blackjack-layout .arc-seat{width:100%;max-width:690px;padding:3px 12px;background:none}
+  .blackjack-layout .arc-seat h3{margin:2px;font-size:12px}.blackjack-layout .arc-seat p{margin:3px;font-size:12px}
+  .blackjack-layout .arc-cards{max-width:100%;min-height:58px;gap:5px;flex-wrap:nowrap}
+  .blackjack-layout .arc-card{height:56px;width:38px;flex-shrink:0;font-size:19px}
+  .blackjack-divider{width:66%;text-align:center;font-size:10px;letter-spacing:1px;color:#a7b7aa;padding:3px;background:linear-gradient(90deg,transparent,#dbc18712,transparent)}
+  .blackjack-player h3,.gold-seat-0 h3{color:#eed097!important}
+  #arcadeScreen[data-game="blackjack"] .assist15{margin:0;font-size:10px;line-height:1.4}
+  #arcadeScreen[data-game="blackjack"] .arc-state,#arcadeScreen[data-game="gold"] .arc-state{margin:0;font-size:11px;line-height:1.4}
+  .gold-layout{position:relative;width:100%;height:252px;min-height:252px}
+  .gold-layout .arc-seat{position:absolute;width:205px;max-width:205px;padding:3px 8px}
+  .gold-layout h3{margin:2px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .gold-layout .arc-seat p{margin:2px;font-size:11px;min-height:14px}.gold-layout .arc-cards{min-height:52px;max-width:none}
+  .gold-layout .arc-card{height:48px;width:34px;font-size:17px;padding:4px}
+  .gold-layout .arc-seat p:empty{display:none}
+  .gold-seat-0{left:50%;bottom:0;transform:translateX(-50%)}.gold-seat-2{left:50%;top:0;transform:translateX(-50%)}
+  .gold-seat-1{right:2%;top:70px}.gold-seat-3{left:2%;top:70px}
+  .gold-pot{position:absolute;left:50%;top:112px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;white-space:nowrap;color:#e6ca90;font-size:11px}.gold-pot strong{font-size:14px}.gold-pot small{color:#a6bdb7}
+  #gdScreen{gap:2px;padding:10px 24px}#gdMessage{min-height:24px}
+  .gd-arena{position:relative;min-height:160px;height:160px;flex-shrink:0;width:100%}
+  .gd-arena #gdSeats{position:absolute;inset:0;display:block;max-width:none;width:100%;margin:0}
+  .gd-arena .gd-seat{position:absolute;width:170px;min-height:64px}
+  .gd-arena .gd-seat:nth-child(1){left:2%;top:75px}.gd-arena .gd-seat:nth-child(2){left:50%;top:0;transform:translateX(-50%)}.gd-arena .gd-seat:nth-child(3){right:2%;top:75px}
+  .gd-arena #gdTable{position:absolute;left:22%;right:22%;bottom:0;width:auto;height:96px;min-height:96px;gap:2px;margin:0;font-size:11px}
+  .gd-arena #gdTable>div{min-width:0;max-width:50%;flex:1}.gd-arena .gd-mini{padding:0;justify-content:center}.gd-arena .gd-mini .gd-card{min-width:14px;width:25px;padding:3px;font-size:14px;margin-left:-5px}.gd-arena .gd-mini .gd-card:first-child{margin-left:0}
 </style>
 </head>
 <body>
@@ -1085,7 +1112,7 @@
 
   <section id="gdScreen" aria-label="掼蛋单机牌桌" hidden>
     <header class="gd-head"><button id="gdBack">返回大厅</button><h2>掼蛋</h2><span id="gdLevel"></span><button id="gdRulesBtn">玩法规则</button></header>
-    <div id="gdSeats"></div><div id="gdTable"></div><div id="gdMessage" role="status"></div><div class="gd-selection"><span id="gdSelection" role="status">点选手牌组成牌型</span><button id="gdClear" disabled>清空选择</button></div><div id="gdHand" aria-label="你的手牌"></div>
+    <div class="gd-arena"><div id="gdSeats"></div><div id="gdTable"></div></div><div id="gdMessage" role="status"></div><div class="gd-selection"><span id="gdSelection" role="status">点选手牌组成牌型</span><button id="gdClear" disabled>清空选择</button></div><div id="gdHand" aria-label="你的手牌"></div>
     <div class="gd-controls"><button id="gdHint">提示</button><button id="gdPlay">出牌</button><button id="gdPass">不出</button><button id="gdAuto">托管</button><button id="gdNext" hidden>下一局</button></div><div id="gdStats"></div>
     <div id="gdExit" class="gd-confirm" role="dialog" aria-modal="true" aria-labelledby="gdExitTitle" hidden><div><h3 id="gdExitTitle">暂时离开牌桌？</h3><p>离开会放弃本局手牌，不扣金币。已完成战绩会保留；当前升级进度保留至关闭网页。</p><button id="gdExitYes">离开本局</button><button id="gdExitNo">继续出牌</button></div></div>
     <article id="gdRules" role="dialog" aria-modal="true" aria-label="掼蛋规则" hidden><button id="gdRulesClose">关闭规则</button><h3>掼蛋 · 单机休闲规则</h3><p>你与对座 AI 组队，对抗两名 AI。两副含大小王的牌共108张，每人27张。无需登录，不扣金币，不影响其他四馆的任务和段位。</p><p>支持单张、对子、三张、三带二、五张顺子、三连对、钢板（连续两组三张）、4至10张炸弹、五张同花顺、四王炸。级牌高于A、低于小王；红桃级牌是逢人配，可替代非王牌；单独打出按级牌计算。顺子包含A2345与10JQKA，不跨越KA2。</p><p>四王炸最大；六张及以上炸弹高于同花顺；同花顺高于五张炸弹，五张高于四张炸弹。普通牌须同型同张数且更大；队友领出时可不压。全员不出后，领出者重新出牌；领出者已走完时由队友接风。</p><p>头游所在队获胜：队友二游升3级、三游升2级、末游升1级。首次打2，下一局打胜方级别；打A赢后重新从2开始。休闲版暂不含进贡、还贡、抗贡与三次过A赛制，每局重新随机先手。</p><p>点选手牌后点“出牌”；“提示”选出建议组合；“托管”自动完成你的回合。退出未完局不扣金币，但当前牌局会结束。战绩按本浏览器独立记录。</p></article>
@@ -2964,7 +2991,7 @@ var guandanSelected = false;
 var ARCADE_NAMES = {blackjack:'21点', gold:'炸金花', dice:'猜骰子', guandan:'掼蛋'};
 var Arcade = {game:'blackjack', mode:'coins', practice:500, round:null, message:'选择下注后开始', busy:false};
 var ARCADE_RULES = {
-  blackjack:'一副52张牌，每局重洗。A按1或11；庄家软17停牌。天然21点净赢下注的1.5倍，普通赢净赢1倍，平局退本金。仅首两张允许加倍，加倍后只补一张。首版不含分牌和保险。未完局离开或刷新视为放弃。',
+  blackjack:'一副52张牌，每局重洗。2–10按牌面，J/Q/K按10点；A自动按不爆牌的最高点数取1或11（A+3=14，再来9则为13；多个A最多一张按11）。起手两张A+10点牌为天然21点，净赢下注1.5倍；双方天然21点退本金，庄家天然21点立即结算。三张及以上21点为普通21点，普通赢净赢1倍，同点退本金；玩家爆牌立即输。庄家不足17必须补牌，软17（如A+6）也停牌。仅起手两张可加倍，须余额和本轮限额足够；加倍只补一张，随后停牌。当前不含分牌、保险、投降或五龙等特殊奖励。未完局离开或刷新视为放弃，不退本金。',
   gold:'四人三张牌：豹子 > 顺金 > 金花 > 顺子 > 对子 > 单张；A23为最小顺子，QKA最大；不含235特殊规则。看牌后跟注/加注/比牌费用为闷牌的2倍。第三轮起可比牌，每次比牌支付本人的跟注额；同牌比牌发起者输。第十轮剩余玩家摊牌，完全相同则平分，余数按座位顺序分配。AI按新手/普通/困难/冠军分别带入500/2000/10000/50000；每轮新对手，只按自己的牌与公开行为决策。',
   dice:'三颗公平六面骰：4–10为小，11–17为大；任意豹子（包括111和666）大小都输。猜中返还本金并净赢1倍下注，否则失去下注。每次下注确认后即时结算，不自动连投。中奖概率105/216，非稳赚玩法。'
 };
@@ -3025,6 +3052,7 @@ function openArcade(game) {
   showScreen('arcade');$('arcHelp').hidden=true;renderArcade();return true;
 }
 function blackjackValue(cards) {var total=0,aces=0;cards.forEach(function(c){total+=c.r===14?11:Math.min(10,c.r);if(c.r===14)aces++;});while(total>21&&aces){total-=10;aces--;}return {total:total,soft:aces>0};}
+function blackjackPointLabel(cards){var v=blackjackValue(cards),n=cards.filter(function(c){return c.r===14;}).length;return v.total+' 点'+(n?' · '+(v.soft?'A按11点'+(n>1?'，其余A按1点':''):'A按1点'):'')+(v.total>21?' · 爆牌':cards.length===2&&v.total===21?' · 天然21点':v.soft?' · 软点':'');}
 function blackjackStart(bet){var r=arcadeBegin(bet);if(!r)return;r.deck=shuffle(makeDeck());r.hand=[r.deck.pop(),r.deck.pop()];r.dealer=[r.deck.pop(),r.deck.pop()];
   var a=blackjackValue(r.hand).total,b=blackjackValue(r.dealer).total;
   if(a===21||b===21)arcadeSettle(a===21&&b===21?bet:a===21?bet*5/2:0,a===21&&b===21?'双方天然21点，平局':a===21?'天然21点':'庄家天然21点');
@@ -3067,11 +3095,11 @@ function renderArcade(){if(!$('arcTable')||!player)return;var r=Arcade.round,liv
   $('arcStats').textContent='正式场 '+s.hands+' 局 / '+s.wins+' 胜 / 净 '+s.net;$('arcMessage').textContent=Arcade.message;
   var table='',actions='',bet=Number($('arcBet').value);
   if(Arcade.game==='blackjack'){
-    if(r){table='<div class="arc-seat"><h3>庄家</h3>'+arcCards(r.dealer,function(i){return live&&i===1;})+'<p>'+(live?'暗牌待揭晓':blackjackValue(r.dealer).total+' 点')+'</p></div><div class="arc-seat"><h3>'+escapeHTML(player.name)+'</h3>'+arcCards(r.hand,false)+'<p>'+blackjackValue(r.hand).total+' 点 · 投入 '+r.stake+'</p></div>';}
+    if(r){table='<div class="blackjack-layout"><div class="arc-seat blackjack-dealer"><h3>庄家</h3>'+arcCards(r.dealer,function(i){return live&&i===1;})+'<p>'+(live?'明牌 '+blackjackPointLabel([r.dealer[0]])+' · 暗牌待揭晓':blackjackPointLabel(r.dealer))+'</p></div><div class="blackjack-divider">庄家软17停牌 · 天然21点赔3:2</div><div class="arc-seat blackjack-player"><h3>'+escapeHTML(player.name)+' · 你</h3>'+arcCards(r.hand,false)+'<p>'+blackjackPointLabel(r.hand)+' · 投入 '+r.stake+'</p></div></div>';}
     else table='<div class="arc-seat"><h3>接近21，不要超过</h3><p>天然21点净赢1.5倍，庄家软17停牌</p></div>';
     if(live)actions=arcButton('要牌','hit')+arcButton('停牌','stand',false,true)+arcButton('加倍','double',r.hand.length!==2||arcadeBalance()<r.base||r.stake+r.base>arcadeLimit15());else actions=arcButton('发牌 · '+bet,'start',arcadeBalance()<bet,true);
   }else if(Arcade.game==='gold'){
-    if(r){table=r.seats.map(function(p,i){return '<div class="arc-seat'+(p.folded?' out':'')+'"><h3>'+escapeHTML(p.name)+(i===0?' · 你':' · AI')+'</h3>'+arcCards(p.hand,!r.done&&(i!==0||!p.seen))+'<p>'+(p.folded?'已弃牌':p.seen?'已看牌':'闷牌')+' · 投入 '+p.paid+'</p><p>'+((r.done||i===0&&p.seen)?goldLabel(p.hand):'')+'</p></div>';}).join('');table+='<p style="width:100%;text-align:center;margin:0;color:#ddc68d">底池 '+r.pot+' · 第 '+r.turn+' / 10 轮 · 闷牌单注 '+r.unit+'</p>';}
+    if(r){table='<div class="gold-layout">'+r.seats.map(function(p,i){return '<div class="arc-seat gold-seat-'+i+(p.folded?' out':'')+'"><h3>'+escapeHTML(p.name)+(i===0?' · 你':' · AI')+'</h3>'+arcCards(p.hand,!r.done&&(i!==0||!p.seen))+'<p>'+(p.folded?'已弃牌':p.seen?'已看牌':'闷牌')+' · 投入 '+p.paid+'</p><p>'+((r.done||i===0&&p.seen)?goldLabel(p.hand):'')+'</p></div>';}).join('')+'<div class="gold-pot"><strong>底池 '+r.pot+'</strong><span>第 '+r.turn+' / 10 轮</span><small>闷牌单注 '+r.unit+'</small></div></div>';}
     else table='<div class="arc-seat"><h3>三张牌，一场心理较量</h3><p>四人桌 · 每人底注 '+bet+' · 最多十轮</p></div>';
     if(live){var cost=r.unit*(r.seats[0].seen?2:1),capBlocked=r.stake+cost>arcadeLimit15();actions=arcButton('看牌','peek',r.seats[0].seen)+arcButton('跟注 '+cost,'call',arcadeBalance()<cost||capBlocked,true)+arcButton('加注','raise',r.unit>=r.base*4||arcadeBalance()<(r.unit+r.base)*(r.seats[0].seen?2:1)||r.stake+(r.unit+r.base)*(r.seats[0].seen?2:1)>arcadeLimit15())+(capBlocked?arcButton('达到上限·摊牌','cap',false,true):'')+arcButton('弃牌','fold');for(var i=1;i<4;i++)if(!r.seats[i].folded)actions+=arcButton('比 '+escapeHTML(r.seats[i].name),'compare-'+i,r.turn<3||arcadeBalance()<cost||capBlocked);}
     else actions=arcButton('开局 · 底注 '+bet,'start',arcadeBalance()<bet,true);
