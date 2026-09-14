@@ -476,11 +476,17 @@
     color:#f2c14e; letter-spacing:3px;
     display:flex; align-items:center; gap:10px; }
   .panel .closebtn { margin-left:auto; background:rgba(255,255,255,.08);
-    border:none; color:#9fb0c2; width:28px; height:28px;
-    border-radius:50%; font-size:16px; cursor:pointer;
+    border:none; color:#9fb0c2; height:30px; min-width:30px; padding:0 11px;
+    border-radius:15px; font-size:12px; letter-spacing:1px; cursor:pointer;
     font-family:inherit; display:flex; align-items:center;
-    justify-content:center; }
+    justify-content:center; gap:4px; white-space:nowrap; }
+  .panel .closebtn:hover { background:rgba(224,197,145,.14); color:#ecd9a8; }
   .panel .closebtn:active { background:rgba(255,255,255,.16); }
+  /* 信息类弹窗底部统一返回条，点面板外也能关闭 */
+  .ov-back { display:flex; justify-content:center; margin-top:16px; }
+  .ov-back button { border:1px solid rgba(224,197,145,.32); background:transparent; color:#dcc89a;
+    border-radius:16px; padding:8px 26px; font:inherit; font-size:12.5px; letter-spacing:1px; cursor:pointer; }
+  .ov-back button:active { transform:translateY(1px); background:rgba(224,197,145,.12); }
 
   /* Tab 切换 */
   .tab-row {
@@ -1339,7 +1345,7 @@
   <!-- 成就 -->
   <div class="overlay" id="ovAchieve">
     <div class="panel">
-      <h2>🏆 成就 <button class="closebtn" data-close="ovAchieve">✕</button></h2>
+      <h2>🏆 成就 <button class="closebtn" data-close="ovAchieve">✕ 返回</button></h2>
       <div class="stat-row">
         <div class="stat-cell"><div class="v" id="stHands">0</div><div class="l">总手数</div></div>
         <div class="stat-cell"><div class="v" id="stWins">0</div><div class="l">胜局</div></div>
@@ -1353,7 +1359,7 @@
   <!-- 任务 (含 Tab) -->
   <div class="overlay" id="ovTasks">
     <div class="panel">
-      <h2>📋 任务 <button class="closebtn" data-close="ovTasks">✕</button></h2>
+      <h2>📋 任务 <button class="closebtn" data-close="ovTasks">✕ 返回</button></h2>
       <div class="tab-row">
         <button class="tab-btn active" id="tabNewbie" data-tab="newbie">新手任务 <span class="badge" id="nbBadge" style="display:none">!</span></button>
         <button class="tab-btn" id="tabDaily" data-tab="daily">每日任务 <span class="badge" id="dailyBadge" style="display:none">!</span></button>
@@ -1367,7 +1373,7 @@
 
   <div class="overlay" id="ovHelp">
     <div class="panel">
-      <h2>❓ 游戏规则 <button class="closebtn" data-close="ovHelp">✕</button></h2>
+      <h2>❓ 游戏规则 <button class="closebtn" data-close="ovHelp">✕ 返回</button></h2>
       <div style="font-size:13px;line-height:1.85;color:#9fb0c2;">
         <p style="color:#f2c14e;font-weight:800;margin-bottom:6px;">🎴 基本玩法</p>
         <p>每人获得 2 张底牌，桌面依次发出 5 张公共牌。从 7 张牌中选最佳 5 张与对手比大小，最大者赢取底池。</p>
@@ -1460,7 +1466,7 @@
   <!-- 存档管理 -->
   <div class="overlay" id="ovStorage">
     <div class="panel" style="max-width:520px;">
-      <h2>💾 存档管理 <button class="closebtn" data-close="ovStorage">✕</button></h2>
+      <h2>💾 存档管理 <button class="closebtn" data-close="ovStorage">✕ 返回</button></h2>
       <div style="font-size:12px;color:#8fa0b4;margin-bottom:14px;line-height:1.7;">
         每个存档独立记录金币、等级、成就与任务进度。<br>
         你可以随时切换存档，或开新档重新体验新手场。
@@ -1531,7 +1537,7 @@
         <span style="font-size:12px;color:#f2c14e;letter-spacing:0;font-weight:800;margin-left:auto">
           🪙 <span id="shopCoins">0</span>
         </span>
-        <button class="closebtn" data-close="ovShop">✕</button>
+        <button class="closebtn" data-close="ovShop">✕ 返回</button>
       </h2>
       <div style="font-size:11.5px;color:#8fa0b4;margin-bottom:12px;line-height:1.7;">
         外观类买断后永久拥有，可随时装备 / 卸下；消耗品立即生效，可在牌局中提供实际优势。
@@ -1543,7 +1549,7 @@
   <!-- 档案：数据 / 图鉴 / 段位 -->
   <div class="overlay" id="ovStats">
     <div class="panel">
-      <h2>📊 档案 <button class="closebtn" data-close="ovStats">✕</button></h2>
+      <h2>📊 档案 <button class="closebtn" data-close="ovStats">✕ 返回</button></h2>
       <div class="tab-row">
         <button class="tab-btn active" id="tabSData" data-tab="sdata">数据面板</button>
         <button class="tab-btn" id="tabSDex" data-tab="sdex">牌型图鉴</button>
@@ -1560,7 +1566,7 @@
   <!-- 签到 / 周常 -->
   <div class="overlay" id="ovCheckin">
     <div class="panel">
-      <h2>📅 签到与周常 <button class="closebtn" data-close="ovCheckin">✕</button></h2>
+      <h2>📅 签到与周常 <button class="closebtn" data-close="ovCheckin">✕ 返回</button></h2>
       <div class="tab-row">
         <button class="tab-btn active" id="tabCi" data-tab="ci">每日签到
           <span class="badge" id="ciBadge" style="display:none">!</span>
@@ -1577,7 +1583,7 @@
   <!-- 设置：音效 / 音乐 / 音量 -->
   <div class="overlay" id="ovSettings">
     <div class="panel" style="max-width:420px;">
-      <h2>⚙️ 设置 <button class="closebtn" data-close="ovSettings">✕</button></h2>
+      <h2>⚙️ 设置 <button class="closebtn" data-close="ovSettings">✕ 返回</button></h2>
       <div style="display:flex;gap:10px;margin-bottom:8px;">
         <button class="shop-btn ghost" id="setSfxToggle" style="flex:1;padding:10px;font-size:13px;">🔊 音效</button>
         <button class="shop-btn ghost" id="setMusicToggle" style="flex:1;padding:10px;font-size:13px;">🎵 音乐</button>
@@ -2110,15 +2116,46 @@ function claimAchievement(id) {
 var achPage = 0, achFilter = 'all';
 
 /* 段位 */
+/* 段位：7 个大段位，每档相差 1000 段位分；每个大段位再分 III → II → I 三个小段位。
+   晋级只看段位分（排位胜负累积），不看胜场或金币。 */
 var RANKS = [
   { id:0, name:'青铜', icon:'🥉', min:0,    reward:0,     points:0 },
-  { id:1, name:'白银', icon:'🥈', min:100,  reward:500,   points:5 },
-  { id:2, name:'黄金', icon:'🥇', min:250,  reward:1200,  points:12 },
-  { id:3, name:'铂金', icon:'💠', min:450,  reward:2500,  points:25 },
-  { id:4, name:'钻石', icon:'💎', min:700,  reward:5000,  points:50 },
-  { id:5, name:'大师', icon:'🔮', min:1000, reward:10000, points:100 },
-  { id:6, name:'传奇', icon:'👑', min:1400, reward:20000, points:200 }
+  { id:1, name:'白银', icon:'🥈', min:1000, reward:500,   points:5 },
+  { id:2, name:'黄金', icon:'🥇', min:2000, reward:1200,  points:12 },
+  { id:3, name:'铂金', icon:'💠', min:3000, reward:2500,  points:25 },
+  { id:4, name:'钻石', icon:'💎', min:4000, reward:5000,  points:50 },
+  { id:5, name:'大师', icon:'🔮', min:5000, reward:10000, points:100 },
+  { id:6, name:'传奇', icon:'👑', min:6000, reward:20000, points:200 }
 ];
+/* 每个大段位固定 1000 分，平均切成三个小段（333 / 333 / 334） */
+var SUB_TIER_LABELS = ['I', 'II', 'III'];
+var RANK_STEP = 1000;
+/* 排位单局段位分增减（按难度：新手 / 普通 / 困难 / 冠军） */
+var RANK_POINT_WIN  = [50, 70, 90, 120];
+var RANK_POINT_LOSS = [18, 25, 32, 40];
+/* 小段位：III(下) → II → I(上)，返回当前小段位与段内进度 */
+function subTierInfo(points) {
+  points = Math.max(0, Number(points) || 0);
+  var tier = rankTierFor(points), base = RANKS[tier].min;
+  var b1 = base + 334, b2 = base + 668, top = base + RANK_STEP;
+  var idx = points < b1 ? 2 : (points < b2 ? 1 : 0);
+  var lo = idx === 2 ? base : (idx === 1 ? b1 : b2);
+  var hi = idx === 2 ? b1 : (idx === 1 ? b2 : top);
+  return { tier: tier, idx: idx, label: SUB_TIER_LABELS[idx], lo: lo, hi: hi,
+           got: points - lo, span: hi - lo,
+           pct: Math.max(0, Math.min(100, (points - lo) / (hi - lo) * 100)), nextMin: hi };
+}
+/* 小段位全序号：0..20，用于难度随段位平滑爬升 */
+function subTierOrder(points) { var s = subTierInfo(points); return s.tier * 3 + (2 - s.idx); }
+/* 大段位展示名：最高段位显示专属封号 */
+function tierDisplayName(game, tier) {
+  var top = TOP_TIER_NAMES[game || ''];
+  return (tier >= RANKS.length - 1 && top) ? top : RANKS[tier].name;
+}
+function rankFullName(game, points) {
+  var s = subTierInfo(points);
+  return tierDisplayName(game, s.tier) + ' ' + s.label;
+}
 
 /* 各游戏最高段位的专属封号：达成后显示于段位面板，并成为可佩戴的永久称号。
    掼蛋不进排位积分体系，改用胜场计段（同为 7 档），200 胜封顶。 */
@@ -3218,6 +3255,61 @@ var Timer = {
   }
 };
 
+/* 弹窗：同一时刻只保留一个，避免两个 ✕ 叠在一起；
+   信息类弹窗支持「点击面板外」与 Esc 关闭，其余确认类弹窗仍走各自按钮。 */
+var OV_CLOSE_ON_BACKDROP = ['ovAchieve', 'ovTasks', 'ovHelp', 'ovShop', 'ovStats', 'ovCheckin', 'ovSettings', 'ovStorage'];
+function closeOverlay(id) { var el = $(id); if (el) el.classList.remove('show'); }
+function openOverlay(id, keep) {
+  document.querySelectorAll('.overlay').forEach(function (o) {
+    if (o.id === id) return;
+    if (keep && keep.indexOf(o.id) >= 0) return;   // 需要叠放的面板（如升级提示叠在结算上）
+    o.classList.remove('show');
+  });
+  var el = $(id);
+  if (el) el.classList.add('show');
+}
+function closeTopOverlay() {
+  var list = document.querySelectorAll('.overlay.show');
+  if (!list.length) return false;
+  var o = list[list.length - 1];
+  if (OV_CLOSE_ON_BACKDROP.indexOf(o.id) < 0) return false;
+  sfx('click'); closeOverlay(o.id); return true;
+}
+/* 初始化弹窗交互：补「← 返回」按钮、点遮罩返回、Esc 返回 */
+function initOverlayUX() {
+  try {
+    var ovs = document.querySelectorAll ? document.querySelectorAll('.overlay') : [];
+    Array.prototype.forEach.call(ovs, function (o) {
+      if (!o || OV_CLOSE_ON_BACKDROP.indexOf(o.id) < 0) return;
+      if (!o.dataset || o.dataset.uxBound) return;
+      o.dataset.uxBound = '1';
+      o.addEventListener('mousedown', function (e) { if (e.target === o) { sfx('click'); closeOverlay(o.id); } });
+      var pn = o.querySelector('.panel');
+      if (!pn) return;
+      var bar = document.createElement('div');
+      bar.className = 'ov-back';
+      var back = document.createElement('button');
+      back.type = 'button';
+      back.className = 'ov-backbtn';
+      back.textContent = '← 返回';
+      back.setAttribute('data-close', o.id);
+      back.addEventListener('click', function () { sfx('click'); closeOverlay(o.id); });
+      bar.appendChild(back);
+      pn.appendChild(bar);
+    });
+    var root = document.body || document.documentElement;
+    if (root && root.dataset && !root.dataset.uxEsc && document.addEventListener) {
+      root.dataset.uxEsc = '1';
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape' && e.key !== 'Esc') return;
+        var a = document.activeElement;
+        if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable)) return;
+        closeTopOverlay();
+      });
+    }
+  } catch (e) { /* 无完整 DOM 的单元测试桩下静默跳过 */ }
+}
+
 function showScreen(name) {
   App.screen = name;
   $('lobbyScreen').style.display = name === 'lobby' ? 'flex' : 'none';
@@ -3535,7 +3627,7 @@ function renderSettle(data) {
 function showSettle(data) {
   lastSettle = data;
   renderSettle(data);
-  $('ovSettle').classList.add('show');
+  openOverlay('ovSettle');
 }
 function hideSettle() {
   $('ovSettle').classList.remove('show');
@@ -4757,20 +4849,16 @@ function rankTierFor(points) {
   return t;
 }
 function rankInfo() {
-  var t = rankTierFor(player ? player.rankPoints : 0), r = RANKS[t] || RANKS[0];
-  /* 德州扑克登顶后，顶栏与结算里显示专属封号 */
-  if (t >= RANKS.length - 1 && TOP_TIER_NAMES.holdem) r = Object.assign({}, r, { name: TOP_TIER_NAMES.holdem });
-  return r;
+  var pts = player ? player.rankPoints : 0, t = rankTierFor(pts), r = RANKS[t] || RANKS[0];
+  return Object.assign({}, r, { name: tierDisplayName('holdem', t) + ' ' + subTierInfo(pts).label });
 }
 function rankProgress() {
   var pts = player ? player.rankPoints : 0;
-  var t = rankTierFor(pts);
-  var cur = RANKS[t], next = RANKS[t + 1];
-  if (!next) return { tier: t, pct: 100, need: 0, got: pts - cur.min, span: 1, next: null };
-  var span = next.min - cur.min;
-  var got = pts - cur.min;
-  return { tier: t, pct: Math.max(0, Math.min(100, got / span * 100)),
-           need: next.min - pts, got: got, span: span, next: next };
+  var info = subTierInfo(pts), next = RANKS[info.tier + 1];
+  return { tier: info.tier, pct: info.pct, need: info.nextMin - pts, got: info.got, span: info.span,
+           next: next, sub: info,
+           nextLabel: info.idx > 0 ? RANKS[info.tier].name + ' ' + SUB_TIER_LABELS[info.idx - 1]
+                                   : ((next ? next.name : RANKS[info.tier].name) + ' III') };
 }
 function addRankPoints(delta) {
   if (!player) return;
@@ -5544,7 +5632,7 @@ function showGameOver() {
   var left = reliefLeft();
   $('goAgain').textContent = left > 0 ? ('领取救济金 ' + fmt(RELIEF.amount) + '（剩 ' + left + '）') : '今日救济金已领完';
   $('goAgain').disabled = left <= 0;
-  $('ovGameOver').classList.add('show');
+  openOverlay('ovGameOver');
 }
 
 /* 破产面板的“补充金”已并入统一救济金：每日 3 次、可被复活券翻倍，见 claimDailyRelief */
@@ -5554,12 +5642,12 @@ function showLevelUp() {
   if (lu) lu.textContent = '升级！Lv.' + player.level;
   if (ls) ls.textContent = '恭喜你升到了 Lv.' + player.level + '，解锁更强的对手与场次';
   sfx('levelup');
-  $('ovLevelUp').classList.add('show');
+  openOverlay('ovLevelUp', ['ovSettle']);
 }
 
 function requestExit() {
   if (G.settling && !G.handSettled) { showToast('本手正在结算，请稍候', 1400); return; }
-  $('ovExitConfirm').classList.add('show');
+  openOverlay('ovExitConfirm');
 }
 
 function exitGame() {
@@ -5596,7 +5684,7 @@ function exitGame() {
       + ' · 牌局净盈亏 ' + session.net + ' 金币 · 入场费 ' + session.fee
       + ' 金币 · 奖励及其他收支 ' + (player.coins - session.coins - session.net)
       + ' 金币 · 段位变化 ' + (player.rankPoints - session.rank) + ' 分';
-    $('ovSession').classList.add('show');
+    openOverlay('ovSession');
     G.session = null;
   }
 }
@@ -5940,7 +6028,7 @@ function renderSlotList() {
     news[n].addEventListener('click', function(){
       sfx('click');
       pendingNewSlot = parseInt(this.getAttribute('data-new-slot'), 10);
-      $('ovNewSaveConfirm').classList.add('show');
+      openOverlay('ovNewSaveConfirm');
     });
   }
   var sws = document.querySelectorAll('[data-switch-slot]');
@@ -5957,7 +6045,7 @@ function renderSlotList() {
     dels[d].addEventListener('click', function(){
       sfx('click');
       pendingDeleteSlot = parseInt(this.getAttribute('data-del-slot'), 10);
-      $('ovDeleteConfirm').classList.add('show');
+      openOverlay('ovDeleteConfirm');
     });
   }
 }
@@ -6239,12 +6327,12 @@ function renderWeekly() {
    ============================================================ */
 function openShop() {
   renderShop();
-  $('ovShop').classList.add('show');
+  openOverlay('ovShop');
 }
 function openStats(tab) {
   renderStats(); renderDex(); renderRank(); renderTitleList();
   switchStatsTab(tab || 'sdata');
-  $('ovStats').classList.add('show');
+  openOverlay('ovStats');
 }
 function switchStatsTab(tab) {
   $('tabSData').classList.toggle('active', tab === 'sdata');
@@ -6261,7 +6349,7 @@ function openCheckin(tab) {
   ensureWeekly();
   renderCheckin(); renderWeekly();
   switchCheckinTab(tab || (hasCheckinClaimable() ? 'ci' : (checkWeeklyHasClaimable() ? 'wk' : 'ci')));
-  $('ovCheckin').classList.add('show');
+  openOverlay('ovCheckin');
 }
 function switchCheckinTab(tab) {
   $('tabCi').classList.toggle('active', tab === 'ci');
@@ -6281,7 +6369,7 @@ function openSettings() {
   $('setMusicToggle').textContent = player.musicOn ? '🎵 音乐 开' : '🎵 音乐 关';
   $('setSettleToggle').textContent = (player.settlePanel === false) ? '📋 每手结算 关' : '📋 每手结算 开';
   $('bgmSrcLabel').textContent = bgmSourceLabel();
-  $('ovSettings').classList.add('show');
+  openOverlay('ovSettings');
 }
 function toggleMusic() {
   var on = Music.toggle();
@@ -6293,7 +6381,7 @@ function toggleMusic() {
 
 function openAchieve() {
   renderAchList();
-  $('ovAchieve').classList.add('show');
+  openOverlay('ovAchieve');
 }
 function openTasks(tab) {
   renderTasks();
@@ -6302,14 +6390,14 @@ function openTasks(tab) {
   else if (checkDailyHasClaimable()) switchTaskTab('daily');
   else if (monthlyClaimableCount()) switchTaskTab('monthly');
   else switchTaskTab('newbie');
-  $('ovTasks').classList.add('show');
+  openOverlay('ovTasks');
 }
 function openStorage() {
   renderSlotList();
-  $('ovStorage').classList.add('show');
+  openOverlay('ovStorage');
 }
 function openHelp() {
-  $('ovHelp').classList.add('show');
+  openOverlay('ovHelp');
 }
 function switchTaskTab(tab) {
   if (tab !== 'newbie' && tab !== 'daily' && tab !== 'monthly') tab = 'newbie';
@@ -6551,10 +6639,12 @@ function bindEvents() {
   for (var i = 0; i < closers.length; i++) {
     closers[i].addEventListener('click', function(){
       var id = this.getAttribute('data-close');
-      var el = $(id);
-      if (el) el.classList.remove('show');
+      closeOverlay(id);
     });
   }
+
+  // 点击面板外的遮罩区域 = 返回；Esc 同样返回
+  initOverlayUX();
 
   // 任务 Tab
   $('tabNewbie').addEventListener('click', function(){ sfx('click'); switchTaskTab('newbie'); });
@@ -6744,7 +6834,7 @@ function exchangePoints(game,direction,n){
 /* 金币买积分的入口已关闭：积分只能靠排位赢取 */
 buyRankedPoints=function(n){return false;};
 function applyRankResult15(game,key,net){var s=profile15(game),i=level15(key),sign=Math.sign(net),before=s.redeemPoints,rank=s.rankPoints;
-  s.redeemPoints=Math.max(0,s.redeemPoints+sign*(i+1));s.rankPoints=Math.max(0,s.rankPoints+(sign>0?[12,16,20,26][i]:sign<0?-[5,7,9,12][i]:0));
+  s.redeemPoints=Math.max(0,s.redeemPoints+sign*(i+1));s.rankPoints=Math.max(0,s.rankPoints+(sign>0?RANK_POINT_WIN[i]:sign<0?-RANK_POINT_LOSS[i]:0));
   if(!Number.isSafeInteger(s.redeemPoints)||!Number.isSafeInteger(s.rankPoints))throw Error('积分超出范围');
   s.rankPeak=Math.max(s.rankPeak,rankTierFor(s.rankPoints));s.rankedHands++;if(sign>0){s.rankedWins++;s.rankedStreak++;}else s.rankedStreak=0;
   if(game==='holdem'){player.rankPoints=s.rankPoints;player.rankTier=rankTierFor(s.rankPoints);player.rankPeak=s.rankPeak;}
@@ -6781,13 +6871,13 @@ claimWeekly=function(id){ensureWeekly();var t=getWeeklyTaskById(id);if(!t||playe
   var ok=atomic15(function(){player.weekly.claimed[id]=true;addCoins(t.reward);});if(ok){renderWeekly();renderLobby();updateTasksBadges();}return ok;};
 claimAchievement=function(id){var a=ACHIEVEMENTS.find(function(t){return t.id===id;});if(!a||player.achievementClaims[id]||!achievementReady(a))return false;
   var ok=atomic15(function(){player.achievementClaims[id]=true;player.achievements[id]=true;addCoins(a.reward);});if(ok){renderAchList();renderLobby();}return ok;};
-rankInfo=function(game){var g=game||hubGame||'holdem',t=rankTierFor(player?profile15(g).rankPoints:0),r=RANKS[t]||RANKS[0];
- if(t>=RANKS.length-1&&TOP_TIER_NAMES[g])r=Object.assign({},r,{name:TOP_TIER_NAMES[g]});
- return r;};
+rankInfo=function(game){var g=game||hubGame||'holdem',pts=player?profile15(g).rankPoints:0,t=rankTierFor(pts),sub=subTierInfo(pts),base=tierDisplayName(g,t);
+ return Object.assign({},RANKS[t]||RANKS[0],{name:base+' '+sub.label,base:base,sub:sub.label,info:sub});};
 /* 排位只有一种模式：不选手难度，对手强度由玩家当前段位决定 */
 function rankedDifficultyFor(game){
-  var t=rankTierFor(player?profile15(game).rankPoints:0);
-  return t<=1?'easy':t===2?'normal':t===3?'hard':'champion';
+  /* 对手强度随小段位（0..20）平滑爬升，而不是到了大段位才跳一档 */
+  var i=subTierOrder(player?profile15(game).rankPoints:0);
+  return i<6?'easy':i<12?'normal':i<17?'hard':'champion';
 }
 var oldRankProgress15=rankProgress;
 rankProgress=function(){var pts=player.rankPoints;player.rankPoints=profile15().rankPoints;try{return oldRankProgress15();}finally{player.rankPoints=pts;}};
@@ -6850,7 +6940,7 @@ renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var r
 /* 所有游戏共用模式及难度入口。 */
 renderModeCards=function(){if(!player)return;var s=profile15(hubGame),body=$('modeBody');body.innerHTML='';
  ['quick','ranked'].forEach(function(mode){var card=document.createElement('button');card.className='mode-card '+mode;
-  card.innerHTML='<div class="mode-name">'+(mode==='quick'?'自由匹配':'独立排位')+'</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>'+(mode==='quick'?'金币对局 · 本地AI或庄家<br>四档挑战，自主选择':'单一模式 · 不挑选难度<br>对手强度随你的段位变化<br>'+rankInfo(hubGame).name+' · 当前对手 '+LEVEL_NAMES[level15(rankedDifficultyFor(hubGame))]+'级<br>可兑换积分 '+s.redeemPoints+'<br>胜加、负扣，平局不变')+'</p></div>';
+  card.innerHTML='<div class="mode-name">'+(mode==='quick'?'自由匹配':'独立排位')+'</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>'+(mode==='quick'?'金币对局 · 本地AI或庄家<br>四档挑战，自主选择':'单一模式 · 不挑选难度<br>对手强度随你的段位变化<br>'+rankInfo(hubGame).name+' · 当前对手 '+LEVEL_NAMES[level15(rankedDifficultyFor(hubGame))]+'级<br>可兑换积分 '+s.redeemPoints+'<br>胜 +50 ~ +120 · 负 -18 ~ -40<br>平局不变 · 段位只靠积分晋级')+'</p></div>';
   card.onclick=function(){App.mode=mode;
     if(mode==='ranked'){var d=rankedDifficultyFor(hubGame);App.difficulty=d;tryEnterGame(d);return;}
     renderDifficultyCards();showScreen('difficulty');};body.appendChild(card);
@@ -7156,14 +7246,15 @@ var oldRenderAch15=renderAchList;
 renderAchList=function(){oldRenderAch15();var host=$('achList');if(!host)return;var bar=document.createElement('div');bar.className='game-filter15';
  ['all'].concat(GAME_IDS).forEach(function(g){var b=document.createElement('button');b.textContent=g==='all'?'全部游戏':GAME_NAMES[g];b.onclick=function(){achGame15=g;achPage=0;renderAchList();};bar.appendChild(b);});host.prepend(bar);};
 var achGame15='all';
-renderRank=function(){if(!player)return;var s=profile15(hubGame),tier=rankTierFor(s.rankPoints),cur=RANKS[tier],next=RANKS[tier+1];
- var topName=TOP_TIER_NAMES[hubGame]||'',curName=(tier>=RANKS.length-1&&topName)?topName:cur.name;
- var pct=next?Math.max(0,Math.min(100,100*(s.rankPoints-cur.min)/(next.min-cur.min))):100;
- var html='<div class="rank-row"><div class="mid"><div class="nm">'+GAME_NAMES[hubGame]+' · '+curName+'</div><div class="pt">'+s.rankPoints+' 段位分</div><div class="rank-bar"><div class="rank-fill" style="width:'+pct+'%"></div></div></div></div><div class="stat-grid"><div class="stat-box"><div class="v">'+s.rankPoints+'</div><div class="l">段位分（不可兑换）</div></div><div class="stat-box"><div class="v">'+s.redeemPoints+'</div><div class="l">可兑换积分</div></div><div class="stat-box"><div class="v">'+s.rankedWins+' / '+s.rankedHands+'</div><div class="l">排位胜局 / 总局数</div></div></div>';
- html+='<p>各游戏独立计算。金币100:1双向兑换积分，不影响段位。排位不收门票，每局重置比赛筹码，不结算金币。</p><p>新手 / 普通 / 困难 / 冠军：胜局积分 +1/+2/+3/+4；负局 -1/-2/-3/-4。段位胜 +12/+16/+20/+26，负 -5/-7/-9/-12；平局均不变，最低0。中途离开或刷新未完局记负。</p>';
- html+='<p>'+(next?'距 '+next.name+' 还需 '+(next.min-s.rankPoints)+' 段位分':'已到最高段位 · 专属封号「'+topName+'」')+'</p>';
+renderRank=function(){if(!player)return;var s=profile15(hubGame),info=subTierInfo(s.rankPoints),tier=info.tier,cur=RANKS[tier],next=RANKS[tier+1];
+ var base=tierDisplayName(hubGame,tier),full=base+' '+info.label,pct=info.pct;
+ var nextLabel=info.idx>0?(cur.name+' '+SUB_TIER_LABELS[info.idx-1]):((next?next.name:cur.name)+' III');
+ var html='<div class="rank-row"><div class="mid"><div class="nm">'+GAME_NAMES[hubGame]+' · '+full+'</div><div class="pt">'+s.rankPoints+' 段位分 · 本小段 '+info.got+' / '+info.span+'</div><div class="rank-bar"><div class="rank-fill" style="width:'+pct+'%"></div></div></div></div><div class="stat-grid"><div class="stat-box"><div class="v">'+s.rankPoints+'</div><div class="l">段位分（不可兑换）</div></div><div class="stat-box"><div class="v">'+s.redeemPoints+'</div><div class="l">可兑换积分</div></div><div class="stat-box"><div class="v">'+s.rankedWins+' / '+s.rankedHands+'</div><div class="l">排位胜局 / 总局数</div></div></div>';
+ html+='<p>段位只靠段位分晋级：每 1000 段位分升一个大段位，每个大段位再分 III → II → I 三个小段位（约 333 分一小段）。青铜 0 起步 → 白银 1000 → 黄金 2000 → 铂金 3000 → 钻石 4000 → 大师 5000 → 传奇 6000。排位不收门票，每局重置比赛筹码，不结算金币。</p>';
+ html+='<p>排位单局段位分（新手 / 普通 / 困难 / 冠军）：胜 +'+RANK_POINT_WIN.join('/+')+'；负 -'+RANK_POINT_LOSS.join('/-')+'；平局不变，最低 0。可兑换积分另算（胜 +1 ~ +4，负 -1 ~ -4），100 积分可换 100 金币，与段位互不影响。</p>';
+ html+='<p>'+(info.nextMin>s.rankPoints?'距下一小段位「'+nextLabel+'」还需 <b>'+(info.nextMin-s.rankPoints)+'</b> 段位分':'已达最高段位')+(tier>=RANKS.length-1?' · 专属封号「'+base+'」':'')+'</p>';
  html+='<p>👑 六冠赌神进度 <b>'+crownCount(player)+' / 6</b> · 六大游戏全部达到最高段位可获得永久称号「六冠赌神」</p>';
- RANKS.forEach(function(r){html+='<div class="task-item"><div class="info"><div class="t">'+r.name+(r.id===RANKS.length-1&&topName?' · '+topName:'')+'</div><div class="pg">'+r.min+' 段位分'+(r.id===tier?' · 当前':'')+'</div></div></div>';});$('rankPanel').innerHTML=html;};
+ RANKS.forEach(function(r){html+='<div class="task-item"><div class="info"><div class="t">'+r.name+(r.id===RANKS.length-1&&TOP_TIER_NAMES[hubGame]?' · '+TOP_TIER_NAMES[hubGame]:'')+'</div><div class="pg">'+r.min+' 分起 · '+['III','II','I'].map(function(l){return r.name+' '+l;}).join(' → ')+(r.id===tier?' · 当前 '+full:'')+'</div></div></div>';});$('rankPanel').innerHTML=html;};
 
 
 /* ============================================================

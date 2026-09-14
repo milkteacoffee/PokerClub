@@ -165,7 +165,7 @@ test('段位面板登顶后显示专属封号与六冠进度', () => {
   fresh();
   w.ensureGames15(w.player);
   w.player.games.holdem.rankPeak = 6;
-  w.player.games.holdem.rankPoints = 1400;
+  w.player.games.holdem.rankPoints = 6000;
   w.renderRank();
   const panel = doc.getElementById('rankPanel');
   assert.ok(panel.textContent.includes('德州王牌'), '应显示德州王牌，实际：' + panel.textContent.slice(0, 80));
@@ -178,10 +178,10 @@ test('顶栏段位徽章登顶显示德州王牌', () => {
   w.ensureGames15(w.player);
   w.player.rankPoints = 1400;
   w.player.rankPeak = 6;
-  w.player.games.holdem.rankPoints = 1400;
+  w.player.games.holdem.rankPoints = 6000;
   w.player.games.holdem.rankPeak = 6;
   w.renderLobby();
-  assert.equal(doc.getElementById('lbRank').textContent, '👑 德州王牌');
+  assert.equal(doc.getElementById('lbRank').textContent, '👑 德州王牌 III');
 });
 
 test('掼蛋战绩栏显示段位与封顶进度', () => {

@@ -444,15 +444,16 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   ok(ctx.exchangePoints('holdem','buy',1) === false && ctx.player.coins === rankCoins, '金币不能购买积分，积分只能靠排位赢取');
   ctx.profile15('holdem').redeemPoints = 1; // 模拟排位赢得的积分
   ok(ctx.exchangePoints('holdem','sell',1) === true && ctx.player.coins === rankCoins + 100 && ctx.profile15('holdem').redeemPoints === 0, '1个排位积分可兑换100金币');
-  ctx.addRankPoints(120);
-  ok(ctx.rankTierFor(ctx.player.rankPoints) === 1, '积分 120 晋升白银');
-  ok(ctx.rankInfo().name === '白银', 'rankInfo 返回白银');
+  ctx.addRankPoints(1000);                      // 每 1000 分升一个大段位
+  ok(ctx.rankTierFor(ctx.player.rankPoints) === 1, '积分 1000 晋升白银');
+  ok(ctx.rankInfo().name === '白银 III', 'rankInfo 返回白银 III（大段位 + 小段位）');
   var coinsBeforeRank = ctx.player.coins;
-  ctx.addRankPoints(150);                       // 270 → 黄金
-  ok(ctx.rankTierFor(ctx.player.rankPoints) === 2, '积分 270 晋升黄金');
+  ctx.addRankPoints(1000);                      // 2000 → 黄金
+  ok(ctx.rankTierFor(ctx.player.rankPoints) === 2, '积分 2000 晋升黄金');
+  ok(ctx.rankInfo().name === '黄金 III', 'rankInfo 跟随小段位');
   ok(ctx.player.coins === coinsBeforeRank,
      '升段不直接发放金币（' + coinsBeforeRank + ' → ' + ctx.player.coins + '）');
-  ctx.addRankPoints(-1000);
+  ctx.addRankPoints(-99999);
   ok(ctx.player.rankPoints === 0, '积分不会低于 0');
   ok(ctx.rankTierFor(0) === 0, '0 分回落青铜');
   ok(ctx.player.rankPeak === 2, '历史最高段位保留为黄金');

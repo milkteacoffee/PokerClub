@@ -298,7 +298,7 @@ function click(el) {
                    bluffTotal: 10, bluffWins: 4, biggestPot: 8888,
                    totalWagered: 50000, totalNet: 12000 },
           handDex: { 0: 20, 1: 50, 2: 20, 3: 8, 4: 5, 5: 3, 6: 2, 7: 1, 8: 0 },
-          rankPoints: 520, rankPeak: 4
+          rankPoints: 3600, rankPeak: 4
         },
         createdAt: Date.now(), lastPlayed: Date.now()
       },
@@ -328,7 +328,7 @@ function click(el) {
   ok(g2('lbName').textContent === '土豪', '迁移保留玩家名（' + g2('lbName').textContent + '）');
   ok(g2('lbCoins').textContent === '999,999', '迁移保留金币 999,999（实际 ' + g2('lbCoins').textContent + '）');
   ok(g2('lbLevel').textContent === 'Lv.5', '迁移保留等级 Lv.5');
-  ok(g2('lbRank').textContent.indexOf('铂金') >= 0, '520 分对应铂金段位（' + g2('lbRank').textContent + '）');
+  ok(g2('lbRank').textContent.indexOf('铂金') >= 0, '3600 分对应铂金段位（' + g2('lbRank').textContent + '）');
 
   // 商城：购买 → 装备 → 卸下
   click2(g2('lbBtnShop'));
@@ -372,7 +372,7 @@ function click(el) {
   click2(g2('tabSRank'));
   await tick(40);
   ok(g2('rankPanel').textContent.indexOf('铂金') >= 0, '段位页显示铂金');
-  ok(g2('rankPanel').textContent.indexOf('520') >= 0, '段位页显示 520 分');
+  ok(g2('rankPanel').textContent.indexOf('3600') >= 0, '段位页显示 3600 分');
   click2(g2('ovStats').querySelector('[data-close="ovStats"]'));
   await tick(30);
 
