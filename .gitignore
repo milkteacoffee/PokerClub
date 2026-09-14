@@ -3,12 +3,16 @@ tests/game.extracted.js
 tests/shots/
 tests/tmp/
 
+# 本地验收产物（截图、临时驱动脚本，仅本机使用）
+outputs/
+
 # 外置音频：放用户自己的音乐，版权素材不进公开仓库
 assets/*
 !assets/README.md
 
 # 工具/项目本地数据
 .workbuddy/
+.wbapp_*
 
 # 系统/编辑器
 .DS_Store
