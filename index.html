@@ -2978,13 +2978,14 @@ function goldResolve(force){var r=Arcade.round,live=r.seats.filter(function(p){r
   arcadeSettle(share,winners.map(function(p){return p.name;}).join('、')+' 获胜 · 底池 '+r.pot);return true;}
 function goldAITurns(){var r=Arcade.round;for(var i=1;i<4&&!r.done;i++){var p=r.seats[i];if(p.folded)continue;
   if(!p.seen&&randomInt(100)<[30,55,80,95][level15(Arcade.difficulty)])p.seen=true;var strength=p.seen?goldValue(p.hand)[0]:-1,cost=r.unit*(p.seen?2:1);
-  if(p.stack<cost||(p.seen&&strength===0&&randomInt(100)<[15,30,45,60][level15(Arcade.difficulty)])){p.folded=true;r.log.push(p.name+' 弃牌');continue;}
-  if(p.seen&&strength>=1&&r.unit<r.base*4&&p.stack>=cost*2&&randomInt(100)<[10,22,36,50][level15(Arcade.difficulty)]){r.unit+=r.base;cost=r.unit*2;r.log.push(p.name+' 加注');}
+  if(p.stack<cost||p.paid+cost>arcadeLimit15()||(p.seen&&strength===0&&randomInt(100)<[15,30,45,60][level15(Arcade.difficulty)])){p.folded=true;r.log.push(p.name+' 弃牌');continue;}
+  if(p.seen&&strength>=1&&r.unit<r.base*4&&p.stack>=cost*2&&p.paid+cost+r.base*2<=arcadeLimit15()&&randomInt(100)<[10,22,36,50][level15(Arcade.difficulty)]){r.unit+=r.base;cost=r.unit*2;r.log.push(p.name+' 加注');}
+  if(p.paid+cost>arcadeLimit15()){p.folded=true;r.log.push(p.name+' 达到单局上限，弃牌');continue;}
   p.stack-=cost;p.paid+=cost;r.pot+=cost;
   if(r.turn>=3&&randomInt(100)<25){var candidates=r.seats.filter(function(q){return q!==p&&!q.folded;});if(candidates.length){var target=candidates[randomInt(candidates.length)];if(p.stack>=cost){p.stack-=cost;p.paid+=cost;r.pot+=cost;var loser=goldCompare(p.hand,target.hand)>0?target:p;loser.folded=true;r.log.push(p.name+' 比牌，'+loser.name+' 出局');}}}
   if(goldResolve(false))return;
  }if(r.seats[0].folded){goldResolve(true);return;}if(goldResolve(false))return;r.turn++;if(r.turn>10){goldResolve(true);return;}Arcade.message='第'+r.turn+'轮 · '+r.log.slice(-2).join('；');renderArcade();}
-function goldAction(action,target){var r=Arcade.round;if(!r||r.done||r.retry)return;var p=r.seats[0];if(action==='peek'){p.seen=true;Arcade.message='已看牌：'+goldLabel(p.hand)+' · 跟注费用翻倍';renderArcade();return;}if(action==='fold'){p.folded=true;goldResolve(true);return;}
+function goldAction(action,target){var r=Arcade.round;if(!r||r.done||r.retry)return;var p=r.seats[0];if(action==='cap'){goldResolve(true);return;}if(action==='peek'){p.seen=true;Arcade.message='已看牌：'+goldLabel(p.hand)+' · 跟注费用翻倍';renderArcade();return;}if(action==='fold'){p.folded=true;goldResolve(true);return;}
   if(action==='compare'&&(r.turn<3||!r.seats[target]||r.seats[target].folded||target===0))return;
   var unit=r.unit+(action==='raise'?r.base:0);if(unit>r.base*4)return;var cost=unit*(p.seen?2:1);if(!arcadeExtra(cost)){Arcade.message='余额不足或已达本档投入上限，请弃牌；下一局可选择更高档位';renderArcade();return;}
   r.unit=unit;p.paid+=cost;r.pot+=cost;if(action==='compare'){var other=r.seats[target];var wonCompare=goldCompare(p.hand,other.hand)>0;(wonCompare?other:p).folded=true;if(wonCompare)r.compareWins=(r.compareWins||0)+1;}
@@ -3007,7 +3008,7 @@ function renderArcade(){if(!$('arcTable')||!player)return;var r=Arcade.round,liv
   }else if(Arcade.game==='gold'){
     if(r){table=r.seats.map(function(p,i){return '<div class="arc-seat'+(p.folded?' out':'')+'"><h3>'+escapeHTML(p.name)+(i===0?' · 你':' · AI')+'</h3>'+arcCards(p.hand,!r.done&&(i!==0||!p.seen))+'<p>'+(p.folded?'已弃牌':p.seen?'已看牌':'闷牌')+' · 投入 '+p.paid+'</p><p>'+((r.done||i===0&&p.seen)?goldLabel(p.hand):'')+'</p></div>';}).join('');table+='<p style="width:100%;text-align:center;margin:0;color:#ddc68d">底池 '+r.pot+' · 第 '+r.turn+' / 10 轮 · 闷牌单注 '+r.unit+'</p>';}
     else table='<div class="arc-seat"><h3>三张牌，一场心理较量</h3><p>四人桌 · 每人底注 '+bet+' · 最多十轮</p></div>';
-    if(live){var cost=r.unit*(r.seats[0].seen?2:1);actions=arcButton('看牌','peek',r.seats[0].seen)+arcButton('跟注 '+cost,'call',arcadeBalance()<cost||r.stake+cost>arcadeLimit15(),true)+arcButton('加注','raise',r.unit>=r.base*4||arcadeBalance()<(r.unit+r.base)*(r.seats[0].seen?2:1)||r.stake+(r.unit+r.base)*(r.seats[0].seen?2:1)>arcadeLimit15())+arcButton('弃牌','fold');for(var i=1;i<4;i++)if(!r.seats[i].folded)actions+=arcButton('比 '+escapeHTML(r.seats[i].name),'compare-'+i,r.turn<3||arcadeBalance()<cost||r.stake+cost>arcadeLimit15());}
+    if(live){var cost=r.unit*(r.seats[0].seen?2:1),capBlocked=r.stake+cost>arcadeLimit15();actions=arcButton('看牌','peek',r.seats[0].seen)+arcButton('跟注 '+cost,'call',arcadeBalance()<cost||capBlocked,true)+arcButton('加注','raise',r.unit>=r.base*4||arcadeBalance()<(r.unit+r.base)*(r.seats[0].seen?2:1)||r.stake+(r.unit+r.base)*(r.seats[0].seen?2:1)>arcadeLimit15())+(capBlocked?arcButton('达到上限·摊牌','cap',false,true):'')+arcButton('弃牌','fold');for(var i=1;i<4;i++)if(!r.seats[i].folded)actions+=arcButton('比 '+escapeHTML(r.seats[i].name),'compare-'+i,r.turn<3||arcadeBalance()<cost||capBlocked);}
     else actions=arcButton('开局 · 底注 '+bet,'start',arcadeBalance()<bet,true);
   }else{
     table='<div style="text-align:center"><div>'+[0,1,2].map(function(i){return '<span class="arc-die">'+(r?diceFace(r.dice[i]):'?')+'</span>';}).join('')+'</div><p>小：4–10　大：11–17　豹子通杀</p></div>';
