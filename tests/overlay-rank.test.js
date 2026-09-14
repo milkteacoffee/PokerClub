@@ -145,9 +145,11 @@ test('小段位序号用于难度爬升，共 21 档', () => {
   assert.equal(w.subTierOrder(99999), 20, '封顶后不再增长');
 });
 
-test('单局段位分：胜 +50~+120，负 -18~-40，平局不变', () => {
-  assert.deepEqual(w.RANK_POINT_WIN, [50, 70, 90, 120]);
-  assert.deepEqual(w.RANK_POINT_LOSS, [18, 25, 32, 40]);
+test('单局段位分：胜 5~10，负 5~10，平局不变', () => {
+  assert.deepEqual(w.RANK_POINT_WIN, [5, 7, 9, 10]);
+  assert.deepEqual(w.RANK_POINT_LOSS, [5, 7, 9, 10]);
+  w.RANK_POINT_WIN.forEach(v => assert.ok(v >= 5 && v <= 10, '胜局加分应在 5~10：' + v));
+  w.RANK_POINT_LOSS.forEach(v => assert.ok(v >= 5 && v <= 10, '负局扣分应在 5~10：' + v));
   fresh();
   w.GAME_LEVELS.forEach((key, i) => {
     const s = w.profile15('holdem');
@@ -205,9 +207,9 @@ test('模式卡显示当前小段位与单局增减', () => {
   w.player.coins = 5000;
   w.renderModeCards();
   const text = doc.getElementById('modeBody').textContent;
-  assert.ok(text.includes('黄金 II'), '模式卡应显示小段位，实际：' + text.slice(0, 80));
-  assert.ok(text.includes('+50'), '应显示胜局加分');
-  assert.ok(text.includes('-18'), '应显示负局扣分');
+  assert.ok(text.includes('黄金 II'), '模式卡应显示小段位，实际：' + text.slice(0, 120));
+  assert.ok(text.includes('+5'), '应显示胜局加分区间');
+  assert.ok(text.includes('-10'), '应显示负局扣分区间');
 });
 
 console.log('TOTAL ' + n);

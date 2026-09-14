@@ -872,6 +872,8 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   ctx.player.coins=0;
   ok(!ctx.tryEnterGame('champion') && started===0, '金币为 0 时连门票都付不起，拒绝进入排位');
   ctx.player.coins=ctx.ENTRY_FEE.champion;
+  ok(!ctx.tryEnterGame('champion') && started===0, '排位积分不满 '+ctx.RANKED_ENTRY_MIN+' 时不得进入');
+  ctx.profile15('holdem').rankPoints=ctx.RANKED_ENTRY_MIN;
   ok(ctx.tryEnterGame('champion') && started===1 && ctx.player.coins===0, '排位同样收门票（冠军档 '+ctx.ENTRY_FEE.champion+'）');
   ok(!ctx.tryEnterGame('easy') && !ctx.buyRankedPoints(1), '在牌桌拒绝重复入场及兑换');
   ctx.startGame = realStart; ctx.G.active = false;

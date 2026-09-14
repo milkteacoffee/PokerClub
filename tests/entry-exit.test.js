@@ -37,6 +37,8 @@ function enter(game, mode, difficulty) {
   w.Arcade.difficulty = difficulty || 'easy';
   w.App.mode = mode === 'ranked' ? 'ranked' : 'quick';
   w.Arcade.mode = mode || 'coins';
+  /* 排位需要满 100 排位积分才能进场 */
+  if (mode === 'ranked') w.profile15(game).rankPoints = w.RANKED_ENTRY_MIN;
   if (game !== 'holdem') return w.openArcade(game);
   const start = w.startGame, started = { n: 0 };
   w.startGame = () => { started.n++; };
