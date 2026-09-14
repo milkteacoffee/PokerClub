@@ -1067,6 +1067,19 @@
   .claim-all:active:not(:disabled){transform:scale(.97)}
   .claim-all:disabled{background:rgba(255,255,255,.055);color:#778993;box-shadow:none;cursor:default}
   .claim-all.pulse{animation:claimPulse 1.7s ease-in-out infinite}
+  .relief-card{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:13px;padding:12px 15px;border-radius:14px;
+    background:linear-gradient(110deg,rgba(196,26,26,.14),rgba(196,26,26,.03));}
+  .relief-card.hot{background:linear-gradient(110deg,rgba(214,88,60,.22),rgba(207,168,91,.06));
+    box-shadow:0 0 0 1px rgba(240,215,154,.22) inset;}
+  .relief-card .rc-l{flex:1;min-width:160px}
+  .relief-card .rc-t{font-size:13px;font-weight:800;color:#f0d79a;margin-bottom:4px}
+  .relief-card .rc-d{font-size:11.5px;color:#93a6b5;line-height:1.65}
+  .relief-card .rc-d b{color:#e8cb90}
+  .relief-card button{padding:9px 18px;font-size:12.5px;white-space:nowrap}
+  .lobby-relief{min-height:34px;padding:0 13px;border:0;border-radius:999px;cursor:pointer;font:inherit;font-size:12px;font-weight:800;
+    background:linear-gradient(120deg,#c4583c,#e0a05a);color:#fff;box-shadow:0 5px 14px rgba(0,0,0,.28);letter-spacing:.5px}
+  .lobby-relief:active{transform:scale(.96)}
+  .lobby-relief[hidden]{display:none}
   @keyframes claimPulse{0%,100%{box-shadow:0 7px 18px rgba(0,0,0,.3),0 0 0 0 rgba(232,203,144,.55)}50%{box-shadow:0 7px 18px rgba(0,0,0,.3),0 0 0 8px rgba(232,203,144,0)}}
   .task-group{display:flex;align-items:center;gap:10px;margin:16px 0 9px;font-size:11px;letter-spacing:2.5px;color:#7b8f9a}
   .task-group:first-child{margin-top:2px}
@@ -1144,6 +1157,24 @@
   .gold-seat .arc-compare:hover:not(:disabled){background:rgba(226,201,141,.3)}
   .gold-seat .arc-compare:disabled{opacity:.35;cursor:not-allowed}
   .gd-seat.low span{color:#f0cf86;font-weight:800}
+  /* ===== 骰子比大小 ===== */
+  .dd-layout{display:flex;flex-direction:column;gap:10px;align-items:center}
+  .dd-seats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;max-width:520px}
+  .dd-seat{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:12px;
+    background:rgba(255,255,255,.035);box-shadow:0 0 0 1px rgba(212,197,169,.09) inset}
+  .dd-seat.me{background:linear-gradient(160deg,rgba(207,168,91,.2),rgba(207,168,91,.04));
+    box-shadow:0 0 0 1px rgba(240,215,154,.35) inset}
+  .dd-name{font-size:11px;color:#cfd8e0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dd-seat.me .dd-name{color:#f2c14e;font-weight:800}
+  .dd-dice{display:flex;gap:3px;justify-content:center}
+  .dd-die{width:32px;height:32px;display:block}
+  .dd-die svg{width:100%;height:100%;display:block}
+  .dd-sum{font-size:12px;color:#e6dcc0;font-weight:700}
+  .dd-res{font-size:12px;min-height:16px}
+  .dd-res .w{color:#e8705f;font-weight:800}
+  .dd-res .l{color:#7fa88c;font-weight:800}
+  .dd-res .p{color:#9fb0c2;font-weight:800}
+  .dd-tip{font-size:11px;color:#7e929b;line-height:1.7;text-align:center;max-width:520px}
 </style>
 </head>
 <body>
@@ -1179,6 +1210,7 @@
         <span class="icon">🪙</span>
         <span id="lbCoins">0</span>
       </div>
+      <button class="lobby-relief" id="lbBtnRelief" hidden title="金币不足时领取每日救济金">救济金 <b id="lbReliefN">3</b></button>
       <nav class="lobby-topbtns" aria-label="大厅功能">
         <button class="lobby-iconbtn" id="lbBtnTasks" title="任务与奖励">任务<span class="badge" id="lbTaskBadge" style="display:none">!</span></button>
         <button class="lobby-iconbtn" id="lbBtnAchieve" title="查看成就">成就</button>
@@ -1197,12 +1229,13 @@
     </div>
     <div class="lobby-logo-area">
       <div class="lobby-logo">牌友小馆</div>
-      <div class="lobby-subtitle">一张牌桌，五种乐趣 · 纯单机</div>
+      <div class="lobby-subtitle">一张牌桌，六种乐趣 · 纯单机</div>
       <div class="game-shelf">
         <button class="game-tile selected" data-game="holdem"><span class="tile-art">A<span>♠</span></span><strong>德州扑克</strong><small>读牌与博弈</small></button>
         <button class="game-tile" data-game="blackjack"><span class="tile-art">21</span><strong>21点</strong><small>进退之间的判断</small></button>
         <button class="game-tile" data-game="gold"><span class="tile-art">3<span>♦</span></span><strong>炸金花</strong><small>闷牌与看牌</small></button>
         <button class="game-tile" data-game="dice"><span class="tile-art">6<span>·</span></span><strong>猜骰子</strong><small>3/5骰 · 多项下注</small></button>
+        <button class="game-tile" data-game="diceduel"><span class="tile-art">⚄</span><strong>骰子比大小</strong><small>你 + 3 AI · 豹子翻倍</small></button>
         <button class="game-tile" data-game="guandan"><span class="tile-art">对</span><strong>掼蛋</strong><small>四人组队 · 轮流出牌</small></button>
       </div>
     </div>
@@ -1314,9 +1347,11 @@
       <div class="tab-row">
         <button class="tab-btn active" id="tabNewbie" data-tab="newbie">新手任务 <span class="badge" id="nbBadge" style="display:none">!</span></button>
         <button class="tab-btn" id="tabDaily" data-tab="daily">每日任务 <span class="badge" id="dailyBadge" style="display:none">!</span></button>
+        <button class="tab-btn" id="tabMonthly" data-tab="monthly">月度挑战 <span class="badge" id="moBadge" style="display:none">!</span></button>
       </div>
       <div id="taskListNewbie"></div>
       <div id="taskListDaily" style="display:none"></div>
+      <div id="taskListMonthly" style="display:none"></div>
     </div>
   </div>
 
@@ -1338,7 +1373,7 @@
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎁 任务与成就</p>
         <p>小馆内含德州扑克、21点、炸金花、3/5骰 · 多项下注。大厅选择游戏再点击开始；新游戏提供金币场与免费练习，练习筹码可补满但不可兑换。任务、成就和排位仍为德州专属，新游戏战绩在各自牌桌查看。新游戏未完局刷新或离桌视为放弃已投入筹码。</p>
         <p>小游戏的操作按牌桌习惯收拢：下注金额在顶部用筹码点选，骰子直接点押注格下注，炸金花的“比牌”按钮落在对手座位上，骰子出目后自动开奖结算。每局结束会显示大字输赢与明细，主按钮直接变成“再来一局”，金额保持不变。</p>
-        <p>每日5项，每项20金币，每天最多100；每周一刷新25项，按阶段奖励20至60金币，每周最多910。成就共1000项，按进阶目标解锁，单项10至2000金币，需在成就页领取。日周刷新以北京时间为准。</p>
+        <p>每日5项，每项40金币，每天最多200；每周一刷新25项，按阶段奖励30至78金币，每周最多1242；每月1号刷新10项月度挑战，共4000金币。成就共1000项，按进阶目标解锁，单项10至2000金币，需在成就页领取。日周月刷新以北京时间为准。</p>
         <p>任务与成就列表里，<b style="color:#f2c14e;">已完成但还没领奖的条目会自动排到最上面</b>，其次是进行中的，已领取的沉到列表底部。任务、每日、周常、签到与成就面板顶部都有一键领取按钮，一次领完当前可领的全部奖励；成就的一键领取会连同还没翻到的分页一起结算。</p>
         <p>新手场每手开局至少500金币。电脑对手低于500时在下一手前离桌，由新昵称对手带入500补位；玩家不足500会保留余额返回大厅。对手昵称随机生成，仍全部为本地电脑AI，不是真人联机。</p>
         <p>每手使用全新52张牌，安全随机洗牌，不按输赢安排牌型；正常随机可能连续出现相同点数或弱牌。</p>
@@ -1348,11 +1383,17 @@
         <p>段位积分与入场积分独立：青铜 → 白银 → 黄金 → 铂金 → 钻石 → 大师 → 传奇。胜手 +12 至 +26，三连胜起额外 +2；弃牌失利 -5，摊牌失利 -10，最低 0 分，可降段。各段位金币奖励仅首次到达发放。</p>
         <p>大厅直接点击用户名改名，回车或点击别处保存，Esc 取消。每手结算可在桌底回看；中途离桌保留剩余筹码、放弃本手已投入筹码，排位另扣最多 5 段位分。离桌汇总区分牌局盈亏、入场费和奖励收入。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">📅 每日签到</p>
-        <p>7 天一轮，奖励逐日递增（60 → 888🪙），断签重新从第 1 天开始。</p>
+        <p>7 天一轮，奖励逐日递增（120 → 1,200🪙），断签重新从第 1 天开始。</p>
+        <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🧧 破产救济金</p>
+        <p>金币低于 100 时，大厅顶部会出现「救济金」按钮，每天可领 3 次、每次 500🪙（持有复活券时翻倍），每日 0 点重置。筹码用尽时也可在结算面板直接领取。</p>
+        <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🗓️ 月度挑战</p>
+        <p>每月 1 号刷新 10 项（四馆各「完成 120 局 / 净赢 40 局」+ 小馆巡游 2 项），全部完成共 4,000🪙，在任务面板的「月度挑战」页查看与领取。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🛒 商城与道具</p>
         <p>金币的消费出口。牌背 / 座位边框 / 称号为买断外观，可随时装备；复活券、双倍经验卡、透视卡为消耗品，能在牌局里提供真实优势（透视卡可在翻牌后公开一位对手底牌）。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">📊 档案</p>
         <p>记录入池率 VPIP、胜率、全下胜率、诈唬成功率、最大底池、累计盈亏，以及 9 类牌型图鉴。</p>
+        <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎖️ 称号收集</p>
+        <p>共 19 个称号，<b style="color:#f2c14e;">只能靠对局解锁，商城不售卖</b>：连胜 3/5/10 次、累计打出同花 10/50 次、四条 5 次、全下获胜 20 次、排位达到黄金/钻石/传奇段位、排位获胜 20 局、天然 21 点 10 次、炸金花比牌获胜 30 次、猜中点数或豹子 20/100 次、四馆累计 100/500 局与净赢 100 局、四馆各自完成 50 局。达成后自动解锁并提示，可在「档案 · 称号」页佩戴，佩戴后显示在牌桌座位与顶栏。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎵 音乐与音效</p>
         <p>主界面与牌桌是<b style="color:#f2c14e;">两套不同的 BGM</b>，进游戏会自动切换；四个场次还各有一套。</p>
         <p>默认用 WebAudio 实时合成（鼓组 + 贝斯 + 电钢 + 铺底 + 混响），无音频文件、离线可播。<br>
@@ -1497,10 +1538,12 @@
         <button class="tab-btn active" id="tabSData" data-tab="sdata">数据面板</button>
         <button class="tab-btn" id="tabSDex" data-tab="sdex">牌型图鉴</button>
         <button class="tab-btn" id="tabSRank" data-tab="srank">段位</button>
+        <button class="tab-btn" id="tabSTitle" data-tab="stitle">称号<span class="badge" id="titleBadge" style="display:none">!</span></button>
       </div>
       <div id="statPanel"></div>
       <div id="dexPanel" style="display:none"></div>
       <div id="rankPanel" style="display:none"></div>
+      <div id="titlePanel" style="display:none"><div id="titleList"></div></div>
     </div>
   </div>
 
@@ -1966,6 +2009,53 @@ var ACHIEVEMENTS = [
   { id:'newbie_master', name:'新手毕业', desc:'完成所有新手任务', icon:'🎓', reward:3000 }
 ];
 
+/* ============================================================
+   称号收集
+   只能通过实际对局（日常匹配 + 排位）解锁，商城买不到。
+   check(p) 只读不写，由 syncTitles 周期性比对解锁。
+   ============================================================ */
+var TITLES = [
+  /* 德州 · 连胜 */
+  { id:'tt_streak_3',  name:'三连捷',   icon:'🔥', desc:'达成 3 连胜',           check:function(p){ return (p.maxStreak || 0) >= 3; } },
+  { id:'tt_streak_5',  name:'五连捷',   icon:'⚡', desc:'达成 5 连胜',           check:function(p){ return (p.maxStreak || 0) >= 5; } },
+  { id:'tt_streak_10', name:'十连捷',   icon:'💥', desc:'达成 10 连胜',          check:function(p){ return (p.maxStreak || 0) >= 10; } },
+  /* 德州 · 牌型 */
+  { id:'tt_flush_10',  name:'同花匠',   icon:'🌊', desc:'累计打出 10 次同花及以上', check:function(p){ return titleMetric(p,'holdem','flush') >= 10; } },
+  { id:'tt_flush_50',  name:'花色大师', icon:'🌈', desc:'累计打出 50 次同花及以上', check:function(p){ return titleMetric(p,'holdem','flush') >= 50; } },
+  { id:'tt_quads_5',   name:'四条猎手', icon:'💎', desc:'累计打出 5 次四条及以上',  check:function(p){ return titleMetric(p,'holdem','quads') >= 5; } },
+  { id:'tt_allin_20',  name:'孤胆英雄', icon:'🎲', desc:'全下获胜 20 次',        check:function(p){ return titleMetric(p,'holdem','allinwin') >= 20; } },
+  /* 排位 */
+  { id:'tt_rank_2',    name:'黄金圣手', icon:'🥇', desc:'排位达到黄金段位',      check:function(p){ return (p.games.holdem.rankPeak || 0) >= 2; } },
+  { id:'tt_rank_4',    name:'钻石宗师', icon:'💎', desc:'排位达到钻石段位',      check:function(p){ return (p.games.holdem.rankPeak || 0) >= 4; } },
+  { id:'tt_rank_6',    name:'传奇牌神', icon:'👑', desc:'排位达到传奇段位',      check:function(p){ return (p.games.holdem.rankPeak || 0) >= 6; } },
+  { id:'tt_ranked_20', name:'排位常胜', icon:'🎖️', desc:'排位累计获胜 20 局',    check:function(p){ return (p.games.holdem.rankedWins || 0) >= 20; } },
+  /* 21 点 */
+  { id:'tt_bj_10',     name:'天生赢家', icon:'🃏', desc:'拿到 10 次天然 21 点',  check:function(p){ return titleMetric(p,'blackjack','natural') >= 10; } },
+  /* 炸金花 */
+  { id:'tt_gold_30',   name:'比牌高手', icon:'🂡', desc:'炸金花比牌获胜 30 次',  check:function(p){ return titleMetric(p,'gold','comparewin') >= 30; } },
+  /* 猜骰子 */
+  { id:'tt_dice_20',   name:'神机妙算', icon:'🎯', desc:'猜中点数或豹子 20 次',  check:function(p){ return titleMetric(p,'dice','exactwin') >= 20; } },
+  { id:'tt_dice_100',  name:'未卜先知', icon:'🔮', desc:'猜中点数或豹子 100 次', check:function(p){ return titleMetric(p,'dice','exactwin') >= 100; } },
+  /* 小馆通用 */
+  { id:'tt_hands_100', name:'小馆常客', icon:'🍵', desc:'四馆累计完成 100 局',   check:function(p){ return titleMetricAny(p,'hands') >= 100; } },
+  { id:'tt_hands_500', name:'馆中元老', icon:'🏮', desc:'四馆累计完成 500 局',   check:function(p){ return titleMetricAny(p,'hands') >= 500; } },
+  { id:'tt_allround',  name:'四艺兼修', icon:'🎴', desc:'四馆各自完成 50 局',    check:function(p){ return GAME_IDS.every(function(g){ return titleMetric(p, g, 'hands') >= 50; }); } },
+  { id:'tt_wins_100',  name:'百胜牌手', icon:'🏆', desc:'四馆累计净赢 100 局',   check:function(p){ return titleMetricAny(p,'wins') >= 100; } }
+];
+function titleMetric(p, game, ev) {
+  var g = p && p.games ? p.games[game] : null;
+  return g && g.metrics ? (g.metrics[ev] || 0) : 0;
+}
+function titleMetricAny(p, ev) {
+  var n = 0;
+  for (var i = 0; i < GAME_IDS.length; i++) n += titleMetric(p, GAME_IDS[i], ev);
+  return n;
+}
+function titleById(id) {
+  for (var i = 0; i < TITLES.length; i++) if (TITLES[i].id === id) return TITLES[i];
+  return null;
+}
+
 // 16个特色成就 + 12条路线各82阶 = 1000个独立目标。
 var ACH_ROUTES = [
   ['hands','牌桌历练',10,function(p){return p.totalHands;}],
@@ -2003,17 +2093,17 @@ var achPage = 0, achFilter = 'all';
 
 /* 段位 */
 var RANKS = [
-  { id:0, name:'青铜', icon:'🥉', min:0,    reward:0 },
-  { id:1, name:'白银', icon:'🥈', min:100,  reward:500 },
-  { id:2, name:'黄金', icon:'🥇', min:250,  reward:1200 },
-  { id:3, name:'铂金', icon:'💠', min:450,  reward:2500 },
-  { id:4, name:'钻石', icon:'💎', min:700,  reward:5000 },
-  { id:5, name:'大师', icon:'🔮', min:1000, reward:10000 },
-  { id:6, name:'传奇', icon:'👑', min:1400, reward:20000 }
+  { id:0, name:'青铜', icon:'🥉', min:0,    reward:0,     points:0 },
+  { id:1, name:'白银', icon:'🥈', min:100,  reward:500,   points:5 },
+  { id:2, name:'黄金', icon:'🥇', min:250,  reward:1200,  points:12 },
+  { id:3, name:'铂金', icon:'💠', min:450,  reward:2500,  points:25 },
+  { id:4, name:'钻石', icon:'💎', min:700,  reward:5000,  points:50 },
+  { id:5, name:'大师', icon:'🔮', min:1000, reward:10000, points:100 },
+  { id:6, name:'传奇', icon:'👑', min:1400, reward:20000, points:200 }
 ];
 
-/* 每日签到（7 天一轮，连续递增） */
-var CHECKIN_REWARDS = [60, 90, 140, 220, 320, 500, 888];
+/* 每日签到（7 天一轮，连续递增）— 已上调为稳定金币来源 */
+var CHECKIN_REWARDS = [120, 180, 260, 380, 520, 720, 1200];
 
 /* 周常挑战（每周一刷新，全量 6 项） */
 var WEEKLY_TASKS = [
@@ -2025,7 +2115,7 @@ var WEEKLY_TASKS = [
   { id:'w_streak_3',name:'达成一次 3 连胜',     target:1,    reward:1000 }
 ];
 
-// 25项按阶段奖励20/30/40/50/60，共910金币；同类事件更新各阶段。
+// 25项按阶段奖励30/42/54/66/78，共1242金币；同类事件更新各阶段。
 var WEEKLY_FAMILIES = [
   ['w_play_30','完成牌局',[10,30,60,100,150]],
   ['w_win_10','赢得牌局',[3,10,20,35,50]],
@@ -2037,8 +2127,24 @@ var WEEKLY_FAMILIES = [
 WEEKLY_TASKS = [];
 WEEKLY_FAMILIES.forEach(function(f){
   f[2].forEach(function(target,i){ WEEKLY_TASKS.push({id:i===0?f[0]:f[0]+'_'+i,
-    event:f[0], name:f[1]+' '+target+' 次', target:target, reward:20 + i * 10}); });
+    event:f[0], name:f[1]+' '+target+' 次', target:target, reward:30 + i * 12}); });
 });
+
+/* 月度挑战（每月 1 号刷新，四馆 + 通用共 10 项，是每月最稳定的一笔收入）
+   目标按“一个月”的量级设定，完成一项即发放一次，不需要分阶段。 */
+var MONTHLY_TASKS = [
+  { id:'m_holdem_hands', game:'holdem',    event:'hands', name:'德州扑克 · 完成 120 局', target:120, reward:300 },
+  { id:'m_holdem_wins',  game:'holdem',    event:'wins',  name:'德州扑克 · 净赢 40 局',  target:40,  reward:400 },
+  { id:'m_bj_hands',     game:'blackjack', event:'hands', name:'21 点 · 完成 120 局',    target:120, reward:300 },
+  { id:'m_bj_wins',      game:'blackjack', event:'wins',  name:'21 点 · 净赢 40 局',     target:40,  reward:400 },
+  { id:'m_gold_hands',   game:'gold',      event:'hands', name:'炸金花 · 完成 120 局',   target:120, reward:300 },
+  { id:'m_gold_wins',    game:'gold',      event:'wins',  name:'炸金花 · 净赢 40 局',    target:40,  reward:400 },
+  { id:'m_dice_hands',   game:'dice',      event:'hands', name:'猜骰子 · 完成 120 局',   target:120, reward:300 },
+  { id:'m_dice_wins',    game:'dice',      event:'wins',  name:'猜骰子 · 净赢 40 局',    target:40,  reward:400 },
+  { id:'m_any_hands',    game:'any',       event:'hands', name:'小馆巡游 · 累计完成 400 局', target:400, reward:500 },
+  { id:'m_any_wins',     game:'any',       event:'wins',  name:'小馆巡游 · 累计净赢 120 局', target:120, reward:700 }
+];
+// 10 项共 4000 金币。
 
 /* 商城 */
 var SHOP_ITEMS = [
@@ -3093,12 +3199,13 @@ function showScreen(name) {
 /* 四游戏共享入口与独立规则；不调用德州任务或段位。 */
 var hubGame = 'holdem';
 var guandanSelected = false;
-var ARCADE_NAMES = {blackjack:'21点', gold:'炸金花', dice:'猜骰子', guandan:'掼蛋'};
+var ARCADE_NAMES = {blackjack:'21点', gold:'炸金花', dice:'猜骰子', diceduel:'骰子比大小', guandan:'掼蛋'};
 var Arcade = {game:'blackjack', mode:'coins', practice:500, round:null, message:'选择下注后开始', busy:false};
 var ARCADE_RULES = {
   blackjack:'一副52张牌，每局重洗。2–10按牌面，J/Q/K按10点；A自动按不爆牌的最高点数取1或11（A+3=14，再来9则为13；多个A最多一张按11）。起手两张A+10点牌为天然21点，净赢下注1.5倍；双方天然21点退本金，庄家天然21点立即结算。三张及以上21点为普通21点，普通赢净赢1倍，同点退本金；玩家爆牌立即输。庄家不足17必须补牌，软17（如A+6）也停牌。仅起手两张可加倍，须余额和本轮限额足够；加倍只补一张，随后停牌。当前不含分牌、保险、投降或五龙等特殊奖励。未完局离开或刷新视为放弃，不退本金。',
   gold:'四人三张牌：豹子 > 顺金 > 金花 > 顺子 > 对子 > 单张；A23为最小顺子，QKA最大；不含235特殊规则。看牌后跟注/加注/比牌费用为闷牌的2倍。第三轮起可比牌，每次比牌支付本人的跟注额；同牌比牌发起者输。第十轮剩余玩家摊牌，完全相同则平分，余数按座位顺序分配。AI按新手/普通/困难/冠军分别带入500/2000/10000/50000；每轮新对手，只按自己的牌与公开行为决策。',
-  dice:'三颗公平六面骰：4–10为小，11–17为大；任意豹子（包括111和666）大小都输。猜中返还本金并净赢1倍下注，否则失去下注。每次下注确认后即时结算，不自动连投。中奖概率105/216，非稳赚玩法。'
+  dice:'三颗公平六面骰：4–10为小，11–17为大；任意豹子（包括111和666）大小都输。猜中返还本金并净赢1倍下注，否则失去下注。每次下注确认后即时结算，不自动连投。中奖概率105/216，非稳赚玩法。',
+  diceduel:'你与 3 位电脑对手各掷 3 颗公平六面骰，比总点数（3–18）。三颗同点为豹子，豹子大于任何普通点数，豹子之间比点数大小。你分别与 3 位对手单独比：赢一家返还该份注额的 2 倍，同点退还该份注额，输则失去该份注额。下注额按 3 份均分，因此只接受 30 的倍数。你掷出豹子时，本局所有返还再翻倍（输了不加扣）。对手骰子同样公平随机，难度只改变单轮投入上限。'
 };
 function arcadeData() {
   if (!player.arcade || typeof player.arcade !== 'object') player.arcade={stats:{},pending:null,history:[]};
@@ -3208,8 +3315,11 @@ function renderArcade(){if(!$('arcTable')||!player)return;var r=Arcade.round,liv
     else table='<div class="arc-seat"><h3>三张牌，一场心理较量</h3><p>四人桌 · 每人底注 '+bet+' · 最多十轮</p></div>';
     if(live){var cost=gCost,capBlocked=r.stake+cost>arcadeLimit15();actions=arcButton('看牌','peek',r.seats[0].seen)+arcButton('跟注 '+cost,'call',arcadeBalance()<cost||capBlocked,true)+arcButton('加注','raise',r.unit>=r.base*4||arcadeBalance()<(r.unit+r.base)*(r.seats[0].seen?2:1)||r.stake+(r.unit+r.base)*(r.seats[0].seen?2:1)>arcadeLimit15())+(capBlocked?arcButton('达到上限·摊牌','cap',false,true):'')+arcButton('弃牌','fold');}
     else actions=arcButton((r&&r.done?'再来一局 · 底注 ':'开局 · 底注 ')+bet,'start',arcadeBalance()<bet,true);
+  }else if(Arcade.game==='diceduel'){
+    /* 桌面与按钮由 v15 的 renderDiceDuel15 绘制，这里只留占位避免误渲染成猜骰子 */
+    table='';actions=arcButton('开局 · '+bet,'startdd',arcadeBalance()<bet,true);
   }else{
-    table='<div style="text-align:center"><div>'+[0,1,2].map(function(i){return '<span class="arc-die">'+(r?diceFace(r.dice[i]):'?')+'</span>';}).join('')+'</div><p>小：4–10　大：11–17　豹子通杀</p></div>';
+    table='<div style="text-align:center"><div>'+[0,1,2].map(function(i){return '<span class="arc-die">'+(r&&r.dice?diceFace(r.dice[i]):'?')+'</span>';}).join('')+'</div><p>小：4–10　大：11–17　豹子通杀</p></div>';
     actions=arcButton('猜小 · '+bet,'small',arcadeBalance()<bet,true)+arcButton('猜大 · '+bet,'big',arcadeBalance()<bet,true);
   }
   if(r&&r.retry)actions=arcButton('重试保存结算','retry',false,true);
@@ -3224,7 +3334,7 @@ function arcadeDispatch(action){if(Arcade.busy||!$('arcExit').hidden||document.q
  }finally{Arcade.busy=false;}}
 function arcadeLeave(confirm){var r=Arcade.round;if(r&&!r.done&&!confirm){$('arcExit').hidden=false;return;}if(r&&!r.done){if(r.retry){Arcade.message='请先重试保存结算';renderArcade();return;}if(!arcadeSettle(0,'主动离桌'))return;}
   $('arcExit').hidden=true;Arcade.round=null;showScreen('lobby');renderLobby();}
-function initArcade(){document.querySelectorAll('[data-game]').forEach(function(b){b.addEventListener('click',function(){guandanSelected=b.dataset.game==='guandan';if(!guandanSelected)hubGame=b.dataset.game;document.querySelectorAll('.game-tile').forEach(function(x){x.classList.toggle('selected',x===b);x.setAttribute('aria-pressed',String(x===b));});var hints={holdem:'德州扑克 · 两张底牌与五张公共牌 · 可选自由匹配或排位',blackjack:'21点 · 要牌或停牌，尽量接近21 · 支持免费练习',gold:'炸金花 · 四人对局，第三轮起可比牌 · 支持免费练习',dice:'猜骰子 · 先选押法并加入清单，再统一开奖 · 支持免费练习',guandan:'掼蛋 · 对座是队友，轮流出牌 · 不扣金币，支持托管'};$('hubHint').textContent=hints[b.dataset.game];$('lbStartBtn').textContent='开始'+(guandanSelected?'掼蛋':hubGame==='holdem'?'游戏':ARCADE_NAMES[hubGame]);});});
+function initArcade(){document.querySelectorAll('[data-game]').forEach(function(b){b.addEventListener('click',function(){guandanSelected=b.dataset.game==='guandan';if(!guandanSelected)hubGame=b.dataset.game;document.querySelectorAll('.game-tile').forEach(function(x){x.classList.toggle('selected',x===b);x.setAttribute('aria-pressed',String(x===b));});var hints={holdem:'德州扑克 · 两张底牌与五张公共牌 · 可选自由匹配或排位',blackjack:'21点 · 要牌或停牌，尽量接近21 · 支持免费练习',gold:'炸金花 · 四人对局，第三轮起可比牌 · 支持免费练习',dice:'猜骰子 · 先选押法并加入清单，再统一开奖 · 支持免费练习',diceduel:'骰子比大小 · 你与 3 位AI各掷 3 骰，豹子翻倍 · 支持免费练习',guandan:'掼蛋 · 对座是队友，轮流出牌 · 不扣金币，支持托管'};$('hubHint').textContent=hints[b.dataset.game];$('lbStartBtn').textContent='开始'+(guandanSelected?'掼蛋':hubGame==='holdem'?'游戏':ARCADE_NAMES[hubGame]);});});
   $('arcActions').addEventListener('click',function(e){var b=e.target.closest('[data-arc]');if(b&&!b.disabled)arcadeDispatch(b.dataset.arc);});$('arcBet').addEventListener('change',renderArcade);
   $('arcSettings').addEventListener('click',function(){initAudio();sfx('click');openSettings();});
   $('arcRules').addEventListener('click',function(){$('arcHelp').hidden=!$('arcHelp').hidden;$('arcRules').textContent=$('arcHelp').hidden?'规则':'收起规则';$('arcRules').setAttribute('aria-expanded',String(!$('arcHelp').hidden));});$('arcRefill').addEventListener('click',function(){if(Arcade.mode==='practice'&&(!Arcade.round||Arcade.round.done)){Arcade.practice=500;renderArcade();}});
@@ -3269,15 +3379,6 @@ function renderModeCards() {
     });
     body.appendChild(card);
   });
-  var buy = document.createElement('button');
-  buy.type = 'button';
-  buy.textContent = '购买排位积分  ·  100 🪙 = 1 积分  ·  当前 ' + fmt(player.rankedPoints || 0) + ' 分';
-  buy.style.cssText = 'display:block;margin:14px auto 0;padding:8px 14px;border:0;background:transparent;color:#f2c14e;cursor:pointer;font:inherit;';
-  buy.addEventListener('click', function(e){
-    e.stopPropagation();
-    buyRankedPoints(1);
-  });
-  body.appendChild(buy);
 }
 
 /* ============================================================
@@ -3498,14 +3599,30 @@ function renderLobby() {
 
   ensureDailyTasks();
   ensureCheckin();
+  ensureRelief();
+  ensureMonthly();
 
   // 检查红点
   var nbDone = checkNewbieHasClaimable();
   var dailyDone = checkDailyHasClaimable();
-  $('lbTaskBadge').style.display = (nbDone || dailyDone) ? 'block' : 'none';
+  var moDone = monthlyClaimableCount() > 0;
+  $('lbTaskBadge').style.display = (nbDone || dailyDone || moDone) ? 'block' : 'none';
   var ciDone = hasCheckinClaimable();
   var wkDone = checkWeeklyHasClaimable();
   $('lbQCheckinBadge').style.display = (ciDone || wkDone) ? 'block' : 'none';
+
+  /* 称号解锁兜底：任何途径回到大厅都补一次比对（不弹提示，避免打扰） */
+  syncTitles({ silent: true });
+
+  /* 救济金：金币低于门槛时在大厅顶部直接给出入口 */
+  var rb = $('lbBtnRelief');
+  if (rb) {
+    var left = reliefLeft();
+    rb.hidden = !(left > 0 && player.coins < RELIEF.threshold);
+    var rn = $('lbReliefN');
+    if (rn) rn.textContent = String(left);
+    rb.title = '金币低于 ' + RELIEF.threshold + ' 可领取，今日剩余 ' + left + ' 次，每次 ' + RELIEF.amount + ' 金币';
+  }
 
   updateSaveIndicator('saved');
 }
@@ -4501,7 +4618,12 @@ function updateTasksBadges() {
     dlEl.style.display = dl ? 'inline-block' : 'none';
     dlEl.textContent = dl > 99 ? '99+' : String(dl);
   }
-  var any = nb + dl + weeklyClaimableCount();
+  var mo = monthlyClaimableCount(), moEl = $('moBadge');
+  if (moEl) {
+    moEl.style.display = mo ? 'inline-block' : 'none';
+    moEl.textContent = mo > 99 ? '99+' : String(mo);
+  }
+  var any = nb + dl + mo + weeklyClaimableCount();
   var badge = $('lbTaskBadge');
   if (badge) badge.style.display = any ? 'block' : 'none';
   var wEl = $('wkBadge');
@@ -4681,6 +4803,179 @@ function ensureWeekly() {
   if (!player.weekly.claimed) player.weekly.claimed = {};
   return player.weekly;
 }
+
+/* ============================================================
+   破产救济金
+   单机没有充值渠道，输光就只能删档重来。这里给一条兜底底线：
+   金币低于门槛时每天可领 3 次固定救济金，跨日自动重置。
+   ============================================================ */
+var RELIEF = { threshold: 100, timesPerDay: 3, amount: 500 };
+function ensureRelief() {
+  if (!player) return null;
+  var today = todayStr();
+  if (!player.relief || player.relief.date !== today) {
+    player.relief = { date: today, used: 0 };
+    saveAllSaves(true);
+  }
+  if (!Number.isSafeInteger(player.relief.used)) player.relief.used = 0;
+  return player.relief;
+}
+function reliefLeft() {
+  if (!player) return 0;
+  ensureRelief();
+  return Math.max(0, RELIEF.timesPerDay - player.relief.used);
+}
+function reliefAvailable() {
+  return !!player && player.coins < RELIEF.threshold && reliefLeft() > 0;
+}
+/* 无门槛兜底：不判断金币，只要当天还有次数就能领（用于玩家主动补充） */
+function claimDailyRelief() {
+  if (!player) return false;
+  ensureRelief();
+  if (reliefLeft() <= 0) { showToast('今日救济金已领完，明天再来', 2200, true); return false; }
+  var n = RELIEF.amount, doubled = false;
+  if (!atomic15(function () {
+    if (hasItem('revive')) {
+      player.inventory['revive']--;
+      if (player.inventory['revive'] <= 0) delete player.inventory['revive'];
+      doubled = true;
+    }
+    player.relief.used++;
+    addCoins(doubled ? n * 2 : n);
+  })) return false;
+  sfx('coin');
+  if (doubled) showToast('💊 复活券已消耗 · 救济金翻倍', 2400, false, 'success');
+  showToast('🧧 救济金 +' + fmt(doubled ? n * 2 : n) + '🪙（今日剩余 ' + reliefLeft() + ' 次）', 2400, false, 'success');
+  try { renderLobby(); renderCheckin(); } catch (e) {}
+  return true;
+}
+
+/* ============================================================
+   月度挑战（每月 1 号刷新）
+   ============================================================ */
+function ensureMonthly() {
+  if (!player) return null;
+  var mk = monthKeyOf(todayStr());
+  if (!player.monthly || player.monthly.month !== mk) {
+    player.monthly = { month: mk, progress: {}, claimed: {} };
+    saveAllSaves(true);
+  }
+  if (!player.monthly.progress) player.monthly.progress = {};
+  if (!player.monthly.claimed) player.monthly.claimed = {};
+  return player.monthly;
+}
+function getMonthlyTaskById(id) {
+  for (var i = 0; i < MONTHLY_TASKS.length; i++) {
+    if (MONTHLY_TASKS[i].id === id) return MONTHLY_TASKS[i];
+  }
+  return null;
+}
+function monthlyClaimableCount() {
+  if (!player) return 0;
+  ensureMonthly();
+  var n = 0;
+  for (var i = 0; i < MONTHLY_TASKS.length; i++) {
+    var t = MONTHLY_TASKS[i];
+    if (player.monthly.claimed[t.id]) continue;
+    if ((player.monthly.progress[t.id] || 0) >= t.target) n++;
+  }
+  return n;
+}
+function bumpMonthlyProgress(game, ev, n) {
+  if (!player) return;
+  ensureMonthly();
+  MONTHLY_TASKS.forEach(function (t) {
+    if ((t.game !== game && t.game !== 'any') || t.event !== ev) return;
+    if (player.monthly.claimed[t.id]) return;
+    player.monthly.progress[t.id] = Math.min(t.target, (player.monthly.progress[t.id] || 0) + n);
+  });
+}
+function claimMonthly(id) {
+  if (!player) return false;
+  ensureMonthly();
+  var t = getMonthlyTaskById(id);
+  if (!t || player.monthly.claimed[id] || (player.monthly.progress[id] || 0) < t.target) return false;
+  var ok = atomic15(function () { player.monthly.claimed[id] = true; addCoins(t.reward); });
+  if (ok) { sfx('coin'); showToast('🗓️ 月度奖励 +' + fmt(t.reward) + '🪙', 2200, false, 'success'); renderTasks(); renderLobby(); }
+  return ok;
+}
+function claimAllMonthly() {
+  if (!player) return 0;
+  ensureMonthly();
+  var picks = [];
+  MONTHLY_TASKS.forEach(function (t) {
+    if (player.monthly.claimed[t.id]) return;
+    if ((player.monthly.progress[t.id] || 0) < t.target) return;
+    picks.push(t);
+  });
+  if (!picks.length) return 0;
+  var sum = 0; picks.forEach(function (t) { sum += t.reward; });
+  if (!atomic15(function () {
+    picks.forEach(function (t) { player.monthly.claimed[t.id] = true; });
+    addCoins(sum);
+  })) return 0;
+  sfx('coin');
+  showToast('🗓️ 一键领取 ' + picks.length + ' 项月度  +' + fmt(sum) + '🪙', 2400, false, 'success');
+  renderTasks(); renderLobby();
+  return picks.length;
+}
+/* ------------------------------------------------------------------
+   跨天 / 跨周自动刷新
+   页面长期开着（手机切后台、电脑不关机）时，到点不会自己重开面板，
+   签到与任务就会一直停在昨天。这里做一次轻量巡检：只要日期变了，
+   就重跑刷新逻辑并刷新已打开的界面，不必重启页面。
+   ------------------------------------------------------------------ */
+function monthKeyOf(dateStr) { return String(dateStr).slice(0, 7); }
+
+var lastDaySeen = '';
+function refreshPeriodic(opts) {
+  if (!player) return false;
+  var c0 = player.checkin ? player.checkin.date + '|' + (player.checkin.claimed ? 1 : 0) : '';
+  var d0 = player.dailyTasks ? player.dailyTasks.date : '';
+  var w0 = player.weekly ? player.weekly.week : '';
+  var m0 = player.monthly ? player.monthly.month : '';
+  var r0 = player.relief ? player.relief.date : '';
+  ensureCheckin();
+  ensureDailyTasks();
+  ensureWeekly();
+  ensureMonthly();
+  ensureRelief();
+  var c1 = player.checkin ? player.checkin.date + '|' + (player.checkin.claimed ? 1 : 0) : '';
+  /* 只有「之前已有记录且周期键发生变化」才算刷新：
+     首次进入游戏做初始化不该弹提示，领取救济金改变次数也不该算跨天。 */
+  var changed = (c0 && c1 !== c0)
+    || (d0 && (player.dailyTasks ? player.dailyTasks.date : '') !== d0)
+    || (w0 && (player.weekly ? player.weekly.week : '') !== w0)
+    || (m0 && (player.monthly ? player.monthly.month : '') !== m0)
+    || (r0 && (player.relief ? player.relief.date : '') !== r0);
+  lastDaySeen = todayStr();
+  if (!changed) return false;
+  try {
+    updateTasksBadges();
+    renderLobby();
+    if ($('ovCheckin') && $('ovCheckin').classList.contains('show')) { renderCheckin(); renderWeekly(); }
+    if ($('ovTasks') && $('ovTasks').classList.contains('show')) renderTasks();
+    if ($('ovAchieve') && $('ovAchieve').classList.contains('show')) renderAchList();
+  } catch (e) {}
+  if (!opts || opts.toast !== false) showToast('🔄 新的一天到了 · 签到与任务已刷新', 2400, false, 'success');
+  return true;
+}
+
+function startPeriodicWatchdog() {
+  refreshPeriodic({ toast: false });
+  try {
+    if (typeof setInterval === 'function') setInterval(function () {
+      if (document.visibilityState === 'hidden') return;
+      if (todayStr() === lastDaySeen) return;
+      refreshPeriodic();
+    }, 60000);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') refreshPeriodic();
+  });
+  window.addEventListener('focus', function () { refreshPeriodic(); });
+  } catch (e) {}
+}
+
 function getWeeklyTaskById(id) {
   for (var i = 0; i < WEEKLY_TASKS.length; i++) {
     if (WEEKLY_TASKS[i].id === id) return WEEKLY_TASKS[i];
@@ -4790,8 +5085,100 @@ function frameClass() {
 function titleText() {
   var id = player && player.equipped ? player.equipped.title : '';
   if (!id) return '';
+  var t = titleById(id);
+  if (t) return t.icon + ' ' + t.name;
   var it = shopItemById(id);
   return it ? it.css : '';
+}
+
+/* ============================================================
+   称号解锁 / 装备 / 列表
+   称号只能靠对局解锁（日常匹配与排位），商城不售卖。
+   ============================================================ */
+function ensureTitles() {
+  if (!player) return null;
+  if (!player.titles || typeof player.titles !== 'object') player.titles = {};
+  return player.titles;
+}
+function unlockedTitles() {
+  var t = ensureTitles();
+  if (!t) return [];
+  return TITLES.filter(function (x) { return !!t[x.id]; });
+}
+function titleUnlocked(id) { var t = ensureTitles(); return !!(t && t[id]); }
+/* 比对所有条件，解锁新称号；返回本次解锁数量 */
+function syncTitles(opts) {
+  if (!player) return 0;
+  ensureGames15(player);
+  ensureTitles();
+  var got = [];
+  for (var i = 0; i < TITLES.length; i++) {
+    var t = TITLES[i];
+    if (player.titles[t.id]) continue;
+    var ok = false;
+    try { ok = !!t.check(player); } catch (e) { ok = false; }
+    if (!ok) continue;
+    player.titles[t.id] = true;
+    got.push(t);
+  }
+  if (!got.length) return 0;
+  /* 事务内不写盘，交给外层事务统一落盘 */
+  if (typeof transaction15 === 'undefined' || !transaction15) saveAllSaves(true);
+  if (!(opts && opts.silent)) {
+    sfx('achievement');
+    showToast('🎖️ 解锁称号「' + got[0].name + '」' + (got.length > 1 ? ' 等 ' + got.length + ' 个' : '')
+      + ' · 可在档案·称号中佩戴', 2800, false, 'success');
+    try { renderTitleList(); } catch (e) {}
+  }
+  updateTitleBadge();
+  return got.length;
+}
+function equipTitle(id) {
+  if (!player) return false;
+  if (id && !titleUnlocked(id)) return false;
+  if (!player.equipped || typeof player.equipped !== 'object') player.equipped = {};
+  var ok = atomic15(function () {
+    if (id) player.equipped.title = id; else delete player.equipped.title;
+  });
+  if (ok) { sfx('click'); renderTitleList(); renderLobby(); if (G.active) render(); }
+  return ok;
+}
+function updateTitleBadge() {
+  var el = $('titleBadge');
+  if (!el) return;
+  var n = TITLES.length - unlockedTitles().length;
+  el.style.display = n ? 'inline-block' : 'none';
+  el.textContent = n > 99 ? '99+' : String(n);
+}
+function renderTitleList() {
+  var box = $('titleList');
+  if (!box || !player) return;
+  ensureTitles(); ensureGames15(player);
+  var owned = unlockedTitles();
+  var eq = player.equipped ? player.equipped.title : '';
+  var html = '<div class="reward-bar"><div class="sum">称号 · 已解锁 <b>' + owned.length + '</b> / ' + TITLES.length
+    + ' <i>· 点击「佩戴」显示在牌桌与顶栏</i></div>'
+    + '<button class="claim-all' + (eq ? '' : ' disabled') + '" id="btnUnequipTitle"' + (eq ? '' : ' disabled') + '>'
+    + (eq ? '取消佩戴' : '未佩戴') + '</button></div><div class="ach-list">';
+  for (var i = 0; i < TITLES.length; i++) {
+    var t = TITLES[i], on = !!player.titles[t.id], isEq = eq === t.id;
+    html += '<div class="ach-item' + (on ? ' claimable' : '') + (isEq ? ' done' : '') + '">';
+    html += '<div class="ic">' + (on ? t.icon : '🔒') + '</div>';
+    html += '<div class="info"><div class="t">' + (on ? t.name : '未解锁称号') + '</div>';
+    html += '<div class="d">' + t.desc + '</div>';
+    html += '<div class="rw">' + (on ? (isEq ? '佩戴中' : '可佩戴') : '达成后自动解锁') + '</div></div>';
+    html += on ? (isEq ? '<span>佩戴中</span>'
+      : '<button class="slot-mini" data-equip-title="' + t.id + '">佩戴</button>') : '<span>未达成</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+  box.innerHTML = html;
+  box.querySelectorAll('[data-equip-title]').forEach(function (b) {
+    b.addEventListener('click', function () { equipTitle(b.getAttribute('data-equip-title')); });
+  });
+  var u = $('btnUnequipTitle');
+  if (u) u.addEventListener('click', function () { if (u.disabled) return; equipTitle(''); });
+  updateTitleBadge();
 }
 /* 透视卡：翻牌后公开一位对手底牌 */
 function maybeApplyPeek() {
@@ -5035,7 +5422,8 @@ async function finishHand() {
   // 同步筹码回存档
   player.coins = G.players[0].chips;
   if (player.coins < 0) player.coins = 0;
-  recordGrowth15('holdem',{hands:1,wins:humanWinAmount>human.totalBet?1:0,pair:hv&&hv[0]>=1?1:0,straight:hv&&hv[0]>=4?1:0,allinwin:humanAllIn&&humanWinAmount>human.totalBet?1:0},App.difficulty);
+  recordGrowth15('holdem',{hands:1,wins:humanWinAmount>human.totalBet?1:0,pair:hv&&hv[0]>=1?1:0,straight:hv&&hv[0]>=4?1:0,flush:hv&&hv[0]>=5?1:0,quads:hv&&hv[0]>=7?1:0,allinwin:humanAllIn&&humanWinAmount>human.totalBet?1:0},App.difficulty);
+  syncTitles();
   });
   if(!ok){G.quickRetry=commitQuick15;G.settling=false;G.handOver=true;render();return false;}
   G.quickRetry=null;
@@ -5108,25 +5496,13 @@ async function runGameLoop() {
 function showGameOver() {
   $('goHands').textContent = fmt(player.totalHands);
   $('goWins').textContent = fmt(player.totalWins);
+  var left = reliefLeft();
+  $('goAgain').textContent = left > 0 ? ('领取救济金 ' + fmt(RELIEF.amount) + '（剩 ' + left + '）') : '今日救济金已领完';
+  $('goAgain').disabled = left <= 0;
   $('ovGameOver').classList.add('show');
 }
 
-function claimRelief() {
-  var amount = 1000;
-  if (hasItem('revive')) {
-    amount = 2000;
-    player.inventory['revive']--;
-    if (player.inventory['revive'] <= 0) delete player.inventory['revive'];
-    showToast('💊 复活券已消耗 · 补充金翻倍', 2400, false, 'success');
-  }
-  addCoins(amount);
-  saveAllSaves();
-  $('ovGameOver').classList.remove('show');
-  sfx('coin');
-  showToast('💰 领取补充金 $' + fmt(amount), 2000, false, 'success');
-  renderLobby();
-  showScreen('lobby');
-}
+/* 破产面板的“补充金”已并入统一救济金：每日 3 次、可被复活券翻倍，见 claimDailyRelief */
 
 function showLevelUp() {
   var lu = $('luTitle'), ls = $('luSub');
@@ -5378,7 +5754,31 @@ function renderTasks() {
       dlN ? '一键领取 ' + dlN + ' 项' : '暂无可领取', dlN)
       + groupTaskHTML(dl, function (r) { return 'data-dclaim="' + r.id + '"'; });
   }
+  // 月度挑战
+  var moEl = $('taskListMonthly');
+  if (moEl) {
+    ensureMonthly();
+    var mo = [];
+    for (var k = 0; k < MONTHLY_TASKS.length; k++) {
+      var mt = MONTHLY_TASKS[k];
+      var mDone = !!player.monthly.claimed[mt.id];
+      var mCur = Math.min(player.monthly.progress[mt.id] || 0, mt.target);
+      mo.push({ id: mt.id, name: mt.name, reward: mt.reward, state: claimStateOf(mDone, mCur, mt.target), prog: '进度 ' + mCur + ' / ' + mt.target });
+    }
+    mo = sortByClaimState(mo);
+    var moN = claimCountOf(mo, 'claimable');
+    moEl.innerHTML = rewardBarHTML(taskSumText('月度挑战 · ' + monthKeyOf(todayStr()), mo), 'data-claim-all="monthly"',
+      moN ? '一键领取 ' + moN + ' 项' : '暂无可领取', moN)
+      + groupTaskHTML(mo, function (r) { return 'data-mclaim="' + r.id + '"'; });
+  }
   // 绑定领取按钮
+  var mbtns = document.querySelectorAll('[data-mclaim]');
+  for (var m = 0; m < mbtns.length; m++) {
+    mbtns[m].addEventListener('click', function () {
+      sfx('click');
+      claimMonthly(this.getAttribute('data-mclaim'));
+    });
+  }
   var btns = document.querySelectorAll('[data-claim]');
   for (var b = 0; b < btns.length; b++) {
     btns[b].addEventListener('click', function () {
@@ -5398,6 +5798,7 @@ function renderTasks() {
       if (btn.disabled) return;
       sfx('click');
       if (btn.getAttribute('data-claim-all') === 'newbie') claimAllNewbie();
+      else if (btn.getAttribute('data-claim-all') === 'monthly') claimAllMonthly();
       else claimAllDaily();
     });
   });
@@ -5686,8 +6087,21 @@ function renderRank() {
 /* ============================================================
    签到 / 周常
    ============================================================ */
+function reliefCardHTML() {
+  if (!player) return '';
+  var left = reliefLeft(), poor = player.coins < RELIEF.threshold;
+  return '<div class="relief-card' + (poor && left ? ' hot' : '') + '">'
+    + '<div class="rc-l"><div class="rc-t">🧧 破产救济金</div>'
+    + '<div class="rc-d">金币低于 <b>' + RELIEF.threshold + '</b> 时每天可领 <b>' + RELIEF.timesPerDay + '</b> 次，每次 <b>'
+    + fmt(RELIEF.amount) + '</b> 🪙，每日 0 点重置</div></div>'
+    + '<button class="shop-btn' + (left ? '' : ' ghost') + '" id="btnRelief"' + (left ? '' : ' disabled') + '>'
+    + (left ? '领取 ' + fmt(RELIEF.amount) + ' 🪙（剩 ' + left + '）' : '今日已领完')
+    + '</button></div>';
+}
+
 function renderCheckin() {
   if (!player) return;
+  if (!$('ciPanel')) return;
   ensureCheckin();
   ensureWeekly();
   var c = player.checkin;
@@ -5716,6 +6130,7 @@ function renderCheckin() {
   html += '</div>';
   html += '<div style="margin-top:13px;font-size:11px;color:#566c82;line-height:1.7;">'
        +  '连续签到奖励逐日递增，第 7 天可得 ' + fmt(CHECKIN_REWARDS[6]) + ' 🪙，之后开启新一轮。</div>';
+  html += reliefCardHTML();
   $('ciPanel').innerHTML = html;
   var b = $('btnClaimCheckin');
   if (b) {
@@ -5726,6 +6141,8 @@ function renderCheckin() {
       renderLobby();
     });
   }
+  var rb = $('btnRelief');
+  if (rb) rb.addEventListener('click', function () { sfx('click'); claimDailyRelief(); });
   var cb = $('ciPanel').querySelector('[data-claim-all]');
   if (cb) cb.addEventListener('click', function () {
     if (cb.disabled) return;
@@ -5780,7 +6197,7 @@ function openShop() {
   $('ovShop').classList.add('show');
 }
 function openStats(tab) {
-  renderStats(); renderDex(); renderRank();
+  renderStats(); renderDex(); renderRank(); renderTitleList();
   switchStatsTab(tab || 'sdata');
   $('ovStats').classList.add('show');
 }
@@ -5788,9 +6205,12 @@ function switchStatsTab(tab) {
   $('tabSData').classList.toggle('active', tab === 'sdata');
   $('tabSDex').classList.toggle('active', tab === 'sdex');
   $('tabSRank').classList.toggle('active', tab === 'srank');
+  $('tabSTitle').classList.toggle('active', tab === 'stitle');
   $('statPanel').style.display = tab === 'sdata' ? 'block' : 'none';
   $('dexPanel').style.display = tab === 'sdex' ? 'block' : 'none';
   $('rankPanel').style.display = tab === 'srank' ? 'block' : 'none';
+  $('titlePanel').style.display = tab === 'stitle' ? 'block' : 'none';
+  if (tab === 'stitle') renderTitleList();
 }
 function openCheckin(tab) {
   ensureWeekly();
@@ -5835,6 +6255,7 @@ function openTasks(tab) {
   if (tab) switchTaskTab(tab);
   else if (checkNewbieHasClaimable()) switchTaskTab('newbie');
   else if (checkDailyHasClaimable()) switchTaskTab('daily');
+  else if (monthlyClaimableCount()) switchTaskTab('monthly');
   else switchTaskTab('newbie');
   $('ovTasks').classList.add('show');
 }
@@ -5846,11 +6267,13 @@ function openHelp() {
   $('ovHelp').classList.add('show');
 }
 function switchTaskTab(tab) {
-  var isNewbie = tab === 'newbie';
-  $('tabNewbie').classList.toggle('active', isNewbie);
-  $('tabDaily').classList.toggle('active', !isNewbie);
-  $('taskListNewbie').style.display = isNewbie ? 'block' : 'none';
-  $('taskListDaily').style.display = isNewbie ? 'none' : 'block';
+  if (tab !== 'newbie' && tab !== 'daily' && tab !== 'monthly') tab = 'newbie';
+  $('tabNewbie').classList.toggle('active', tab === 'newbie');
+  $('tabDaily').classList.toggle('active', tab === 'daily');
+  $('tabMonthly').classList.toggle('active', tab === 'monthly');
+  $('taskListNewbie').style.display = tab === 'newbie' ? 'block' : 'none';
+  $('taskListDaily').style.display = tab === 'daily' ? 'block' : 'none';
+  $('taskListMonthly').style.display = tab === 'monthly' ? 'block' : 'none';
 }
 function toggleSound() {
   player.soundOn = !player.soundOn;
@@ -6036,6 +6459,7 @@ function bindEvents() {
   $('lbQCheckin').addEventListener('click', function(){ initAudio(); sfx('click'); openCheckin(); });
   $('lbQStats').addEventListener('click', function(){ initAudio(); sfx('click'); openStats(); });
   $('lbBtnSettings').addEventListener('click', function(){ initAudio(); sfx('click'); openSettings(); });
+  $('lbBtnRelief').addEventListener('click', function(){ initAudio(); sfx('click'); claimDailyRelief(); });
   $('btnSettings').addEventListener('click', function(){ initAudio(); sfx('click'); openSettings(); });
 
   $('setSfxToggle').addEventListener('click', function(){ initAudio(); toggleSound(); openSettings(); });
@@ -6090,16 +6514,23 @@ function bindEvents() {
   // 任务 Tab
   $('tabNewbie').addEventListener('click', function(){ sfx('click'); switchTaskTab('newbie'); });
   $('tabDaily').addEventListener('click', function(){ sfx('click'); switchTaskTab('daily'); });
+  $('tabMonthly').addEventListener('click', function(){ sfx('click'); switchTaskTab('monthly'); });
 
   // 档案 / 签到 Tab
   $('tabSData').addEventListener('click', function(){ sfx('click'); switchStatsTab('sdata'); });
   $('tabSDex').addEventListener('click', function(){ sfx('click'); switchStatsTab('sdex'); });
   $('tabSRank').addEventListener('click', function(){ sfx('click'); switchStatsTab('srank'); });
+  $('tabSTitle').addEventListener('click', function(){ sfx('click'); switchStatsTab('stitle'); });
   $('tabCi').addEventListener('click', function(){ sfx('click'); switchCheckinTab('ci'); });
   $('tabWk').addEventListener('click', function(){ sfx('click'); switchCheckinTab('wk'); });
 
   // 游戏结束
-  $('goAgain').addEventListener('click', function(){ sfx('click'); claimRelief(); });
+  $('goAgain').addEventListener('click', function(){
+    sfx('click');
+    if (!claimDailyRelief()) return;
+    $('ovGameOver').classList.remove('show');
+    showScreen('lobby');
+  });
   $('goBackLobby').addEventListener('click', function(){ sfx('click'); exitGame(); });
 
   // 存档确认
@@ -6176,26 +6607,29 @@ function bindEvents() {
 }
 
 /* v15 四游戏成长与独立排位。所有资产均为本地虚拟积分。 */
-var GAME_IDS = ['holdem','blackjack','gold','dice'];
-var GAME_NAMES = {holdem:'德州扑克',blackjack:'21点',gold:'炸金花',dice:'猜骰子'};
+var GAME_IDS = ['holdem','blackjack','gold','dice','diceduel'];
+var GAME_NAMES = {holdem:'德州扑克',blackjack:'21点',gold:'炸金花',dice:'猜骰子',diceduel:'骰子比大小'};
 var GAME_LEVELS = ['easy','normal','hard','champion'];
 var LEVEL_NAMES = ['新手','普通','困难','冠军'];
 var GROWTH_ROUTES = {
   holdem:[['hands','完成牌局',5],['wins','净赢牌局',2],['pair','一对以上',2],['straight','顺子以上',1],['allinwin','全下获胜',1]],
   blackjack:[['hands','完成牌局',5],['wins','净赢牌局',2],['natural','天然21点',1],['standwin','停牌获胜',2],['doublewin','加倍获胜',1]],
   gold:[['hands','完成牌局',5],['wins','净赢牌局',2],['blindwin','闷牌获胜',1],['comparewin','比牌获胜',1],['pair','对子以上',2]],
-  dice:[['hands','完成开奖',5],['wins','本轮净赢',2],['five','五骰开奖',3],['multi','多项下注开奖',3],['exactwin','点数或豹子押中',1]]
+  dice:[['hands','完成开奖',5],['wins','本轮净赢',2],['five','五骰开奖',3],['multi','多项下注开奖',3],['exactwin','点数或豹子押中',1]],
+  diceduel:[['hands','掷骰开局',5],['wins','净赢开局',2],['triplewin','豹子获胜',1],['sweep','通杀三家',1],['pointwin','赢下对局',3]]
 };
 var ACH_REWARD_BUDGET = ACHIEVEMENTS.reduce(function(n,a){return n+a.reward;},0);
 var V14_WEEKLY = WEEKLY_TASKS.map(function(t){return Object.assign({},t);});
 var V14_ACH = ACHIEVEMENTS.map(function(a){return Object.assign({},a);});
 var oldCreatePlayer15 = createNewPlayer;
-function newGameProfile15(){return {redeemPoints:0,rankPoints:0,rankPeak:0,rankedHands:0,rankedWins:0,rankedStreak:0,metrics:{},levels:{}};}
+function newGameProfile15(){return {redeemPoints:0,rankPoints:0,rankPeak:0,tierReward:0,rankedHands:0,rankedWins:0,rankedStreak:0,metrics:{},levels:{}};}
 function safeCount15(v){return Number.isSafeInteger(v)&&v>=0?v:0;}
 function ensureGames15(p){
   if(!p.games||typeof p.games!=='object'||Array.isArray(p.games))p.games={};
   GAME_IDS.forEach(function(g){var s=p.games[g];if(!s||typeof s!=='object'||Array.isArray(s))s=p.games[g]=newGameProfile15();
     ['redeemPoints','rankPoints','rankPeak','rankedHands','rankedWins','rankedStreak'].forEach(function(k){s[k]=safeCount15(s[k]);});
+    /* 已领过段位奖励的最高段位：老存档按当前段位初始化，避免补发历史奖励 */
+    if(!Number.isSafeInteger(s.tierReward))s.tierReward=rankTierFor(s.rankPoints);
     if(!s.metrics||typeof s.metrics!=='object')s.metrics={};if(!s.levels||typeof s.levels!=='object')s.levels={};});
 }
 createNewPlayer = function(name){var p=oldCreatePlayer15(name);p.games={};ensureGames15(p);p.growthVersion=15;p.rankedPoints=0;p.rankedPending=null;return p;};
@@ -6213,7 +6647,7 @@ migratePlayer=function(p){
     h.metrics.hands=safeCount15(p.totalHands);h.metrics.wins=safeCount15(p.totalWins);
     Object.keys(p.handDex||{}).forEach(function(c){if(+c>=1)h.metrics.pair=(h.metrics.pair||0)+safeCount15(p.handDex[c]);if(+c>=4)h.metrics.straight=(h.metrics.straight||0)+safeCount15(p.handDex[c]);});
     h.metrics.allinwin=safeCount15(p.stats.allInWins);
-    ['blackjack','gold','dice'].forEach(function(g){var s=p.arcade.stats&&p.arcade.stats[g];if(s){p.games[g].metrics.hands=safeCount15(s.hands);p.games[g].metrics.wins=safeCount15(s.wins);}});
+    ['blackjack','gold','dice','diceduel'].forEach(function(g){var s=p.arcade.stats&&p.arcade.stats[g];if(s){p.games[g].metrics.hands=safeCount15(s.hands);p.games[g].metrics.wins=safeCount15(s.wins);}});
     p.legacyEntryCredits=safeCount15(p.rankedPoints);
     if(p.dailyTasks&&p.dailyTasks.date===todayStr()){
       var claimed=p.dailyClaimed||{},paid=Object.keys(claimed).filter(function(id){return claimed[id];}).length*20;
@@ -6229,11 +6663,15 @@ migratePlayer=function(p){
   }
   return p;
 };
-TASK_POOL=GAME_IDS.map(function(g){return {id:'d15_'+g,name:GAME_NAMES[g]+' · 完成3局',game:g,event:'hands',target:3,reward:20};});
-TASK_POOL.push({id:'d15_any',name:'小馆常客 · 任意游戏净赢2局',game:'any',event:'wins',target:2,reward:20});
-WEEKLY_TASKS=V14_WEEKLY.map(function(t,i){var g=GAME_IDS[Math.floor(i/6)],j=i%6,route=g?GROWTH_ROUTES[g][j%5]:null;
-  return {id:t.id,reward:t.reward,game:g||'any',event:route?route[0]:'hands',target:route?(j===5?50:route[2]*3):80,name:g?GAME_NAMES[g]+' · '+route[1]+' '+(j===5?50:route[2]*3)+'次':'四馆巡游 · 累计完成80局'};});
-ACHIEVEMENTS=V14_ACH.map(function(a,i){var g=GAME_IDS[Math.floor(i/250)],index=i%250,route=GROWTH_ROUTES[g][index%5],tier=Math.floor(index/5)+1;
+/* 日常 5 项每项 40，单日最多 200 金币（v15 实际生效的任务表，替换了上方的旧池） */
+TASK_POOL=GAME_IDS.map(function(g){return {id:'d15_'+g,name:GAME_NAMES[g]+' · 完成3局',game:g,event:'hands',target:3,reward:40};});
+TASK_POOL.push({id:'d15_any',name:'小馆常客 · 任意游戏净赢2局',game:'any',event:'wins',target:2,reward:40});
+/* 周常与成就都按 GAME_IDS 均分，新增游戏自动获得自己的一档目标 */
+var WK_PER_GAME = Math.ceil(V14_WEEKLY.length / GAME_IDS.length);
+WEEKLY_TASKS=V14_WEEKLY.map(function(t,i){var g=GAME_IDS[Math.min(GAME_IDS.length-1,Math.floor(i/WK_PER_GAME))],j=i%WK_PER_GAME,route=g?GROWTH_ROUTES[g][j%5]:null;
+  return {id:t.id,reward:t.reward,game:g||'any',event:route?route[0]:'hands',target:route?route[2]*3:80,name:g?GAME_NAMES[g]+' · '+route[1]+' '+route[2]*3+'次':'四馆巡游 · 累计完成80局'};});
+var ACH_PER_GAME = Math.ceil(V14_ACH.length / GAME_IDS.length);
+ACHIEVEMENTS=V14_ACH.map(function(a,i){var g=GAME_IDS[Math.min(GAME_IDS.length-1,Math.floor(i/ACH_PER_GAME))],index=i%ACH_PER_GAME,route=GROWTH_ROUTES[g][index%5],tier=Math.floor(index/5)+1;
   return {id:a.id,reward:a.reward,game:g,route:g+'_'+route[0],event:route[0],target:route[2]*tier*tier,icon:'',name:GAME_NAMES[g]+' · '+route[1]+' '+tier+'阶',desc:'累计 '+route[2]*tier*tier+' 次',metric:function(p){return p.games&&p.games[g]?(p.games[g].metrics[route[0]]||0):0;}};});
 var transaction15=false;
 function restorePlayer15(snapshot){Object.keys(player).forEach(function(k){delete player[k];});Object.assign(player,JSON.parse(snapshot));}
@@ -6250,26 +6688,40 @@ function profile15(game){ensureGames15(player);return player.games[game||hubGame
 function level15(key){var i=GAME_LEVELS.indexOf(key||App.difficulty);return i<0?0:i;}
 function roundLocked15(){return G.active||!!(Arcade.round&&!Arcade.round.done)||!!player.rankedPending||!!arcadeData().pending;}
 function exchangePoints(game,direction,n){
-  if(!GAME_IDS.includes(game)||!['buy','sell'].includes(direction)||roundLocked15()||!Number.isSafeInteger(n)||n<=0||!Number.isSafeInteger(n*100))return false;
+  /* 积分只能通过排位赢取，是实力的体现：只保留「积分 → 金币」单向兑换，金币不能购买积分 */
+  if(direction!=='sell')return false;
+  if(!GAME_IDS.includes(game)||roundLocked15()||!Number.isSafeInteger(n)||n<=0||!Number.isSafeInteger(n*100))return false;
   var s=profile15(game),cost=n*100;
-  if(direction==='buy'&&(player.coins<cost||!Number.isSafeInteger(s.redeemPoints+n)))return false;
-  if(direction==='sell'&&(s.redeemPoints<n||!Number.isSafeInteger(player.coins+cost)))return false;
-  var ok=atomic15(function(){if(direction==='buy'){player.coins-=cost;s.redeemPoints+=n;}else{s.redeemPoints-=n;player.coins+=cost;}});
+  if(s.redeemPoints<n||!Number.isSafeInteger(player.coins+cost))return false;
+  var ok=atomic15(function(){s.redeemPoints-=n;player.coins+=cost;});
   if(ok){renderLobby();renderModeCards();showToast('兑换成功 · 段位分不变',1500);}return ok;
 }
-buyRankedPoints=function(n){return exchangePoints(hubGame,'buy',n);};
+/* 金币买积分的入口已关闭：积分只能靠排位赢取 */
+buyRankedPoints=function(n){return false;};
 function applyRankResult15(game,key,net){var s=profile15(game),i=level15(key),sign=Math.sign(net),before=s.redeemPoints,rank=s.rankPoints;
   s.redeemPoints=Math.max(0,s.redeemPoints+sign*(i+1));s.rankPoints=Math.max(0,s.rankPoints+(sign>0?[12,16,20,26][i]:sign<0?-[5,7,9,12][i]:0));
   if(!Number.isSafeInteger(s.redeemPoints)||!Number.isSafeInteger(s.rankPoints))throw Error('积分超出范围');
   s.rankPeak=Math.max(s.rankPeak,rankTierFor(s.rankPoints));s.rankedHands++;if(sign>0){s.rankedWins++;s.rankedStreak++;}else s.rankedStreak=0;
   if(game==='holdem'){player.rankPoints=s.rankPoints;player.rankTier=rankTierFor(s.rankPoints);player.rankPeak=s.rankPeak;}
-  return {points:s.redeemPoints-before,rank:s.rankPoints-rank};
+  var promo=grantTierReward15(s);
+  return {points:s.redeemPoints-before,rank:s.rankPoints-rank,promo:promo};
+}
+/* 段位晋升奖励：每个大段位发放金币与可兑换积分，只发未领过的新段位 */
+function grantTierReward15(s){
+  var t1=rankTierFor(s.rankPoints),coins15=0,pts15=0;
+  for(var t=Math.max(0,s.tierReward||0)+1;t<=t1;t++){coins15+=RANKS[t].reward||0;pts15+=RANKS[t].points||0;}
+  if(t1>(s.tierReward||0))s.tierReward=t1;
+  if(coins15>0)addCoins(coins15);
+  if(pts15>0)s.redeemPoints+=pts15;
+  if(coins15>0||pts15>0){sfx('rankup');showToast('🏅 晋升 '+RANKS[t1].name+'  +'+fmt(coins15)+'🪙  +'+fmt(pts15)+' 积分',2600,false,'success');}
+  return {tier:t1,coins:coins15,points:pts15};
 }
 function recoverRanked15(){var p=player.rankedPending;if(!p||G.active)return true;return atomic15(function(){applyRankResult15(p.game,p.difficulty,-1);player.rankedPending=null;});}
 function recordGrowth15(game,events,key){
-  ensureDailyTasks();ensureWeekly();var s=profile15(game);
+  ensureDailyTasks();ensureWeekly();ensureMonthly();var s=profile15(game);
   Object.keys(events).forEach(function(ev){var n=events[ev];if(!Number.isSafeInteger(n)||n<=0)return;
     s.metrics[ev]=Math.min(Number.MAX_SAFE_INTEGER,(s.metrics[ev]||0)+n);
+    bumpMonthlyProgress(game,ev,n);
     TASK_POOL.forEach(function(t){if((t.game===game||t.game==='any')&&t.event===ev&&!player.dailyClaimed[t.id])player.dailyProgress[t.id]=Math.min(t.target,(player.dailyProgress[t.id]||0)+n);});
     WEEKLY_TASKS.forEach(function(t){if((t.game===game||t.game==='any')&&t.event===ev&&!player.weekly.claimed[t.id])player.weekly.progress[t.id]=Math.min(t.target,(player.weekly.progress[t.id]||0)+n);});
   });if(events.hands)s.levels[key||'easy']=(s.levels[key||'easy']||0)+1;
@@ -6285,6 +6737,11 @@ claimWeekly=function(id){ensureWeekly();var t=getWeeklyTaskById(id);if(!t||playe
 claimAchievement=function(id){var a=ACHIEVEMENTS.find(function(t){return t.id===id;});if(!a||player.achievementClaims[id]||!achievementReady(a))return false;
   var ok=atomic15(function(){player.achievementClaims[id]=true;player.achievements[id]=true;addCoins(a.reward);});if(ok){renderAchList();renderLobby();}return ok;};
 rankInfo=function(game){return RANKS[rankTierFor(player?profile15(game).rankPoints:0)];};
+/* 排位只有一种模式：不选手难度，对手强度由玩家当前段位决定 */
+function rankedDifficultyFor(game){
+  var t=rankTierFor(player?profile15(game).rankPoints:0);
+  return t<=1?'easy':t===2?'normal':t===3?'hard':'champion';
+}
 var oldRankProgress15=rankProgress;
 rankProgress=function(){var pts=player.rankPoints;player.rankPoints=profile15().rankPoints;try{return oldRankProgress15();}finally{player.rankPoints=pts;}};
 addRankPoints=function(delta){var s=profile15('holdem');s.rankPoints=Math.max(0,s.rankPoints+delta);s.rankPeak=Math.max(s.rankPeak,rankTierFor(s.rankPoints));player.rankPoints=s.rankPoints;player.rankPeak=s.rankPeak;player.rankTier=rankTierFor(s.rankPoints);};
@@ -6301,6 +6758,7 @@ function finishHoldemRank15(winnings,potTotal,net){
     $('retryRank15').onclick=function(){if(finishHoldemRank15(winnings,potTotal,net)&&nextHandResolve){var done=nextHandResolve;nextHandResolve=null;done();}};return false;
   }
   G.rankRetry=null;G.handSettled=true;G.settling=false;G.handOver=true;
+  syncTitles();
   G.lastSettleData=buildSettleData(winnings,potTotal,delta.rank);
   G.session.hands++;G.session.wins+=net>0?1:0;
   showToast('排位结算：积分 '+(delta.points>=0?'+':'')+delta.points+' · 段位 '+(delta.rank>=0?'+':'')+delta.rank,2500);
@@ -6326,14 +6784,16 @@ renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}retur
 /* 所有游戏共用模式及难度入口。 */
 renderModeCards=function(){if(!player)return;var s=profile15(hubGame),body=$('modeBody');body.innerHTML='';
  ['quick','ranked'].forEach(function(mode){var card=document.createElement('button');card.className='mode-card '+mode;
-  card.innerHTML='<div class="mode-name">'+(mode==='quick'?'自由匹配':'独立排位')+'</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>'+(mode==='quick'?'金币对局 · 本地AI或庄家<br>四档挑战，自主选择':'比赛筹码不兑换，不动金币<br>'+rankInfo(hubGame).name+' · 段位 '+s.rankPoints+'<br>可兑换积分 '+s.redeemPoints+'<br>胜加、负扣，平局不变')+'</p></div>';
-  card.onclick=function(){App.mode=mode;renderDifficultyCards();showScreen('difficulty');};body.appendChild(card);
+  card.innerHTML='<div class="mode-name">'+(mode==='quick'?'自由匹配':'独立排位')+'</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>'+(mode==='quick'?'金币对局 · 本地AI或庄家<br>四档挑战，自主选择':'单一模式 · 不挑选难度<br>对手强度随你的段位变化<br>'+rankInfo(hubGame).name+' · 当前对手 '+LEVEL_NAMES[level15(rankedDifficultyFor(hubGame))]+'级<br>可兑换积分 '+s.redeemPoints+'<br>胜加、负扣，平局不变')+'</p></div>';
+  card.onclick=function(){App.mode=mode;
+    if(mode==='ranked'){var d=rankedDifficultyFor(hubGame);App.difficulty=d;tryEnterGame(d);return;}
+    renderDifficultyCards();showScreen('difficulty');};body.appendChild(card);
  });
- var bar=document.createElement('div');bar.className='exchange15';bar.innerHTML='<span>'+GAME_NAMES[hubGame]+'：100金币 ⇄ 1积分 · 兑换不改变段位</span><input id="exchangeAmount15" type="number" min="1" step="1" value="1" aria-label="兑换积分数量"><button id="buyPoints15">金币换积分</button><button id="sellPoints15">积分换金币</button><small>旧版门票已退役，不作为可兑换资产；四馆积分不互通。</small>';
- body.appendChild(bar);$('buyPoints15').onclick=function(){if(!exchangePoints(hubGame,'buy',Number($('exchangeAmount15').value)))showToast('兑换未完成：请检查余额、数量或未结束的对局',2500,true);};$('sellPoints15').onclick=function(){if(!exchangePoints(hubGame,'sell',Number($('exchangeAmount15').value)))showToast('兑换未完成：请检查积分、数量或未结束的对局',2500,true);};
+ var bar=document.createElement('div');bar.className='exchange15';bar.innerHTML='<span>'+GAME_NAMES[hubGame]+'：1 积分 = 100 金币 · 积分只能靠排位赢取</span><input id="exchangeAmount15" type="number" min="1" step="1" value="1" aria-label="兑换积分数量"><button id="sellPoints15">积分换金币</button><small>积分是实力的体现，金币不能购买；四馆积分不互通。</small>';
+ body.appendChild(bar);$('sellPoints15').onclick=function(){if(!exchangePoints(hubGame,'sell',Number($('exchangeAmount15').value)))showToast('兑换未完成：请检查积分、数量或未结束的对局',2500,true);};
 };
 renderDifficultyCards=function(){var body=$('diffBody');body.innerHTML='';GAME_LEVELS.forEach(function(key,i){var cfg=DIFFICULTY_CONFIG[key],locked=hubGame==='holdem'&&App.mode!=='ranked'&&player.coins<cfg.minCoins,card=document.createElement('button');card.className='diff-card '+key+(locked?' locked':'');
- var lines=hubGame==='holdem'?'盲注 '+cfg.sb+'/'+cfg.bb+'<br>AI策略强度递增':hubGame==='gold'?'AI看牌与加注策略逐档加强':hubGame==='blackjack'?'公平洗牌 · 庄家软17停牌<br>'+(i<2?'显示点数与辅助提示':'显示点数，自主决策'):'公平六面骰 · 不改变中奖概率<br>3骰 / 5骰 · 多项下注';
+ var lines=hubGame==='holdem'?'盲注 '+cfg.sb+'/'+cfg.bb+'<br>AI策略强度递增':hubGame==='gold'?'AI看牌与加注策略逐档加强':hubGame==='blackjack'?'公平洗牌 · 庄家软17停牌<br>'+(i<2?'显示点数与辅助提示':'显示点数，自主决策'):hubGame==='diceduel'?'公平六面骰 · 对手同样随机<br>难度只改变单轮投入上限':'公平六面骰 · 不改变中奖概率<br>3骰 / 5骰 · 多项下注';
  card.innerHTML='<div class="diff-name">'+LEVEL_NAMES[i]+'</div><div class="diff-info">'+lines+'<p>'+(App.mode==='ranked'?'胜 +'+(i+1)+' / 负 -'+(i+1)+' 积分<br>独立比赛筹码':hubGame==='holdem'?'最低金币 '+cfg.minCoins+' · 入场 '+cfg.entryFee:(hubGame==='blackjack'?'初始下注上限 ':'单轮总投入上限 ')+[100,500,2000,10000][i]+(hubGame==='blackjack'?' · 加倍可达2倍':''))+'</p><small>纯单机，无真人联机</small></div>';
  card.onclick=function(){tryEnterGame(key);};body.appendChild(card);});};
 tryEnterGame=function(key){if(!GAME_LEVELS.includes(key)||G.active||(Arcade.round&&!Arcade.round.done)||player.rankedPending||arcadeData().pending)return false;var cfg=DIFFICULTY_CONFIG[key];
@@ -6365,13 +6825,15 @@ arcadeExtra=function(n){var r=Arcade.round;if(!r||r.done||r.retry||!Number.isSaf
  if(!ok){if(r.mode==='ranked')Arcade.rankedBank=bank;return false;}r.stake+=n;return true;};
 function arcadeEvents15(r,payout){var win=payout>r.stake,e={hands:1,wins:win?1:0};if(r.game==='blackjack'&&r.hand){e.natural=r.hand.length===2&&blackjackValue(r.hand).total===21?1:0;e.doublewin=win&&r.stake>r.base?1:0;e.standwin=win&&!e.natural?1:0;}
  if(r.game==='gold'&&r.seats){e.blindwin=win&&!r.seats[0].seen?1:0;e.comparewin=r.compareWins||0;e.pair=goldValue(r.seats[0].hand)[0]>=1?1:0;}
- if(r.game==='dice'&&r.dice){e.five=r.dice.length===5?1:0;e.multi=r.bets&&r.bets.length>1?1:0;e.exactwin=r.bets&&r.bets.some(function(b){return !['small','big'].includes(b.choice)&&diceResult(r.dice,b.choice).win;})?1:0;}return e;}
+ if(r.game==='dice'&&r.dice){e.five=r.dice.length===5?1:0;e.multi=r.bets&&r.bets.length>1?1:0;e.exactwin=r.bets&&r.bets.some(function(b){return !['small','big'].includes(b.choice)&&diceResult(r.dice,b.choice).win;})?1:0;}
+ if(r.game==='diceduel'&&r.seats){e.triplewin=r.rank&&r.rank.triple&&r.wins>0?1:0;e.sweep=r.wins===3?1:0;e.pointwin=r.wins||0;}return e;}
 arcadeSettle=function(payout,label){var r=Arcade.round;if(!r||r.done||!Number.isSafeInteger(payout)||payout<0)return false;var delta=null;
  if(r.mode!=='practice'){
   if(!arcadeData().pending||arcadeData().pending.id!==r.id)return false;
   if(!atomic15(function(){if(r.mode==='ranked')delta=applyRankResult15(r.game,r.difficulty,payout-r.stake);else addCoins(payout);
     arcadeRecord(r.game,r.stake,payout,label);var h=arcadeData().history[0];h.mode=r.mode;h.unit=r.mode==='ranked'?'比赛筹码':'金币';h.points=delta?delta.points:0;
     if(label!=='主动离桌'&&label!=='未完局离开')recordGrowth15(r.game,arcadeEvents15(r,payout),r.difficulty);
+    syncTitles();
     arcadeData().pending=null;})){r.retry={payout:payout,label:label};Arcade.message='保存失败，请重试结算，勿刷新';renderArcade();return false;}
  }else Arcade.practice+=payout;
  if(r.mode==='ranked')Arcade.rankedBank+=payout;
@@ -6402,6 +6864,70 @@ function diceRollBasket(){if(!Arcade.basket.length)return false;var bets=Arcade.
  bets.forEach(function(b){b.multiplier=diceMultiplier(r.dice.length,b.choice);b.payout=diceResult(r.dice,b.choice).win?b.amount*b.multiplier:0;payout+=b.payout;});
  Arcade.basket=[];return arcadeSettle(payout,'总点数 '+r.dice.reduce(function(a,b){return a+b;},0)+(diceResult(r.dice,'any').triple?' · 豹子':'')+' · 投入 '+bet+' / 返还 '+payout);}
 dicePlay=function(bet,choice){Arcade.basket=[];if(!diceAddBet(choice,bet))return false;return diceRollBasket();};
+/* ============================================================
+   骰子比大小：玩家 + 3 位AI，各掷 3 颗公平六面骰
+   豹子（三同）大于任何普通点数；玩家掷出豹子时全部返还翻倍。
+   下注按 3 份均分，因此只接受 30 的倍数。
+   ============================================================ */
+function ddRankOf(dice) {
+  var t = dice[0] === dice[1] && dice[1] === dice[2];
+  var sum = dice[0] + dice[1] + dice[2];
+  return { triple: t, sum: sum, key: (t ? 1000 : 0) + sum };
+}
+function ddCmp(a, b) { return a.key > b.key ? 1 : a.key < b.key ? -1 : 0; }
+function ddRoll() { return [1 + randomInt(6), 1 + randomInt(6), 1 + randomInt(6)]; }
+function ddStart(bet) {
+  if (!Number.isSafeInteger(bet) || bet <= 0 || bet % 30 !== 0) {
+    Arcade.message = '骰子比大小只接受 30 的倍数（按 3 位对手均分）';
+    renderArcade(); return false;
+  }
+  if (Arcade.round && !Arcade.round.done) return false;
+  var r = arcadeBegin(bet);
+  if (!r) return false;
+  var seats = [{ name: (player && player.name) || '你', human: true, dice: ddRoll() }];
+  for (var i = 0; i < 3; i++) seats.push({ name: randomAIName(seats.map(function (s) { return s.name; })), dice: ddRoll() });
+  var unit = bet / 3, me = ddRankOf(seats[0].dice), wins = 0, ties = 0, payout = 0;
+  for (var k = 1; k < seats.length; k++) {
+    var c = ddCmp(me, ddRankOf(seats[k].dice));
+    seats[k].result = c;
+    if (c > 0) { wins++; payout += unit * 2; }
+    else if (c === 0) { ties++; payout += unit; }
+    else payout += 0;
+  }
+  var doubled = false;
+  if (me.triple) { payout *= 2; doubled = true; }
+  r.seats = seats; r.unit = unit; r.wins = wins; r.ties = ties; r.losses = 3 - wins - ties; r.doubled = doubled;
+  r.rank = me;
+  return arcadeSettle(payout, (me.triple ? '豹子 ' + me.sum : '点数 ' + me.sum)
+    + ' · 赢 ' + wins + ' / 平 ' + ties + ' / 负 ' + r.losses + (doubled ? ' · 豹子翻倍' : ''));
+}
+function renderDiceDuel15() {
+  var r = Arcade.round, live = !!(r && !r.done);
+  var seats = (r && r.seats) ? r.seats : null;
+  var bet = Number($('arcBet') ? $('arcBet').value : 30);
+  var html = '<div class="dd-layout"><div class="dd-seats">';
+  for (var i = 0; i < 4; i++) {
+    var s = seats ? seats[i] : null;
+    var nm = s ? s.name : (i === 0 ? ((player && player.name) || '你') : '对手 ' + i);
+    var rk = s ? ddRankOf(s.dice) : null;
+    var res = i === 0 ? '' : (s && typeof s.result === 'number'
+      ? (s.result > 0 ? '<b class="w">胜</b>' : s.result < 0 ? '<b class="l">负</b>' : '<b class="p">平</b>') : '');
+    html += '<div class="dd-seat' + (i === 0 ? ' me' : '') + '">';
+    html += '<div class="dd-name">' + escapeHTML(nm) + '</div>';
+    html += '<div class="dd-dice">' + [0, 1, 2].map(function (j) {
+      return '<span class="dd-die">' + (s ? diceFace(s.dice[j]) : '?') + '</span>';
+    }).join('') + '</div>';
+    html += '<div class="dd-sum">' + (rk ? (rk.triple ? '豹子 ' + rk.sum : rk.sum + ' 点') : '待掷') + '</div>';
+    html += '<div class="dd-res">' + res + '</div>';
+    html += '</div>';
+  }
+  html += '</div><p class="dd-tip">豹子（三同）大于任何普通点数 · 与 3 位对手分别比：赢一家返 2 倍、平局退还、输则失去该份 · 你掷出豹子时全部返还再翻倍</p></div>';
+  $('arcTable').innerHTML = html;
+  $('arcActions').innerHTML = r && r.retry
+    ? arcButton('重试保存结算', 'retry', false, true)
+    : arcButton((r && r.done ? '再来一局 · ' : '开局 · ') + bet, 'startdd', arcadeBalance() < bet, true);
+}
+
 function renderDice15(){
  var r=Arcade.round,count=Arcade.diceCount,live=!!(r&&!r.done),d=diceDistribution(count);
  var staked={};Arcade.basket.forEach(function(b){staked[b.choice]=(staked[b.choice]||0)+b.amount;});
@@ -6432,7 +6958,9 @@ function renderDice15(){
 }
 var oldRenderArcade15=renderArcade;
 renderArcade=function(){oldRenderArcade15();if(!player)return;var live=Arcade.round&&!Arcade.round.done;
- var selectedBet=Number($('arcBet').value);$('arcBet').innerHTML=[10,20,50,100,200,500,1000,2000,5000,10000].filter(function(n){return n<=arcadeLimit15();}).map(function(n){return '<option value="'+n+'">'+n+'</option>';}).join('');$('arcBet').value=String(Math.min(selectedBet||10,arcadeLimit15()));
+ var selectedBet=Number($('arcBet').value),ladder=arcBetLadder();
+ $('arcBet').innerHTML=ladder.map(function(n){return '<option value="'+n+'">'+n+'</option>';}).join('');
+ $('arcBet').value=String(pickBet15(ladder,selectedBet));
  $('arcModeLabel').textContent=LEVEL_NAMES[level15(Arcade.difficulty)]+' · '+(Arcade.mode==='ranked'?'独立排位，比赛筹码不兑换':Arcade.mode==='practice'?'免费练习，不计任务成就':'自由匹配，结算金币')+(Arcade.game==='blackjack'?' · 初始下注上限 '+arcadeLimit15()+' / 加倍总投入上限 '+arcadeRoundLimit15():' · 单轮投入上限 '+arcadeLimit15());
  $('arcBalance').textContent=fmt(arcadeBalance())+(Arcade.mode==='ranked'?' 比赛筹码':Arcade.mode==='practice'?' 练习筹码':' 金币');
  $('arcMode').innerHTML='<option value="coins">自由匹配</option><option value="ranked">独立排位</option><option value="practice">免费练习</option>';$('arcMode').value=Arcade.mode;
@@ -6443,12 +6971,14 @@ renderArcade=function(){oldRenderArcade15();if(!player)return;var live=Arcade.ro
  var s=profile15(Arcade.game);$('arcStats').textContent='段位 '+s.rankPoints+' · 可兑换积分 '+s.redeemPoints;
  $('arcHistory').textContent=Arcade.mode==='practice'?'练习不计金币、任务和成就':arcadeData().history.filter(function(h){return h.game===Arcade.game;}).slice(0,3).map(function(h){return h.label+' / '+(h.mode==='ranked'?'积分 '+h.points:'金币净 '+h.net);}).join(' · ');
  if(Arcade.game==='dice')renderDice15();
+ else if(Arcade.game==='diceduel')renderDiceDuel15();
  else if(Arcade.game==='blackjack'&&level15(Arcade.difficulty)<2){var note=document.createElement('p');note.className='assist15';note.textContent='辅助：A自动按1或11计算；要牌后不能加倍；庄家软17停牌，难度不改变牌概率。';$('arcTable').appendChild(note);}
  var r=Arcade.round,bet=Number($('arcBet').value),note=document.createElement('p');note.className='arc-state';
  if(r&&r.done)note.textContent='本局已结束 · 投入 '+r.stake+' / 返还 '+r.payout+' / 净 '+(r.payout-r.stake>=0?'+':'')+(r.payout-r.stake)+(Arcade.mode==='ranked'?' 比赛筹码':'')+' · 可调整金额或再来一局';
  else if(live&&Arcade.game==='blackjack')note.textContent='轮到你 · 要牌或停牌 · '+(blackjackDoubleReason()?'加倍不可用：'+blackjackDoubleReason():'加倍：补投 '+r.base+'，只拿一张后停牌');
  else if(live&&Arcade.game==='gold')note.textContent='轮到你 · '+(r.turn<3?'第3轮起开放比牌':'可跟注、加注或选择对手比牌')+' · 看牌后跟注翻倍；弃牌不退已投入筹码';
  else if(Arcade.game==='dice')note.textContent='加入清单暂不扣款 · 点击“确认下注”后统一扣款并开奖';
+ else if(Arcade.game==='diceduel')note.textContent='下注按 3 位对手均分（30 的倍数）· 掷骰后一次结算，豹子翻倍';
  else note.textContent=arcadeBalance()<bet?'余额不足以按当前金额开局 · 可降低下注，或切换免费练习':'选择金额后开局 · 本轮结束后可切换模式和难度';
  $('arcTable').appendChild(note);
  $('arcRules').textContent=$('arcHelp').hidden?'规则':'收起规则';$('arcRules').setAttribute('aria-expanded',String(!$('arcHelp').hidden));
@@ -6474,9 +7004,22 @@ var screenBeforeClock=showScreen;showScreen=function(name){if(name!=='arcade')ar
 /* ============================================================
    小游戏交互层：筹码选择 / 结果横幅 / 座位比牌
    ============================================================ */
+/* 当前游戏可选注额阶梯：骰子比大小要按 3 位对手均分，只提供 30 的倍数。
+   下拉选项与筹码片必须同源，否则点筹码片时找不到对应 option 会被静默丢弃。 */
+function arcBetLadder(){
+ var lim=arcadeLimit15();
+ return (Arcade.game==='diceduel'?[30,60,150,300,600,1500,3000,6000]:[10,20,50,100,200,500,1000,2000,5000,10000]).filter(function(n){return n<=lim;});
+}
+/* 把选中注额收敛到阶梯上：能保留就保留，否则取不超过它的最大值，再否则取最小档 */
+function pickBet15(ladder,cur){
+ if(!ladder||!ladder.length)return 10;
+ if(ladder.indexOf(cur)>=0)return cur;
+ for(var i=ladder.length-1;i>=0;i--)if(ladder[i]<=cur)return ladder[i];
+ return ladder[0];
+}
 /* 常用注额阶梯：档位过多时等距抽样，首尾保留 */
 function arcChipValues(){
-  var lim=arcadeLimit15(),all=[10,20,50,100,200,500,1000,2000,5000,10000].filter(function(n){return n<=lim;});
+  var all=arcBetLadder();
   if(all.length<=5)return all.slice();
   var step=Math.ceil(all.length/5),out=[];
   for(var i=0;i<all.length;i+=step)out.push(all[i]);
@@ -6536,7 +7079,10 @@ function initArcadePolish(){
 }
 initArcadePolish();
 var oldDispatch15=arcadeDispatch;
-arcadeDispatch=function(action){if(action==='roll15'){if(Arcade.busy)return;Arcade.busy=true;try{return diceRollBasket();}finally{Arcade.busy=false;}}if(action==='clear15'){Arcade.basket=[];renderArcade();return;}return oldDispatch15(action);};
+arcadeDispatch=function(action){
+  if(action==='startdd'){if(Arcade.busy)return;Arcade.busy=true;try{return ddStart(Number($('arcBet').value));}finally{Arcade.busy=false;}}
+  if(action==='roll15'){if(Arcade.busy)return;Arcade.busy=true;try{return diceRollBasket();}finally{Arcade.busy=false;}}
+  if(action==='clear15'){Arcade.basket=[];renderArcade();return;}return oldDispatch15(action);};
 ARCADE_RULES.blackjack+=' 初始下注按场次限额，加倍可达到初始限额的2倍；新手/普通/困难/冠军每次决策30/20/15/12秒，超时停牌。查看规则、确认离桌或切到后台暂停计时。';
 ARCADE_RULES.gold+=' 每轮决策30/20/15/12秒（按难度），看牌不重置时间，超时弃牌；规则、离桌确认和后台暂停计时。';
 ARCADE_RULES.dice='自主下注，无强制思考倒计时，不会自动确认或扣款。可选3或5颗公平骰子；小/大：3骰4–10/11–17，5骰6–17/18–29；全同为豹子，大小均输。可押大小、精确总点数、任意豹子或指定点数豹子。同轮各押法独立赔付，可叠加；赔率显示为含本金返还倍数。非大小赔率按真实概率折算向下取整，不保证收益。四档仅改变下注上限和排位积分，不暗改概率。';
@@ -6564,6 +7110,7 @@ function init() {
   renderLobby();
   renderTasks();
   renderSlotList();
+  startPeriodicWatchdog();
   showScreen('lobby');
   console.log('[德州扑克] 初始化完成，存档槽 ' + activeSlot);
 }

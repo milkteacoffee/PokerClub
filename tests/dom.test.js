@@ -113,7 +113,7 @@ function click(el) {
   ok($('taskListDaily').style.display === 'block' && $('taskListNewbie').style.display === 'none',
      'Tab 切换到每日任务');
   const dlItems = $('taskListDaily').querySelectorAll('.task-item');
-  ok(dlItems.length === 5, '每日任务渲染 5 项（实际 ' + dlItems.length + '）');
+  ok(dlItems.length === 6, '每日任务渲染 6 项（四馆 + 骰子比大小 + 通用）（实际 ' + dlItems.length + '）');
   click($('tabNewbie'));
   click($('ovTasks').querySelector('[data-close="ovTasks"]'));
   await tick(20);
@@ -170,7 +170,8 @@ function click(el) {
   var coinBefore = $('lbCoins').textContent;
   click($('btnClaimCheckin'));
   await tick(60);
-  ok($('lbCoins').textContent === '560', '签到后金币 500 → 560（实际 ' + $('lbCoins').textContent + '）');
+  var ci1 = Number(($('ciPanel').querySelector('.ci-cell .v').textContent || '0').replace(/[^0-9]/g, ''));
+  ok($('lbCoins').textContent === String(Number(coinBefore) + ci1), '签到后金币 ' + coinBefore + ' → ' + (Number(coinBefore) + ci1) + '（实际 ' + $('lbCoins').textContent + '）');
   ok($('ciPanel').textContent.indexOf('今日已签到') >= 0, '领取后按钮变为已签到');
   click($('tabWk'));
   await tick(30);
@@ -220,8 +221,8 @@ function click(el) {
   ok($('gameScreen').classList.contains('active'), '进入游戏界面');
   ok($('lobbyScreen').style.display === 'none', '大厅已隐藏');
   ok($('topbar').querySelector('#pLevel').textContent === 'Lv.1', '顶栏等级正常');
-  ok($('pCoins').textContent === '560',
-     '顶栏金币与大厅一致（签到后 560，实际 ' + $('pCoins').textContent + '）');
+  ok($('pCoins').textContent === String(Number(coinBefore) + ci1),
+     '顶栏金币与大厅一致（签到后 新签到首档，实际 ' + $('pCoins').textContent + '）');
   const seats = [0,1,2,3].map(i => $('seat' + i));
   ok(seats.every(s => s.querySelector('.chips')), '4 个座位均渲染了筹码');
 
