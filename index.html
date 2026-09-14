@@ -1041,6 +1041,16 @@
   .gd-arena .gd-seat:nth-child(1){left:2%;top:75px}.gd-arena .gd-seat:nth-child(2){left:50%;top:0;transform:translateX(-50%)}.gd-arena .gd-seat:nth-child(3){right:2%;top:75px}
   .gd-arena #gdTable{position:absolute;left:22%;right:22%;bottom:0;width:auto;height:96px;min-height:96px;gap:2px;margin:0;font-size:11px}
   .gd-arena #gdTable>div{min-width:0;max-width:50%;flex:1}.gd-arena .gd-mini{padding:0;justify-content:center}.gd-arena .gd-mini .gd-card{min-width:14px;width:25px;padding:3px;font-size:14px;margin-left:-5px}.gd-arena .gd-mini .gd-card:first-child{margin-left:0}
+  /* 掼蛋手牌单行叠放：每张保留30px左侧识别区，27张总宽850px。 */
+  #gdHand{height:134px;min-height:134px;max-width:900px;display:flex;flex-wrap:nowrap;align-items:flex-start;justify-content:center;gap:0;padding:22px 0 0;overflow:visible;isolation:isolate}
+  #gdHand .gd-card{position:relative;flex:0 0 70px;width:70px;height:104px;margin:0;padding:7px 5px;justify-content:flex-start;gap:3px;font-size:23px;line-height:26px;border-radius:7px;background:linear-gradient(125deg,#fffdf2,#e2e5d9);box-shadow:-2px 1px 5px #0003;transition:transform .12s,background .12s;touch-action:manipulation}
+  #gdHand .gd-card+.gd-card{margin-left:-40px}
+  #gdHand .gd-card small{display:flex;flex-direction:column;align-items:center;width:20px;white-space:normal;font-size:17px;line-height:19px}
+  #gdHand .gd-card .gd-wild{font:9px/11px FangSong,serif;writing-mode:vertical-rl;margin-top:1px;color:#a33331}
+  #gdHand .gd-card:disabled{opacity:1}
+  #gdHand .gd-card.picked{transform:translateY(-18px);background:linear-gradient(125deg,#ffeac0,#e9c579);border-color:#c59029;box-shadow:-2px 1px 5px #0003}
+  #gdHand .gd-card:focus-visible{outline:2px solid #bf8e30;outline-offset:-3px}
+  @media(hover:hover){#gdHand .gd-card:not(:disabled):not(.picked):hover{transform:translateY(-5px)}}
 </style>
 </head>
 <body>
@@ -6160,7 +6170,7 @@ if(!root.document)return;
 var g=null,selected=new Set(),timer=null,levels=[2,2],playing=2,names=['你','右侧对手','队友','左侧对手'],auto=false,stats={hands:0,wins:0},active=false,saveFailed=false;
 try{var savedStats=JSON.parse(localStorage.getItem('poker_guandan_stats_v1'));if(savedStats&&Number.isSafeInteger(savedStats.hands)&&savedStats.hands>=0&&Number.isSafeInteger(savedStats.wins)&&savedStats.wins>=0&&savedStats.wins<=savedStats.hands)stats=savedStats;}catch(e){}
 function el(id){return document.getElementById(id);}function title(r){return ({11:'J',12:'Q',13:'K',14:'A',15:'小王',16:'大王'})[r]||r;}
-function card(c,button){var red=c.s===1||c.s===3||c.r===16;return '<'+(button?'button':'span')+' class="gd-card'+(red?' red':'')+(selected.has(c.id)&&button?' picked':'')+'" '+(button?'data-gd-card="'+c.id+'" aria-pressed="'+selected.has(c.id)+'"':'')+'>'+(c.r===15?'小':c.r===16?'大':title(c.r))+'<small>'+(['♠','♥','♣','♦','王'][c.s])+(wild(c,g.level)?' 逢人配':'')+'</small></'+(button?'button':'span')+'>';}
+function card(c,button){var red=c.s===1||c.s===3||c.r===16;return '<'+(button?'button':'span')+' class="gd-card'+(red?' red':'')+(selected.has(c.id)&&button?' picked':'')+'" '+(button?'data-gd-card="'+c.id+'" aria-pressed="'+selected.has(c.id)+'"':'')+'>'+(c.r===15?'小':c.r===16?'大':title(c.r))+'<small>'+(['♠','♥','♣','♦','王'][c.s])+(wild(c,g.level)?(button?'<span class="gd-wild">逢人配</span>':' 逢人配'):'')+'</small></'+(button?'button':'span')+'>';}
 function stop(){clearTimeout(timer);timer=null;}
 function draw(){if(!active)return;el('gdLevel').textContent='本局打 '+title(playing)+' · 我方 '+title(levels[0])+' / 对方 '+title(levels[1]);el('gdSeats').innerHTML=[3,2,1].map(i=>'<div class="gd-seat '+(!g.done&&g.turn===i?'current':'')+'"><strong>'+names[i]+'</strong><span>'+(g.hands[i].length?'剩 '+g.hands[i].length+' 张':'第 '+(g.order.indexOf(i)+1)+' 名')+'</span><small>'+(i===2?'与你同队':'对方队')+' · AI</small></div>').join('');
  var log=g.log.slice(-3);el('gdTable').innerHTML=log.map(x=>'<div><b>'+names[x.seat]+' · '+x.text+'</b><div class="gd-mini">'+x.cards.map(c=>card(c,false)).join('')+'</div></div>').join('')||'<p>双副108张，每人27张。对座是队友。</p>';
