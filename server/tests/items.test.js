@@ -95,7 +95,13 @@ function freshPlayer() {
       ok(it.limits.week <= it.limits.hold * 7, id + ' 周限不超持有上限的宽松约束');
     }
   });
-  ok(ctx.SHOP_ITEMS.filter(x => x.limits).length === 4, '恰好 4 件限购道具');
+  /* 限购规则：所有「可重复使用的消耗品」都必须有限购（防止无限购买破坏排位平衡），
+     皮肤类为「拥有即止」，无需限购。当前 = 4 件新增排位道具 + 3 件原有消耗品 = 7 件。 */
+  const limited = ctx.SHOP_ITEMS.filter(x => x.limits);
+  const consumes = ctx.SHOP_ITEMS.filter(x => x.type === 'consume');
+  ok(limited.length === 7, '恰好 7 件限购道具（实际 ' + limited.length + '）');
+  ok(consumes.every(x => x.limits), '所有消耗品都有限购约束');
+  ok(ctx.SHOP_ITEMS.filter(x => x.type === 'skin').every(x => !x.limits), '皮肤类不需要限购');
   ok(ctx.SHOP_ITEMS.length === 15, '商城共 15 件（11 原有 + 4 新增）');
 }
 

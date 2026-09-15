@@ -1,5 +1,7 @@
 # 赌途 · 联机与排行后端部署
-# 用法：在 server/ 目录下 `docker compose up -d --build`
+# 与 modelghost-platform 的 edge-nginx 共存：加入 mgnet 外部网络，
+# 由 edge-nginx 以 http://pokerclub-server:8123 反代（含 WebSocket 升级）。
+# 用法：在 /opt/pokerclub 下 `docker compose up -d --build`
 services:
   pokerclub-server:
     build: .
@@ -11,15 +13,16 @@ services:
       PORT: "8123"
       HOST: "0.0.0.0"
       DATA_DIR: /app/data
-      # 允许来源：前端在 GitHub Pages 上，需显式放行该域
-      # 若同时用 Nginx 同域反代，可改为 https://milkteacoffee.github.io
-      ALLOW_ORIGIN: "*"
+      # 前端在 GitHub Pages（https://milkteacoffee.github.io），走同域反代时也一并放行
+      ALLOW_ORIGIN: "https://milkteacoffee.github.io"
       TZ: Asia/Shanghai
     volumes:
       # SQLite 数据持久化：宿主机 ./data 映射到容器 /app/data
       - ./data:/app/data
+    expose:
+      - "8123"
+    # 同时绑定回环，方便宿主机直接 curl 验证（不对外暴露）
     ports:
-      # 仅绑定回环，由宿主机 Nginx 反代并做 TLS；避免直接暴露 8123
       - "127.0.0.1:8123:8123"
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8123/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
@@ -32,3 +35,11 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    mem_limit: 256m
+    networks:
+      - mgnet
+
+networks:
+  mgnet:
+    external: true
+    name: modelghost-platform_mgnet
