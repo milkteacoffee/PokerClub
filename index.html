@@ -1324,6 +1324,13 @@
     font-size:12.5px;font-weight:800;color:#2a1d0c;background:linear-gradient(160deg,#f0d79a,#cfa85b);white-space:nowrap}
   .friend-addbtn:active{transform:translateY(1px)}
   .friend-modes{display:flex;gap:6px;margin-bottom:9px}
+  .friend-mine{display:flex;align-items:center;gap:8px;margin-bottom:9px;padding:7px 10px;border-radius:8px;
+    background:rgba(207,168,91,.08);box-shadow:0 0 0 1px rgba(207,168,91,.18) inset}
+  .friend-mine span{font-size:11.5px;color:#9fb0c2}
+  .friend-mine code{flex:1;font-family:'Courier New',monospace;font-size:15px;letter-spacing:2.5px;font-weight:800;color:#f2c14e;text-align:center}
+  .fmine-copy{padding:4px 12px;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:800;
+    color:#2a1d0c;background:linear-gradient(160deg,#f0d79a,#cfa85b)}
+  .fmine-copy:active{transform:translateY(1px)}
   .friend-modes .fmode{flex:1;padding:7px 0;border:1px solid rgba(255,255,255,.14);border-radius:7px;cursor:pointer;
     font-family:inherit;font-size:12px;font-weight:700;color:#aeb9c4;background:rgba(255,255,255,.03);transition:.15s}
   .friend-modes .fmode:hover{color:#e6edf3;border-color:rgba(240,215,154,.4)}
@@ -1787,6 +1794,11 @@
       <div class="board-games" id="boardGames"></div>
       <!-- 好友管理：添加好友 + 待处理请求（仅好友榜可见） -->
       <div id="friendPanel" class="friend-panel" style="display:none">
+        <div class="friend-mine">
+          <span>我的玩家号</span>
+          <code id="friendMyCode">----</code>
+          <button id="friendMyCodeCopy" class="fmine-copy" type="button">复制</button>
+        </div>
         <div class="friend-modes">
           <button class="fmode selected" data-fmode="id">玩家ID</button>
           <button class="fmode" data-fmode="nick">昵称</button>
@@ -8271,6 +8283,25 @@ function syncRankToServer(cb){
   });
 }
 /* ---------- 好友管理（好友榜弹窗内） ---------- */
+/* 主动拉取身份（短玩家号）：不依赖 WS 连接，打开联机面板/好友面板时即可展示 */
+function onlineFetchIdentity(cb){
+  if (!onlineAvailable()) return cb && cb(false, '未配置联机服务器');
+  if (typeof fetch !== 'function') return cb && cb(false, '当前环境不支持联网');
+  var nick = Online.nickname || ($('onlineNick') && $('onlineNick').value.trim()) || (player && player.name) || '';
+  fetch(Online.server.replace(/\/$/, '') + '/api/player', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Device-Id': onlineDeviceId() },
+    body: JSON.stringify({ nickname: nick }),
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d && d.ok !== false) {
+      if (d.userCode) Online.userCode = d.userCode;
+      if (d.nickname) Online.nickname = d.nickname;
+      refreshOnlineUI();
+      var fm = $('friendMyCode'); if (fm) fm.textContent = Online.userCode || '----';
+      cb && cb(true, d);
+    } else cb && cb(false, (d && d.msg) || '获取失败');
+  }).catch(function(){ cb && cb(false, '网络错误'); });
+}
 function onlineFriendApi(method, path, body, cb){
   if (!onlineAvailable()) return cb && cb(false, '未配置联机服务器');
   if (typeof fetch !== 'function') return cb && cb(false, '当前环境不支持联网');
@@ -8286,6 +8317,8 @@ function onlineLoadFriends(){
   if (Online.boardScope !== 'friends') { fp.style.display = 'none'; return; }
   fp.style.display = 'block';
   onlineFriendModeChange('id');
+  var fm = $('friendMyCode'); if (fm) fm.textContent = Online.userCode || '----';
+  onlineFetchIdentity();
   var sl = $('friendSearchList'); if (sl) sl.innerHTML = '';
   var list = $('friendReqList'); if (!list) return;
   onlineFriendApi('GET', '/api/friends', null, function(ok, d){
@@ -8435,6 +8468,7 @@ function openOnline(){
   if (Online.code) { $('onlineSetup').hidden = true; $('onlineRoom').hidden = false; refreshOnlineUI(); }
   else { $('onlineSetup').hidden = false; $('onlineRoom').hidden = true; }
   onlineSyncStatus();
+  onlineFetchIdentity();
   setOnlineTip(onlineAvailable() ? '' : '联机服务器未配置，单机玩法不受影响');
 }
 
@@ -8455,6 +8489,11 @@ function onlineInitUI(){
     catch(e){ setOnlineTip('房号：' + Online.code); }
   };
   var ucc = $('userCodeCopy'); if (ucc) ucc.onclick = function(){
+    if (!Online.userCode) return setOnlineTip('玩家号尚未生成，请稍候');
+    try { navigator.clipboard.writeText(Online.userCode); setOnlineTip('玩家号已复制：' + Online.userCode); }
+    catch(e){ setOnlineTip('玩家号：' + Online.userCode); }
+  };
+  var fmc = $('friendMyCodeCopy'); if (fmc) fmc.onclick = function(){
     if (!Online.userCode) return setOnlineTip('玩家号尚未生成，请稍候');
     try { navigator.clipboard.writeText(Online.userCode); setOnlineTip('玩家号已复制：' + Online.userCode); }
     catch(e){ setOnlineTip('玩家号：' + Online.userCode); }

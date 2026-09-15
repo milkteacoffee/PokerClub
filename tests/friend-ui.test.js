@@ -73,6 +73,14 @@ async function run() {
   const inpA = domA.window.document.getElementById('friendInput');
   const addA = domA.window.document.getElementById('friendAddBtn');
   check('A 加好友控件存在', !!inpA && !!addA);
+  // 3.5 好友面板内展示「我的玩家号」（免连接 REST 拉取，轮询等待）
+  let myCode = '';
+  for (let i = 0; i < 10; i++) {
+    await wait(400);
+    const t = ((domA.window.document.getElementById('friendMyCode') || {}).textContent || '').trim();
+    if (/^[2-9A-HJKMNP-Z]{8}$/.test(t)) { myCode = t; break; }
+  }
+  check('A 好友面板展示我的玩家号', /^[2-9A-HJKMNP-Z]{8}$/.test(myCode), myCode);
   inpA.value = B;
   addA.click();
   await wait(900);
