@@ -7,6 +7,7 @@ const files = [
   ['掼蛋引擎', 'engine-guandan.test.js', ['500']],
   ['道具系统', 'items.test.js', []],
   ['好友搜索接口', 'friends-search.test.js', []],
+  ['资料/云存档/接管', 'profile-state.test.js', []],
   ['端到端联机', 'e2e.test.js', []],
   ['双客户端联机冒烟', 'smoke-online.js', []],
 ];

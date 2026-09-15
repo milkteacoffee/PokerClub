@@ -17,6 +17,9 @@ const { RoomManager, ADAPTERS } = require('./rooms');
 const store = new Store(config.dataDir);
 const rooms = new RoomManager(store);
 
+/* claim 接口限流：ip -> [最近60秒内的请求时间戳] */
+const claimHits = new Map();
+
 const GAME_NAMES = {
   holdem: '德州扑克', blackjack: '21点', gold: '炸金花',
   dice: '猜骰子', diceduel: '骰子比大小', guandan: '掼蛋',
@@ -78,12 +81,70 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
-    /* 设备建档 / 改名 */
+    /* 设备建档 / 改名 / 设头像 */
     if (path === '/api/player' && method === 'POST') {
       if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
       const body = await readBody(req);
       const p = store.ensurePlayer(deviceId, cleanNick(body.nickname));
-      return json(res, 200, { ok: true, deviceId, nickname: p.nickname, userCode: p.user_code, rank: store.getRank(deviceId), items: store.getItems(deviceId) });
+      /* 头像：预设 id（如 a01），宽松校验为短 token，防止超长串入库 */
+      if (body && body.avatar) {
+        const av = String(body.avatar);
+        if (/^[A-Za-z0-9_-]{1,16}$/.test(av)) store.setAvatar(deviceId, av);
+      }
+      /* 个性签名：去控制字符与尖括号，最长 60 字 */
+      if (body && body.bio !== undefined) {
+        const bio = String(body.bio).replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 60);
+        store.setBio(deviceId, bio);
+      }
+      const fresh = store.getPlayer(deviceId);
+      return json(res, 200, { ok: true, deviceId, nickname: fresh.nickname, avatar: fresh.avatar || 'a01', bio: fresh.bio || '', userCode: fresh.user_code, recoveryCode: fresh.recovery_code, rank: store.getRank(deviceId), items: store.getItems(deviceId) });
+    }
+
+    /* 云存档：全量状态 blob 的读取 / 上推（最后写入胜出，客户端凭 updatedAt 比对） */
+    if (path === '/api/state' && method === 'GET') {
+      if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
+      store.ensurePlayer(deviceId, '牌友');
+      const s = store.getState(deviceId);
+      return json(res, 200, { ok: true, state: s.state, updatedAt: s.updatedAt });
+    }
+    if (path === '/api/state' && method === 'PUT') {
+      if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
+      const body = await readBody(req);
+      if (!body || typeof body.state !== 'object' || body.state === null) {
+        return json(res, 400, { ok: false, msg: '缺少存档数据' });
+      }
+      let raw;
+      try { raw = JSON.stringify(body.state); } catch (e) { return json(res, 400, { ok: false, msg: '存档不可序列化' }); }
+      if (raw.length > 512e3) return json(res, 413, { ok: false, msg: '存档过大' });
+      store.ensurePlayer(deviceId, '牌友');
+      const updatedAt = store.setState(deviceId, body.state);
+      return json(res, 200, { ok: true, updatedAt });
+    }
+
+    /* 跨设备接管：凭 玩家号+恢复码 校验身份，返回原设备ID（客户端本机换绑后拉取云存档） */
+    if (path === '/api/player/claim' && method === 'POST') {
+      const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+      const now = Date.now();
+      claimHits.set(ip, (claimHits.get(ip) || []).filter(t => now - t < 60e3));
+      const hits = claimHits.get(ip); hits.push(now); claimHits.set(ip, hits);
+      if (hits.length > 10) return json(res, 429, { ok: false, msg: '尝试过于频繁，请稍后再试' });
+      const body = await readBody(req);
+      const code = String(body.userCode || '').trim().toUpperCase();
+      const recovery = String(body.recoveryCode || '').replace(/[\s-]/g, '').toUpperCase();
+      if (!code || !recovery) return json(res, 400, { ok: false, msg: '请填写玩家号与恢复码' });
+      const p = store.getUserByCode(code);
+      if (!p || String(p.recovery_code || '').toUpperCase() !== recovery) {
+        return json(res, 401, { ok: false, msg: '玩家号或恢复码不正确' });
+      }
+      return json(res, 200, { ok: true, deviceId: p.device_id, nickname: p.nickname, avatar: p.avatar || 'a01' });
+    }
+
+    /* 重新生成恢复码（旧码立即作废） */
+    if (path === '/api/player/recovery/rotate' && method === 'POST') {
+      if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
+      store.ensurePlayer(deviceId, '牌友');
+      const rc = store.rotateRecovery(deviceId);
+      return json(res, 200, { ok: true, recoveryCode: rc });
     }
 
     /* 同步本地段位到服务端（单机模式也上榜） */
@@ -139,9 +200,15 @@ const server = http.createServer(async (req, res) => {
         const ids = store.friendsOf(deviceId);
         const list = ids.map(id => {
           const p = store.getPlayer(id);
-          return p ? { deviceId: id, nickname: p.nickname, rank: store.getRank(id), lastSeen: p.last_seen } : null;
+          return p ? { deviceId: id, nickname: p.nickname, avatar: p.avatar || 'a01', rank: store.getRank(id), lastSeen: p.last_seen } : null;
         }).filter(Boolean);
-        return json(res, 200, { ok: true, friends: list, requests: store.pendingRequests(deviceId).map(r => ({ deviceId: r.from_id, nickname: r.nickname || '牌友' })) });
+        return json(res, 200, {
+          ok: true, friends: list,
+          requests: store.pendingRequests(deviceId).map(r => {
+            const p = store.getPlayer(r.from_id);
+            return { deviceId: r.from_id, nickname: r.nickname || '牌友', avatar: (p && p.avatar) || 'a01' };
+          }),
+        });
       }
       if (method === 'POST') {
         const body = await readBody(req);
@@ -196,6 +263,7 @@ const server = http.createServer(async (req, res) => {
       const list = rows.map(r => ({
         deviceId: r.deviceId,
         nickname: r.nickname,
+        avatar: r.avatar || 'a01',
         isFriend: friends.has(r.deviceId),
         requested: requested.has(r.deviceId),
         pending: pending.has(r.deviceId),
@@ -214,16 +282,20 @@ const server = http.createServer(async (req, res) => {
       if (!room) return json(res, 404, { ok: false, msg: '房间不存在或已解散' });
       const friends = new Set(validDeviceId(deviceId) ? store.friendsOf(deviceId) : []);
       const pending = new Set(validDeviceId(deviceId) ? store.pendingRequests(deviceId).map(r => r.from_id) : []);
-      const members = room.seats.map(s => ({
-        deviceId: s.deviceId,
-        nickname: s.name || '牌友',
-        seat: s.seat,
-        online: !!s.online,
-        ready: !!s.ready,
-        isMe: validDeviceId(deviceId) && s.deviceId === deviceId,
-        isFriend: friends.has(s.deviceId),
-        pending: pending.has(s.deviceId),
-      }));
+      const members = room.seats.map(s => {
+        const sp = store.getPlayer(s.deviceId);
+        return {
+          deviceId: s.deviceId,
+          nickname: s.name || '牌友',
+          avatar: (sp && sp.avatar) || 'a01',
+          seat: s.seat,
+          online: !!s.online,
+          ready: !!s.ready,
+          isMe: validDeviceId(deviceId) && s.deviceId === deviceId,
+          isFriend: friends.has(s.deviceId),
+          pending: pending.has(s.deviceId),
+        };
+      });
       return json(res, 200, { ok: true, code, game: room.game, members });
     }
 
@@ -269,7 +341,7 @@ wss.on('connection', (ws, req) => {
   const conn = { ws, deviceId, nickname, roomCode: null, msgs: [] };
   conns.set(deviceId, conn);
   const meP = store.getPlayer(deviceId);
-  send(ws, 'hello', { deviceId, nickname, userCode: meP ? meP.user_code : '', games: Object.keys(ADAPTERS) });
+  send(ws, 'hello', { deviceId, nickname, userCode: meP ? meP.user_code : '', avatar: meP ? (meP.avatar || 'a01') : 'a01', games: Object.keys(ADAPTERS) });
 
   ws.on('message', (raw) => {
     /* 限流 */
@@ -443,8 +515,9 @@ function settleRoom(room) {
   const res = room.result || (room.adapter.settlement ? room.adapter.settlement(room.state) : null);
   if (!res) return;
   room.settleSent = true;
+  const seatAvatar = (d) => { try { const p = store.getPlayer(d); return (p && p.avatar) || 'a01'; } catch (e) { return 'a01'; } };
   for (const s of room.seats) {
-    if (s.online && s.ws) send(s.ws, 'settle', { result: res, seatInfo: room.seats.map(x => ({ seat: x.seat, name: x.name, online: x.online })) });
+    if (s.online && s.ws) send(s.ws, 'settle', { result: res, seatInfo: room.seats.map(x => ({ seat: x.seat, name: x.name, avatar: seatAvatar(x.deviceId), online: x.online })) });
   }
 }
 

@@ -62,6 +62,9 @@ class Store {
     `);
     /* 短玩家号：每位玩家一个唯一、易分享的 8 位码（好友互加用，区别于内部设备ID） */
     try { this.db.exec('ALTER TABLE players ADD COLUMN user_code TEXT'); } catch (e) { /* 列已存在则忽略 */ }
+    /* 用户资料：预设头像 ID（av01~av12）+ 个性签名 */
+    try { this.db.exec("ALTER TABLE players ADD COLUMN avatar TEXT NOT NULL DEFAULT ''"); } catch (e) { /* 列已存在则忽略 */ }
+    try { this.db.exec("ALTER TABLE players ADD COLUMN bio TEXT NOT NULL DEFAULT ''"); } catch (e) { /* 列已存在则忽略 */ }
     /* 回填历史玩家（老数据 user_code 为 NULL） */
     const needCode = this.db.prepare('SELECT device_id FROM players WHERE user_code IS NULL OR user_code = ?');
     for (const r of needCode.all('')) {
@@ -70,6 +73,16 @@ class Store {
     }
     /* 回填后再建唯一索引，避免 NULL 冲突 */
     this.db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_players_code ON players(user_code)');
+    /* 资料与云存档：recovery_code=跨设备接管凭据（明文存，低风险好友局）；
+       state_json=全量存档 blob（allSaves），state_updated_at=最后上推时间 */
+    try { this.db.exec('ALTER TABLE players ADD COLUMN recovery_code TEXT'); } catch (e) {}
+    try { this.db.exec("ALTER TABLE players ADD COLUMN state_json TEXT NOT NULL DEFAULT ''"); } catch (e) {}
+    try { this.db.exec('ALTER TABLE players ADD COLUMN state_updated_at INTEGER NOT NULL DEFAULT 0'); } catch (e) {}
+    this.db.exec("UPDATE players SET avatar = 'a01' WHERE avatar IS NULL OR avatar = ''");
+    const needRecovery = this.db.prepare('SELECT device_id FROM players WHERE recovery_code IS NULL OR recovery_code = ?');
+    for (const r of needRecovery.all('')) {
+      this.db.prepare('UPDATE players SET recovery_code = ? WHERE device_id = ?').run(this._genRecovery(), r.device_id);
+    }
   }
 
   /* 生成全局唯一的短玩家号：8 位，去掉易混字符 0/O/1/I/L */
@@ -86,6 +99,15 @@ class Store {
     return 'P' + Date.now().toString(36).slice(-7).toUpperCase();
   }
 
+  /* 生成恢复码：16 位无易混字符（跨设备接管凭据，展示时按 4 位分组） */
+  _genRecovery() {
+    const ABC = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+    const buf = crypto.randomBytes(16);
+    let s = '';
+    for (let i = 0; i < 16; i++) s += ABC[buf[i] % ABC.length];
+    return s;
+  }
+
   _prepare() {
     const d = this.db;
     this.q = {
@@ -96,25 +118,30 @@ class Store {
       updateRank: d.prepare('UPDATE players SET rank_json = ?, updated_at = ? WHERE device_id = ?'),
       updateItem: d.prepare('UPDATE players SET item_json = ?, updated_at = ? WHERE device_id = ?'),
       updateStats: d.prepare('UPDATE players SET stats_json = ?, updated_at = ? WHERE device_id = ?'),
+      updateProfile: d.prepare('UPDATE players SET avatar = ?, bio = ?, updated_at = ? WHERE device_id = ?'),
       updateCode: d.prepare('UPDATE players SET user_code = ? WHERE device_id = ?'),
+      updateAvatar: d.prepare('UPDATE players SET avatar = ?, updated_at = ? WHERE device_id = ?'),
+      updateBio: d.prepare('UPDATE players SET bio = ?, updated_at = ? WHERE device_id = ?'),
+      updateRecovery: d.prepare('UPDATE players SET recovery_code = ?, updated_at = ? WHERE device_id = ?'),
+      updateState: d.prepare('UPDATE players SET state_json = ?, state_updated_at = ?, updated_at = ? WHERE device_id = ?'),
       getByCode: d.prepare('SELECT * FROM players WHERE user_code = ?'),
       touch: d.prepare('UPDATE players SET last_seen = ? WHERE device_id = ?'),
 
       listAllRatings: d.prepare('SELECT device_id,nickname,rank_json,stats_json FROM players WHERE last_seen >= ?'),
-      topByGame: d.prepare('SELECT device_id,nickname,rank_json,stats_json FROM players'),
+      topByGame: d.prepare('SELECT device_id,nickname,avatar,rank_json,stats_json FROM players'),
 
       listFriends: d.prepare('SELECT friend_id FROM friends WHERE device_id = ?'),
       addFriend: d.prepare('INSERT OR IGNORE INTO friends (device_id,friend_id,created_at) VALUES (?,?,?)'),
       delFriend: d.prepare('DELETE FROM friends WHERE device_id = ? AND friend_id = ?'),
       isFriend: d.prepare('SELECT 1 FROM friends WHERE device_id = ? AND friend_id = ?'),
-      getMany: d.prepare(`SELECT device_id,nickname,rank_json,stats_json FROM players WHERE device_id IN (SELECT friend_id FROM friends WHERE device_id = ?)`),
+      getMany: d.prepare(`SELECT device_id,nickname,avatar,rank_json,stats_json FROM players WHERE device_id IN (SELECT friend_id FROM friends WHERE device_id = ?)`),
 
       addReq: d.prepare('INSERT OR IGNORE INTO friend_requests (from_id,to_id,created_at) VALUES (?,?,?)'),
       delReq: d.prepare('DELETE FROM friend_requests WHERE from_id = ? AND to_id = ?'),
-      listReqTo: d.prepare(`SELECT r.from_id, r.created_at, p.nickname FROM friend_requests r
+      listReqTo: d.prepare(`SELECT r.from_id, r.created_at, p.nickname, p.avatar FROM friend_requests r
                             LEFT JOIN players p ON p.device_id = r.from_id WHERE r.to_id = ?`),
       listReqFrom: d.prepare('SELECT to_id, created_at FROM friend_requests WHERE from_id = ?'),
-      searchByNick: d.prepare(`SELECT device_id, nickname FROM players
+      searchByNick: d.prepare(`SELECT device_id, nickname, avatar FROM players
                                WHERE nickname LIKE ? ESCAPE '\\' AND device_id <> ?
                                ORDER BY last_seen DESC LIMIT ?`),
 
@@ -145,6 +172,13 @@ class Store {
       this.q.updateCode.run(code, deviceId);
       p.user_code = code;
     }
+    /* 确保头像与恢复码 */
+    if (!p.avatar) { this.q.updateAvatar.run('a01', now, deviceId); p.avatar = 'a01'; }
+    if (!p.recovery_code) {
+      const rc = this._genRecovery();
+      this.q.updateRecovery.run(rc, now, deviceId);
+      p.recovery_code = rc;
+    }
     this.q.touch.run(now, deviceId);
     return p;
   }
@@ -155,6 +189,37 @@ class Store {
   getUserByCode(code) {
     if (!code) return null;
     return this.q.getByCode.get(String(code).toUpperCase()) || null;
+  }
+
+  /* ---------- 资料 / 云存档 ---------- */
+  /* ---------- 玩家 ---------- */
+  setAvatar(deviceId, avatarId) {
+    this.q.updateAvatar.run(String(avatarId), Date.now(), deviceId);
+  }
+
+  /* 个性签名（路由层已清洗控制字符并截断） */
+  setBio(deviceId, bio) {
+    this.q.updateBio.run(String(bio || ''), Date.now(), deviceId);
+  }
+
+  getState(deviceId) {
+    const p = this.getPlayer(deviceId);
+    if (!p || !p.state_json) return { state: null, updatedAt: 0 };
+    try { return { state: JSON.parse(p.state_json), updatedAt: p.state_updated_at || 0 }; }
+    catch { return { state: null, updatedAt: 0 }; }
+  }
+
+  /* 全量存档上云：返回落库时间戳（客户端记为 cloudSyncedAt，做最后写入胜出） */
+  setState(deviceId, stateObj) {
+    const now = Date.now();
+    this.q.updateState.run(JSON.stringify(stateObj), now, now, deviceId);
+    return now;
+  }
+
+  rotateRecovery(deviceId) {
+    const rc = this._genRecovery();
+    this.q.updateRecovery.run(rc, Date.now(), deviceId);
+    return rc;
   }
 
   getRank(deviceId) {
@@ -181,6 +246,18 @@ class Store {
     this.q.updateStats.run(JSON.stringify(statsObj || {}), Date.now(), deviceId);
   }
 
+  /* 用户资料（头像 / 个性签名）：由路由层校验后写入 */
+  setProfile(deviceId, profile) {
+    const p = profile || {};
+    this.q.updateProfile.run(String(p.avatar || ''), String(p.bio || ''), Date.now(), deviceId);
+  }
+
+  getProfile(deviceId) {
+    const p = this.getPlayer(deviceId);
+    if (!p) return { avatar: '', bio: '' };
+    return { avatar: p.avatar || '', bio: p.bio || '' };
+  }
+
   getStats(deviceId) {
     const p = this.getPlayer(deviceId);
     if (!p) return {};
@@ -194,6 +271,7 @@ class Store {
     const list = rows.map(r => ({
       deviceId: r.device_id,
       nickname: r.nickname,
+      avatar: r.avatar || 'a01',
       points: (JSON.parse(r.rank_json || '{}')[game] || {}).points || 0,
       tier: (JSON.parse(r.rank_json || '{}')[game] || {}).tier || 0,
     })).sort((a, b) => b.points - a.points);
@@ -207,6 +285,7 @@ class Store {
     const list = rows.map(r => ({
       deviceId: r.device_id,
       nickname: r.nickname,
+      avatar: r.avatar || 'a01',
       points: (JSON.parse(r.rank_json || '{}')[game] || {}).points || 0,
       tier: (JSON.parse(r.rank_json || '{}')[game] || {}).tier || 0,
     }));
@@ -214,6 +293,7 @@ class Store {
       list.push({
         deviceId,
         nickname: me.nickname,
+        avatar: me.avatar || 'a01',
         points: (JSON.parse(me.rank_json || '{}')[game] || {}).points || 0,
         tier: (JSON.parse(me.rank_json || '{}')[game] || {}).tier || 0,
       });
@@ -261,7 +341,7 @@ class Store {
     const esc = String(nick || '').replace(/[\\%_]/g, m => '\\' + m);
     const like = '%' + esc + '%';
     const rows = this.q.searchByNick.all(like, excludeId || '', Math.max(1, Math.min(100, limit || 20)));
-    return rows.map(r => ({ deviceId: r.device_id, nickname: r.nickname }));
+    return rows.map(r => ({ deviceId: r.device_id, nickname: r.nickname, avatar: r.avatar || 'a01' }));
   }
 
   /* ---------- 对局 ---------- */

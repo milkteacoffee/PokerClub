@@ -1350,6 +1350,30 @@
   .friend-req .friend-tag{padding:5px 10px;border-radius:7px;font-size:11px;font-weight:800;color:#9fb0c0;background:rgba(255,255,255,.08)}
   .friend-hint{margin-top:7px;font-size:11px;color:#8fa0b4;line-height:1.6}
   .friend-hint b{color:#f2c14e;font-weight:800}
+  /* ---- 用户资料弹窗（头像 / 玩家号 / 恢复码 / 接管） ---- */
+  .pf-avrow{display:flex;gap:12px;align-items:center;margin-bottom:4px}
+  .pf-avatar{width:64px;height:64px;border-radius:12px;overflow:hidden;flex:none;box-shadow:0 0 0 2px rgba(207,168,91,.55),0 4px 14px rgba(0,0,0,.45)}
+  .pf-avmeta{flex:1;min-width:0}
+  .pf-name{font-size:16px;font-weight:800;color:#eef3f8;margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pf-code-row{display:flex;align-items:center;gap:8px}
+  .pf-code-row code{font-family:'Courier New',monospace;font-size:14px;letter-spacing:2px;font-weight:800;color:#f2c14e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pf-code-row.big code{font-size:15px;letter-spacing:2.5px}
+  .pf-sec{font-size:11.5px;color:#9fb0c2;letter-spacing:.5px;margin:13px 0 7px}
+  .pf-hint{font-size:11px;color:#8fa0b4;line-height:1.6;margin-top:5px}
+  .pf-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+  .pf-grid .pf-opt{padding:0;border:2px solid transparent;border-radius:10px;cursor:pointer;background:none;line-height:0}
+  .pf-grid .pf-opt.selected{border-color:#f2c14e;box-shadow:0 0 8px rgba(242,193,78,.45)}
+  .pf-grid .pf-opt:active{transform:scale(.95)}
+  .pf-form{display:flex;flex-direction:column;gap:8px}
+  .pf-cloud{padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04);font-size:11.5px;color:#9fb0c2;line-height:1.7}
+  .pf-ghostbtn{width:100%;margin-top:8px;padding:8px;border:1px solid rgba(255,255,255,.16);border-radius:8px;cursor:pointer;font-family:inherit;font-size:11.5px;font-weight:700;color:#aeb9c4;background:rgba(255,255,255,.03)}
+  .pf-ghostbtn:active{transform:translateY(1px)}
+  .pf-ghostbtn:hover{color:#e6edf3;border-color:rgba(240,215,154,.4)}
+  .friend-addbtn.warn{background:linear-gradient(160deg,#f0b48a,#d97b4a);color:#2b1408}
+  /* 榜单 / 好友 / 房间座位头像 */
+  .bavatar{width:22px;height:22px;border-radius:6px;overflow:hidden;flex:none;line-height:0}
+  .favatar{width:26px;height:26px;border-radius:7px;overflow:hidden;flex:none;line-height:0}
+  .savatar{width:34px;height:34px;border-radius:9px;overflow:hidden;flex:none;line-height:0;margin:0 auto 5px}
 </style>
 </head>
 <body>
@@ -1835,6 +1859,41 @@
     </div>
   </div>
 
+  <!-- 用户资料：头像 / 昵称 / 玩家号 / 恢复码 / 云存档 / 跨设备接管 -->
+  <div class="overlay" id="ovProfile">
+    <div class="panel" style="max-width:440px;">
+      <h2>🪪 用户资料 <button class="closebtn" data-close="ovProfile">✕ 返回</button></h2>
+      <div class="pf-avrow">
+        <div class="pf-avatar" id="pfAvatar"></div>
+        <div class="pf-avmeta">
+          <div class="pf-name" id="pfName">玩家</div>
+          <div class="pf-code-row"><code id="pfUserCode">--------</code><button class="fmine-copy" id="pfUserCodeCopy" type="button">复制</button></div>
+          <div class="pf-hint">玩家号是你在「赌途」的唯一身份，好友可用它搜索并加你为好友。</div>
+        </div>
+      </div>
+      <div class="pf-sec">选择头像</div>
+      <div class="pf-grid" id="pfGrid"></div>
+      <div class="pf-sec">昵称与签名</div>
+      <div class="pf-form">
+        <input id="pfNick" class="friend-input" maxlength="12" placeholder="昵称（最多12字）" autocomplete="off" spellcheck="false">
+        <input id="pfBio" class="friend-input" maxlength="60" placeholder="个性签名（最多60字）" autocomplete="off" spellcheck="false">
+        <button id="pfSave" class="friend-addbtn" type="button">保存资料</button>
+      </div>
+      <div class="pf-sec">云存档</div>
+      <div class="pf-cloud" id="pfCloud">—</div>
+      <div class="pf-sec">恢复码（跨设备接管凭据，请妥善保管）</div>
+      <div class="pf-code-row big"><code id="pfRecovery">----------------</code><button class="fmine-copy" id="pfRecoveryCopy" type="button">复制</button></div>
+      <button id="pfRotate" class="pf-ghostbtn" type="button">重新生成恢复码（旧码立即作废）</button>
+      <div class="pf-sec" style="margin-top:14px">换新设备？用玩家号 + 恢复码接管云存档</div>
+      <div class="pf-form">
+        <input id="claimCode" class="friend-input" maxlength="8" placeholder="原设备的玩家号（8位）" autocomplete="off" spellcheck="false" style="text-transform:uppercase">
+        <input id="claimRecovery" class="friend-input" maxlength="19" placeholder="16位恢复码" autocomplete="off" spellcheck="false" style="text-transform:uppercase">
+        <button id="pfClaim" class="friend-addbtn warn" type="button">接管该账号</button>
+        <div class="pf-hint">接管后本机将与该账号的云存档同步（含好友、战绩、称号），可继续在新设备游玩。</div>
+      </div>
+    </div>
+  </div>
+
   <!-- 签到 / 周常 -->
   <div class="overlay" id="ovCheckin">
     <div class="panel">
@@ -2143,6 +2202,7 @@ function saveAllSaves(silent) {
         allSaves.slots[activeSlot].lastPlayed = Date.now();
       }
       localStorage.setItem(SAVE_KEY_ALL, JSON.stringify(allSaves));
+      cloudQueueSave();   /* 存档有变化 → 防抖上推云服务器（未配置服务器时静默跳过） */
       if (!silent) {
         setTimeout(function() {
           updateSaveIndicator('saved');
@@ -2159,6 +2219,225 @@ function saveAllSaves(silent) {
       }
       resolve(false);
     }
+  });
+}
+
+/* ============================================================
+   预设头像（a01~a12）与云存档 / 用户资料（联机时代 v17）
+   本地存档仍是唯一游玩凭据；配置了服务器时自动双向同步：
+   最后写入胜出 —— 本地记 cloudSyncedAt，与服务器 updatedAt 比对。
+   ============================================================ */
+var AVATAR_IDS = ['a01','a02','a03','a04','a05','a06','a07','a08','a09','a10','a11','a12'];
+var AVATARS = {
+  a01: { name: '黑桃徽章', svg: '<path d="M32 12 C25 24 17 29 17 37 a9 9 0 0 0 15 6.5 C31 48 29 51 25.5 54 h13 C35 51 33 48 32.5 43.5 A9 9 0 0 0 47 37 c0 -8 -8 -13 -15 -25z" fill="#efe6cf"/>' },
+  a02: { name: '赤红之心', svg: '<path d="M32 52 C19 42 13 35 13 26.5 A10.5 10.5 0 0 1 32 21 A10.5 10.5 0 0 1 51 26.5 C51 35 45 42 32 52z" fill="#e05656"/>' },
+  a03: { name: '梅花运', svg: '<circle cx="32" cy="22" r="9" fill="#9fe0b4"/><circle cx="22" cy="36" r="9" fill="#9fe0b4"/><circle cx="42" cy="36" r="9" fill="#9fe0b4"/><path d="M30 34 h4 c0 8 2 14 6 20 h-16 c4 -6 6 -12 6 -20z" fill="#9fe0b4"/>' },
+  a04: { name: '方块闪', svg: '<rect x="21" y="21" width="22" height="22" rx="4" transform="rotate(45 32 32)" fill="#e05656"/>' },
+  a05: { name: '鎏金王冠', svg: '<path d="M14 46 L12 24 L24 33 L32 18 L40 33 L52 24 L50 46 Z" fill="#f2c14e"/><rect x="14" y="48" width="36" height="6" rx="2" fill="#cfa85b"/><circle cx="32" cy="39" r="3.5" fill="#2a1d0c"/>' },
+  a06: { name: '筹码塔', svg: '<circle cx="32" cy="20" r="11" fill="#e05656"/><circle cx="32" cy="20" r="6.5" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="4 3"/><circle cx="32" cy="34" r="11" fill="#4a7a9c"/><circle cx="32" cy="34" r="6.5" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="4 3"/><circle cx="32" cy="48" r="11" fill="#f2c14e"/><circle cx="32" cy="48" r="6.5" fill="none" stroke="#2a1d0c" stroke-width="2" stroke-dasharray="4 3"/>' },
+  a07: { name: '幸运双骰', svg: '<rect x="10" y="24" width="24" height="24" rx="6" fill="#efe6cf" transform="rotate(-8 22 36)"/><rect x="31" y="17" width="24" height="24" rx="6" fill="#f2c14e" transform="rotate(10 43 29)"/><circle cx="21" cy="33" r="2.4" fill="#2a1d0c"/><circle cx="27" cy="40" r="2.4" fill="#2a1d0c"/><circle cx="38" cy="24" r="2.4" fill="#2a1d0c"/><circle cx="44" cy="30" r="2.4" fill="#2a1d0c"/><circle cx="50" cy="36" r="2.4" fill="#2a1d0c"/>' },
+  a08: { name: '扇形手牌', svg: '<rect x="14" y="20" width="16" height="26" rx="3" fill="#cfd8e0" transform="rotate(-18 22 33)"/><rect x="24" y="16" width="16" height="26" rx="3" fill="#fff"/><rect x="34" y="20" width="16" height="26" rx="3" fill="#e05656" transform="rotate(18 42 33)"/>' },
+  a09: { name: '开元铜钱', svg: '<circle cx="32" cy="32" r="20" fill="#f2c14e" stroke="#cfa85b" stroke-width="3"/><rect x="25" y="25" width="14" height="14" fill="#2b3a4d" stroke="#cfa85b" stroke-width="2"/>' },
+  a10: { name: '通灵玉佩', svg: '<circle cx="32" cy="37" r="14" fill="none" stroke="#6fc2a0" stroke-width="9"/><circle cx="32" cy="14" r="4" fill="none" stroke="#cfa85b" stroke-width="2.5"/>' },
+  a11: { name: '胜者酒盏', svg: '<path d="M20 16 h24 v9 a12 12 0 0 1 -24 0 z" fill="#f2c14e"/><path d="M32 37 v9" stroke="#cfa85b" stroke-width="4" stroke-linecap="round"/><path d="M24 50 h16" stroke="#cfa85b" stroke-width="4" stroke-linecap="round"/><path d="M44 19 h5 a6 6 0 0 1 -5 9" fill="none" stroke="#f2c14e" stroke-width="3"/>' },
+  a12: { name: '朱砂印章', svg: '<rect x="16" y="13" width="32" height="31" rx="4" fill="#c41a1a"/><rect x="22" y="19" width="20" height="19" fill="none" stroke="#f5f0e8" stroke-width="2.5"/><path d="M27 24.5 h10 M27 31.5 h10 M32 24.5 v13" stroke="#f5f0e8" stroke-width="2.5"/>' },
+};
+/* 渲染预设头像为内联 SVG（暗底鎏金描边；未知 id 回落 a01；离线/无 player 也可用） */
+function avatarSVG(id, size) {
+  var a = AVATARS[id] ? id : 'a01';
+  var s = size || 24;
+  return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<defs><linearGradient id="pavbg" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0" stop-color="#2b3a4d"/><stop offset="1" stop-color="#141d27"/></linearGradient></defs>' +
+    '<rect x="1.5" y="1.5" width="61" height="61" rx="14" fill="url(#pavbg)" stroke="#cfa85b" stroke-width="2.5"/>' +
+    AVATARS[a].svg + '</svg>';
+}
+
+/* ---- 云存档：全量上推 / 拉取（X-Device-Id 认证，服务器零迁移接管换绑） ---- */
+var CLOUD_SYNC_KEY = 'poker_cloud_sync_v1';
+var cloudPushTimer = null;
+
+function cloudMeta() {
+  try { return JSON.parse(localStorage.getItem(CLOUD_SYNC_KEY)) || {}; } catch (e) { return {}; }
+}
+function cloudMetaSet(m) {
+  try { localStorage.setItem(CLOUD_SYNC_KEY, JSON.stringify(m || {})); } catch (e) {}
+}
+function cloudAvailable() {
+  return !!(typeof Online !== 'undefined' && Online.server && typeof fetch === 'function');
+}
+/* 全量上推；opts.keepalive 用于页面隐藏时的冲刷 */
+function cloudPushSave(opts, cb) {
+  if (typeof opts === 'function') { cb = opts; opts = null; }
+  if (!cb) cb = function(){};
+  if (!cloudAvailable() || !allSaves) return cb(false, 'offline');
+  try {
+    fetch(Online.server.replace(/\/$/, '') + '/api/state', {
+      method: 'PUT', keepalive: !!(opts && opts.keepalive),
+      headers: { 'Content-Type': 'application/json', 'X-Device-Id': onlineDeviceId() },
+      body: JSON.stringify({ state: allSaves }),
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (d && d.ok) {
+        var m = cloudMeta(); m.serverAt = d.updatedAt || 0; m.at = Date.now(); cloudMetaSet(m);
+        cb(true);
+      } else cb(false, (d && d.msg) || 'push failed');
+    }).catch(function () { cb(false, 'network'); });
+  } catch (e) { cb(false, 'exception'); }
+}
+/* 防抖上推：saveAllSaves 成功后调用（2 秒合并连续保存） */
+function cloudQueueSave() {
+  if (!cloudAvailable()) return;
+  if (cloudPushTimer) clearTimeout(cloudPushTimer);
+  cloudPushTimer = setTimeout(function () { cloudPushTimer = null; cloudPushSave(); }, 2000);
+}
+/* 开机比对：服务器更新（另一台设备改过）→ 采纳云档；否则上推本地（覆盖离线修改场景） */
+function cloudBootstrap() {
+  if (!cloudAvailable() || !allSaves) return;
+  try {
+    fetch(Online.server.replace(/\/$/, '') + '/api/state', {
+      headers: { 'X-Device-Id': onlineDeviceId() },
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || d.ok === false) return;
+      var m = cloudMeta();
+      if (d.updatedAt && d.updatedAt > (m.serverAt || 0) && d.state && d.state.slots) {
+        try {
+          localStorage.setItem(SAVE_KEY_ALL, JSON.stringify(d.state));
+          var met = cloudMeta(); met.serverAt = d.updatedAt || 0; met.at = Date.now(); cloudMetaSet(met);
+          allSaves = d.state; activeSlot = d.state.activeSlot || 1;
+          player = (allSaves.slots[activeSlot] && allSaves.slots[activeSlot].player) || null;
+          if (player) migratePlayer(player);
+          renderLobby(); renderTasks(); renderSlotList();
+          showToast('☁️ 已从云端恢复存档', 2200);
+        } catch (e) { console.warn('云端存档应用失败', e); }
+      } else {
+        cloudPushSave();
+      }
+    }).catch(function () { /* 离线：静默保持纯单机 */ });
+  } catch (e) { /* 忽略 */ }
+}
+/* 跨设备接管：凭玩家号+恢复码换绑本机设备身份，随后自动与该账号云存档同步 */
+function cloudClaimDevice(userCode, recoveryCode, cb) {
+  if (!cloudAvailable()) return cb && cb(false, '当前无法连接服务器');
+  fetch(Online.server.replace(/\/$/, '') + '/api/player/claim', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userCode: String(userCode || '').trim(), recoveryCode: String(recoveryCode || '').trim() }),
+  }).then(function (r) { return r.json().then(function (d) { return { d: d }; }); }).then(function (r) {
+    if (!r.d || r.d.ok === false) return cb && cb(false, (r.d && r.d.msg) || '接管失败');
+    /* 换绑设备身份（缓存一并重置），之后拉取该账号云存档 */
+    try { localStorage.setItem(ONLINE_DEVICE_KEY, r.d.deviceId); } catch (e) {}
+    Online.deviceId = r.d.deviceId;
+    if (r.d.nickname) Online.nickname = r.d.nickname;
+    var finish = function () {
+      cloudMetaSet({ serverAt: 0, at: Date.now() });
+      cb && cb(true, r.d);
+      setTimeout(function () { location.reload(); }, 700);
+    };
+    fetch(Online.server.replace(/\/$/, '') + '/api/state', {
+      headers: { 'X-Device-Id': r.d.deviceId },
+    }).then(function (x) { return x.json(); }).then(function (sd) {
+      if (sd && sd.ok !== false && sd.state && sd.state.slots) {
+        try { localStorage.setItem(SAVE_KEY_ALL, JSON.stringify(sd.state)); } catch (e) {}
+        cloudMetaSet({ serverAt: sd.updatedAt || 0, at: Date.now() });
+        cb && cb(true, r.d);
+        setTimeout(function () { location.reload(); }, 700);
+      } else finish();
+    }).catch(finish);
+  }).catch(function () { cb && cb(false, '网络错误'); });
+}
+/* 页面隐藏 / 关闭时立即冲刷待上推的存档（keepalive 保证请求发出） */
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden && cloudPushTimer) { clearTimeout(cloudPushTimer); cloudPushTimer = null; cloudPushSave({ keepalive: true }); }
+});
+window.addEventListener('pagehide', function () {
+  if (cloudPushTimer) { clearTimeout(cloudPushTimer); cloudPushTimer = null; }
+  cloudPushSave({ keepalive: true });
+});
+
+/* ---- 用户资料弹窗（头像 / 昵称签名 / 玩家号 / 恢复码 / 接管） ---- */
+function openProfile() {
+  initAudio(); sfx('click');
+  renderProfile();
+  openOverlay('ovProfile');
+  onlineFetchIdentity();   /* 拉最新玩家号 / 恢复码（不依赖 WS 连接） */
+}
+function renderProfile() {
+  if (!player) return;
+  var av = player.avatar || 'a01';
+  var box = $('pfAvatar'); if (box) box.innerHTML = avatarSVG(av, 60);
+  var g = $('pfGrid');
+  if (g) {
+    g.innerHTML = AVATAR_IDS.map(function (id) {
+      return '<button type="button" class="pf-opt' + (id === av ? ' selected' : '') + '" data-pav="' + id + '" title="' + AVATARS[id].name + '">' + avatarSVG(id, 44) + '</button>';
+    }).join('');
+    g.querySelectorAll('[data-pav]').forEach(function (b) {
+      b.onclick = function () {
+        player.avatar = b.getAttribute('data-pav');
+        sfx('click');
+        renderProfile();
+        savePlayer();            /* 落地本机 + 防抖云同步 */
+        onlinePushProfile();     /* 同步服务器档案（榜单/好友/房间立即生效） */
+      };
+    });
+  }
+  var nm = $('pfNick'); if (nm && document.activeElement !== nm) nm.value = player.name || '';
+  var bio = $('pfBio'); if (bio && document.activeElement !== bio) bio.value = player.bio || '';
+  var pn = $('pfName'); if (pn) pn.textContent = player.name || '玩家';
+  var uc = $('pfUserCode'); if (uc) uc.textContent = Online.userCode || '--------';
+  var rc = $('pfRecovery'); if (rc) rc.textContent = Online.recoveryCode || '----------------';
+  var cl = $('pfCloud');
+  if (cl) {
+    if (!cloudAvailable()) cl.textContent = '未连接服务器 · 当前为纯单机模式，数据保存在本机';
+    else {
+      var m = cloudMeta();
+      cl.innerHTML = '云同步已开启 · 上次上推：' + (m.at ? timeAgo(m.at) : '尚未同步') +
+        (Online.nickname ? '<br>联机昵称：' + esc(Online.nickname) : '');
+    }
+  }
+}
+/* 昵称/签名/头像推送到服务器档案（榜单与好友列表显示用） */
+function onlinePushProfile(cb) {
+  if (!player) return cb && cb(false);
+  onlineFetchIdentity(cb, {
+    nickname: player.name || '',
+    avatar: player.avatar || 'a01',
+    bio: player.bio || '',
+  });
+}
+function saveProfileForm() {
+  if (!player) return;
+  var nm = ($('pfNick').value || '').trim().slice(0, 12);
+  var bio = ($('pfBio').value || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 60);
+  if (nm) player.name = nm;
+  player.bio = bio;
+  Online.nickname = player.name;           /* 联机昵称跟随 */
+  var ni = $('onlineNick'); if (ni) ni.value = player.name;
+  savePlayer();
+  onlinePushProfile(function (ok) {
+    showToast(ok ? '✅ 资料已保存并同步' : '资料已保存本机（服务器暂未连上）', 1900, !ok);
+  });
+  renderLobby();
+  renderProfile();
+}
+function rotateRecoveryCode() {
+  if (!cloudAvailable()) return showToast('未连接服务器，无法更换恢复码', 1900, true);
+  if (!confirm('确定重新生成恢复码？旧恢复码将立即失效。')) return;
+  fetch(Online.server.replace(/\/$/, '') + '/api/player/recovery/rotate', {
+    method: 'POST', headers: { 'X-Device-Id': onlineDeviceId() },
+  }).then(function (r) { return r.json(); }).then(function (d) {
+    if (d && d.ok) { Online.recoveryCode = d.recoveryCode; renderProfile(); showToast('🔑 恢复码已更新', 1900); }
+    else showToast((d && d.msg) || '操作失败', 1900, true);
+  }).catch(function () { showToast('网络错误', 1900, true); });
+}
+function claimFromForm() {
+  var code = ($('claimCode') && $('claimCode').value || '').trim();
+  var rec = ($('claimRecovery') && $('claimRecovery').value || '').trim();
+  if (!code || !rec) return showToast('请填写玩家号与恢复码', 1900, true);
+  var btn = $('pfClaim'); if (btn) btn.disabled = true;
+  cloudClaimDevice(code, rec, function (ok, d) {
+    if (btn) btn.disabled = false;
+    if (ok) showToast('✅ 已接管账号 ' + (d && d.nickname ? '「' + d.nickname + '」' : '') + '，正在同步…', 2200);
+    else showToast('接管失败：' + (d || '未知错误'), 2400, true);
   });
 }
 
@@ -7838,6 +8117,7 @@ function init() {
   renderTasks();
   renderSlotList();
   startPeriodicWatchdog();
+  cloudBootstrap();   /* 云存档开机比对（配置了服务器才生效，纯单机静默跳过） */
   showScreen('lobby');
   console.log('[德州扑克] 初始化完成，存档槽 ' + activeSlot);
 }
@@ -8283,21 +8563,27 @@ function syncRankToServer(cb){
   });
 }
 /* ---------- 好友管理（好友榜弹窗内） ---------- */
-/* 主动拉取身份（短玩家号）：不依赖 WS 连接，打开联机面板/好友面板时即可展示 */
-function onlineFetchIdentity(cb){
+/* 主动拉取身份（短玩家号 / 恢复码）：不依赖 WS 连接，打开联机面板/好友面板/资料页时即可展示。
+   extra 可选：{ nickname, avatar, bio } —— 传入时会把资料一并推送到服务器档案。 */
+function onlineFetchIdentity(cb, extra){
   if (!onlineAvailable()) return cb && cb(false, '未配置联机服务器');
   if (typeof fetch !== 'function') return cb && cb(false, '当前环境不支持联网');
   var nick = Online.nickname || ($('onlineNick') && $('onlineNick').value.trim()) || (player && player.name) || '';
+  var body = { nickname: nick };
+  if (extra && typeof extra === 'object') Object.keys(extra).forEach(function(k){ body[k] = extra[k]; });
   fetch(Online.server.replace(/\/$/, '') + '/api/player', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Device-Id': onlineDeviceId() },
-    body: JSON.stringify({ nickname: nick }),
+    body: JSON.stringify(body),
   }).then(function(r){ return r.json(); }).then(function(d){
     if (d && d.ok !== false) {
       if (d.userCode) Online.userCode = d.userCode;
       if (d.nickname) Online.nickname = d.nickname;
+      if (d.recoveryCode) Online.recoveryCode = d.recoveryCode;
       refreshOnlineUI();
       var fm = $('friendMyCode'); if (fm) fm.textContent = Online.userCode || '----';
+      var pu = $('pfUserCode'); if (pu && Online.userCode) pu.textContent = Online.userCode;
+      var pr = $('pfRecovery'); if (pr && Online.recoveryCode) pr.textContent = Online.recoveryCode;
       cb && cb(true, d);
     } else cb && cb(false, (d && d.msg) || '获取失败');
   }).catch(function(){ cb && cb(false, '网络错误'); });
@@ -8326,7 +8612,7 @@ function onlineLoadFriends(){
     var reqs = (d.requests || []);
     if (!reqs.length) { list.innerHTML = '<span class="board-empty" style="padding:6px 0">暂无待处理的好友请求</span>'; return; }
     list.innerHTML = reqs.map(function(r){
-      return '<div class="friend-req"><span class="fn">' + esc(r.nickname || '牌友') +
+      return '<div class="friend-req"><span class="favatar">' + avatarSVG(r.avatar, 26) + '</span><span class="fn">' + esc(r.nickname || '牌友') +
         '<small>' + esc(r.deviceId) + ' 请求加你为好友</small></span>' +
         '<button class="acc" data-acc="' + esc(r.deviceId) + '">接受</button>' +
         '<button class="dec" data-dec="' + esc(r.deviceId) + '">拒绝</button></div>';
@@ -8454,6 +8740,7 @@ function loadBoard(){
         var cls = 'board-row' + (x.isMe ? ' me' : '') + (x.rank <= 3 ? ' top' + x.rank : '');
         var tn = ['新手', '青铜', '白银', '黄金', '铂金', '钻石', '传奇'][x.tier] || '新手';
         return '<div class="' + cls + '"><span class="rk">' + x.rank + '</span>' +
+          '<span class="bavatar">' + avatarSVG(x.avatar, 22) + '</span>' +
           '<span class="nm">' + esc(x.nickname) + (x.isMe ? '（我）' : '') + '</span>' +
           '<span class="tr">' + tn + '</span>' +
           '<span class="pt">' + fmt(x.points) + '</span></div>';
