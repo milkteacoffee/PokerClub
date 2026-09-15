@@ -1,0 +1,8 @@
+# 统一换行符为 LF：CI（GitHub Pages）与本地保持一致，
+# 否则 Windows 下 checkout 会把 index.html 转成 CRLF，导致「线上/本地 md5 不一致」的误报，
+# 以及整文件级别的伪 diff。
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ogg binary
+*.mp3 binary
