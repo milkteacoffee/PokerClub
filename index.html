@@ -1446,6 +1446,39 @@
   .pf-avup{display:flex;gap:8px;margin-top:8px}
   .pf-avup .pf-ghostbtn{margin-top:0;flex:1}
   .pf-opt-custom svg{display:block}
+  /* 局内社交（快捷语气泡）/ 匹配过场 / 结算动效 */
+  .ost-bubble{position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);white-space:nowrap;
+    background:linear-gradient(160deg,#f0d79a,#cfa85b);color:#2a1d0c;font-size:11.5px;font-weight:800;
+    padding:5px 11px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.42);
+    animation:bubbleIn .22s cubic-bezier(.22,1,.36,1);z-index:12}
+  .ost-bubble::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+    border:5px solid transparent;border-top-color:#cfa85b}
+  @keyframes bubbleIn{from{opacity:0;transform:translateX(-50%) translateY(6px) scale(.9)}
+    to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+  .od-saybtn{position:absolute;right:12px;bottom:104px;z-index:9;padding:8px 14px;border:none;border-radius:20px;
+    cursor:pointer;font-family:inherit;font-size:12px;font-weight:800;color:#2a1d0c;
+    background:linear-gradient(160deg,#f0d79a,#cfa85b);box-shadow:0 6px 16px rgba(0,0,0,.35)}
+  .od-saybtn:active{transform:translateY(1px)}
+  .say-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .say-item{padding:10px 12px;border:none;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12.5px;
+    color:#d8e0e8;background:rgba(255,255,255,.05);text-align:left;transition:.15s}
+  .say-item:hover{background:rgba(255,255,255,.11);color:#fff}
+  .od-intro{position:absolute;inset:0;z-index:14;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:10px;background:radial-gradient(ellipse at 50% 45%, rgba(20,15,8,.86), rgba(8,10,14,.94))}
+  .od-intro .oi-t{font-size:24px;font-weight:800;color:#f2c14e;letter-spacing:3px;
+    animation:bigPop .42s cubic-bezier(.22,1,.36,1) both}
+  .od-intro .oi-d{font-size:12.5px;color:#b9c6d2;letter-spacing:1px}
+  .od-intro .oi-cards{display:flex;gap:8px;margin-bottom:6px}
+  .od-intro .oi-cards i{width:26px;height:36px;border-radius:4px;display:block;
+    background:linear-gradient(150deg,#f4efe2,#d8cfba);box-shadow:0 4px 12px rgba(0,0,0,.4);
+    animation:ioDeal .5s cubic-bezier(.22,1,.36,1) both}
+  .od-intro .oi-cards i:nth-child(2){animation-delay:.09s}
+  .od-intro .oi-cards i:nth-child(3){animation-delay:.18s}
+  @keyframes ioDeal{from{opacity:0;transform:translateY(-22px) rotate(-10deg)}to{opacity:1;transform:none}}
+  @keyframes bigPop{0%{opacity:0;transform:scale(.82)}60%{transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}
+  .od-result .big{animation:bigPop .45s cubic-bezier(.22,1,.36,1) both}
+  .od-result .sub{animation:fadeUp .5s .1s cubic-bezier(.22,1,.36,1) both}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
   /* 快速匹配面板 + 佩戴称号展示 */
   .om-box{margin:0 0 14px;padding:12px 13px;border-radius:12px;
     background:radial-gradient(ellipse at 50% 0%, rgba(212,168,91,.10), rgba(255,255,255,.028));
@@ -1609,6 +1642,13 @@
       </div>
     </div>
     <div id="odReconnect" hidden></div>
+    <!-- 匹配成功过场（真人匹配开局前的 0.8 秒仪式感） -->
+    <div id="odIntro" class="od-intro" hidden>
+      <div class="oi-cards"><i></i><i></i><i></i></div>
+      <div class="oi-t">匹配成功</div>
+      <div class="oi-d">正在发牌…</div>
+    </div>
+    <button id="odSayBtn" class="od-saybtn" hidden>快捷语</button>
     <div id="odHand" class="od-hand" hidden></div>
     <div id="odActions" class="od-actions" hidden></div>
     <div id="odLog" class="od-log" hidden></div>
@@ -1954,6 +1994,15 @@
         </div>
         <div class="online-tip" id="roomTip"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- 快捷语面板（局内社交；只发预设短语，服务端按白名单校验） -->
+  <div class="overlay" id="ovSay">
+    <div class="panel" style="max-width:420px;">
+      <h2>快捷语 <button class="closebtn" data-close="ovSay">✕ 返回</button></h2>
+      <div class="say-grid" id="sayGrid"></div>
+      <div class="pm-note">只为方便局内交流，都是预设短语；不想看某人的发言可以在牌桌上点他的座位把他拉黑。</div>
     </div>
   </div>
 
@@ -4447,7 +4496,7 @@ function goModeScreen() {
 }
 /* 弹窗：同一时刻只保留一个，避免两个 ✕ 叠在一起；
    信息类弹窗支持「点击面板外」与 Esc 关闭，其余确认类弹窗仍走各自按钮。 */
-var OV_CLOSE_ON_BACKDROP = ['ovAchieve', 'ovTasks', 'ovHelp', 'ovShop', 'ovStats', 'ovCheckin', 'ovSettings', 'ovStorage', 'ovOnline', 'ovBoard', 'ovProfile', 'ovLegal'];
+var OV_CLOSE_ON_BACKDROP = ['ovAchieve', 'ovTasks', 'ovHelp', 'ovShop', 'ovStats', 'ovCheckin', 'ovSettings', 'ovStorage', 'ovOnline', 'ovBoard', 'ovProfile', 'ovLegal', 'ovSay'];
 function closeOverlay(id) { var el = $(id); if (el) el.classList.remove('show'); }
 function openOverlay(id, keep) {
   document.querySelectorAll('.overlay').forEach(function (o) {
@@ -9113,6 +9162,12 @@ Online.fetchIdentity = onlineFetchIdentity;
 Online.renderState = function(st){ try { onlineApplyState(st); } catch (e) { console.error(e); } };
 Online.renderWaitView = function(room){ try { onlineRenderWaitView(room); } catch (e) { console.error(e); } };
 Online.seatPos = onlineSeatPos;
+/* 局内社交 / 过场的调试入口（自动化测试与线上排查用） */
+if (typeof window !== 'undefined') {
+  window.sayBubble = sayBubble;
+  window.sayOpen = sayOpen;
+  window.introMatched = introMatched;
+}
 function onlineAvailable(){ return !!Online.server; }
 function onlineStatusText(){
   if (!onlineAvailable()) return '未配置服务器';
@@ -9159,6 +9214,48 @@ function onlineSend(type, data){
   if (!Online.ws || Online.ws.readyState !== 1) return false;
   try { Online.ws.send(JSON.stringify(Object.assign({ type: type }, data || {}))); return true; } catch(e){ return false; }
 }
+/* ---- 局内快捷语（只发预设短语；服务端按同一份白名单校验，杜绝自由文本风险）---- */
+var SAY_TEXTS = [
+  '大家好，很高兴见到各位', '快点吧，等到花都谢了', '打得不错', '手气真好',
+  '承让承让', '这牌有点难打', '我先看看', '稳住，我们能赢',
+  '队友给力', '别急，慢慢来', '这波漂亮', '好牌，可惜了',
+  '我弃牌，你们继续', '再来一局，别走', '不好意思，我赢了', '绝了',
+];
+function sayOpen(){
+  var g = $('sayGrid'); if (!g) return;
+  g.innerHTML = SAY_TEXTS.map(function(t, i){
+    return '<button class="say-item" type="button" data-say="' + i + '">' + esc(t) + '</button>';
+  }).join('');
+  g.querySelectorAll('[data-say]').forEach(function(b){
+    b.onclick = function(){
+      var txt = SAY_TEXTS[Number(b.getAttribute('data-say'))];
+      if (txt) { onlineSend('say', { text: txt }); }
+      sfx('click');
+      closeTopOverlay();
+    };
+  });
+  openOverlay('ovSay');
+}
+/* 收到别人的快捷语：在对应座位上方弹出气泡，3 秒后自动消失 */
+function sayBubble(seat, text){
+  if (seat === null || seat === undefined) return;
+  var el = document.querySelector('#odSeats .ost[data-oseat="' + seat + '"]');
+  if (!el) return;
+  var old = el.querySelector('.ost-bubble'); if (old) old.parentNode.removeChild(old);
+  var b = document.createElement('div');
+  b.className = 'ost-bubble';
+  b.textContent = String(text || '').slice(0, 24);
+  el.appendChild(b);
+  setTimeout(function(){ if (b.parentNode) b.parentNode.removeChild(b); }, 3000);
+}
+/* 真人匹配成功过场：0.8 秒仪式感，再进牌桌 */
+function introMatched(cb){
+  var el = $('odIntro'); if (!el) { return cb && cb(); }
+  el.hidden = false;
+  try { sfx('click'); } catch (e) {}
+  setTimeout(function(){ el.hidden = true; if (cb) cb(); }, 820);
+}
+
 /* ---- 快速匹配：真人陌生人凑桌，凑满由服务端建房并直接开局 ---- */
 var OM = { game: 'holdem', active: false };
 var OM_GAMES = ['guandan', 'holdem', 'gold', 'diceduel'];
@@ -9208,7 +9305,17 @@ function omReset(msg){
 function onlineHandle(m){
   if (m.type === 'error') { setOnlineTip(m.msg || '操作失败'); onlineSyncStatus(); return; }
   if (m.type === 'matching') { omOnMatching(m); return; }
-  if (m.type === 'room') { onlineApplyRoom(m); return; }
+  if (m.type === 'say') { sayBubble(m.seat, m.text); return; }
+  if (m.type === 'room') {
+    /* 真人匹配成功：先播 0.8 秒过场，再进牌桌（好友房保持即时进入） */
+    if (m.matched && !Online._introShown) {
+      Online._introShown = true;
+      introMatched(function(){ onlineApplyRoom(m); });
+      return;
+    }
+    onlineApplyRoom(m);
+    return;
+  }
   if (m.type === 'state') { onlineApplyState(m.state); return; }
   if (m.type === 'settle') { onlineShowSettle(m); return; }
   if (m.type === 'aborted') { setOnlineTip(m.msg || '牌局已中止'); onlineBackToWait(); return; }
@@ -9421,6 +9528,7 @@ function onlineApplyState(st){
   try { omReset(); } catch (e) {}
   showScreen('online');
   $('odWaiting').hidden = true;
+  var sb0 = $('odSayBtn'); if (sb0) sb0.hidden = false;
   $('odTable').hidden = false; $('odHand').hidden = false;
   $('odActions').hidden = false; $('odLog').hidden = false; $('odResult').hidden = true;
   $('odRoom').textContent = '房号 ' + (Online.code || '------') + ' · 积分欢乐局';
@@ -9449,6 +9557,7 @@ function onlineApplyState(st){
   else renderOnlineHoldem(st);
 }
 function onlineBackToWait(){
+  var sb1 = $('odSayBtn'); if (sb1) sb1.hidden = true;
   $('odWaiting').hidden = false; $('odTable').hidden = true; $('odHand').hidden = true;
   $('odActions').hidden = true; $('odLog').hidden = true; $('odResult').hidden = true;
   Online._turnKey = null; Online._deadline = 0;
@@ -9726,6 +9835,7 @@ function onlineRecordResult(game, won){
 function onlineShowSettle(m){
   var res = m.result || {};
   $('odWaiting').hidden = true; $('odTable').hidden = true;
+  var sb2 = $('odSayBtn'); if (sb2) sb2.hidden = true;
   $('odHand').hidden = true; $('odActions').hidden = true; $('odLog').hidden = true;
   $('odResult').hidden = false;
   Online._turnKey = null; Online._deadline = 0;
@@ -10004,6 +10114,7 @@ function loadBoard(){
   if (typeof fetch !== 'function') { list.innerHTML = '<div class="board-empty">当前环境不支持联网<br>排行榜不可用</div>'; return; }
   syncRankToServer(function(ok, err){
     if (!ok) { list.innerHTML = '<div class="board-empty">' + esc(err || '连接失败') + '<br>请稍后重试</div>'; return; }
+    if (list) list.innerHTML = '<div class="board-empty">加载中…</div>';
     fetch(Online.server.replace(/\/$/, '') + '/api/leaderboard?game=' + Online.boardGame + '&scope=' + Online.boardScope + '&limit=100', {
       headers: { 'X-Device-Id': onlineDeviceId() },
     }).then(function(r){ return r.json(); }).then(function(d){
@@ -10067,6 +10178,7 @@ function onlineInitUI(){
     }
     catch(e){ setOnlineTip('自动复制失败，请手动复制链接：' + link); }
   };
+  var osb = $('odSayBtn'); if (osb) osb.onclick = sayOpen;
   var oms = $('omStart'); if (oms) oms.onclick = omStart;
   var omc = $('omCancel'); if (omc) omc.onclick = omCancel;
   omRenderGames();

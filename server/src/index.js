@@ -342,6 +342,15 @@ const server = http.createServer(async (req, res) => {
 const wss = new WebSocketServer({ server, path: '/ws' });
 const conns = new Map();   // deviceId -> { ws, roomCode, lastMsgs: [] }
 
+/* 局内快捷语白名单：与前端 SAY_TEXTS 一字不差。
+   服务端只放行白名单 —— 这样局内社交不存在自由文本，天然规避内容审核风险。 */
+const SAY_TEXTS = [
+  '大家好，很高兴见到各位', '快点吧，等到花都谢了', '打得不错', '手气真好',
+  '承让承让', '这牌有点难打', '我先看看', '稳住，我们能赢',
+  '队友给力', '别急，慢慢来', '这波漂亮', '好牌，可惜了',
+  '我弃牌，你们继续', '再来一局，别走', '不好意思，我赢了', '绝了',
+];
+
 /* ============ 快速匹配（陌生人匹配：凑满即建房并直接开局）============
    设计取舍：真人优先，凑不满就继续等（不做 AI 补位，避免"以为是真人"的误解）；
    匹配房无需准备，建房即开局，与好友房的准备流程互不影响。 */
@@ -504,6 +513,18 @@ wss.on('connection', (ws, req) => {
         /* 全员同步 */
         for (const s of room.seats) if (s.online && s.ws) send(s.ws, 'state', { state: room.viewFor(s.deviceId) });
         if (room.adapter.isDone(room.state)) settleRoom(room);
+        return;
+      }
+
+      if (t === 'say') {
+        const room = getRoomOf(conn);
+        if (!room) return send(ws, 'error', { msg: '不在房间内' });
+        const text = String(msg.text || '').trim();
+        if (SAY_TEXTS.indexOf(text) < 0) return send(ws, 'error', { msg: '只支持预设快捷语' });
+        const sd = room.seats.find(x => x.deviceId === deviceId);
+        if (!sd) return;
+        /* 注意：不刷新 lastActivity —— 发言不该影响「行动超时自动代打」的计时 */
+        broadcast(room, 'say', { seat: sd.seat, text });
         return;
       }
 

@@ -91,6 +91,21 @@ function post(pathname, deviceId, body) {
   const mySeat = (st.seatInfo || []).findIndex(s => s.deviceId === (me.seat === 0 ? 'dev_matchAAAA00001' : 'dev_matchBBBB00002'));
   ok(mySeat >= 0, '能定位当前行动玩家');
 
+  /* 局内快捷语：白名单放行并广播；非白名单一律拒绝（无自由文本） */
+  A.ws.send(JSON.stringify({ type: 'say', text: '打得不错' }));
+  await sleep(400);
+  const sayA = last(A, 'say'), sayB = last(B, 'say');
+  ok(!!sayA && !!sayB, '快捷语广播给房内所有人');
+  ok(sayA && sayA.text === '打得不错', '文案一致');
+  ok(sayA && typeof sayA.seat === 'number', '带发言者座位号（气泡定位用）');
+  B.ws.send(JSON.stringify({ type: 'say', text: '加微信代充金币' }));
+  await sleep(400);
+  ok(B.msgs.filter(m => m.type === 'say').length === 1, '非白名单文本不会被广播');
+  ok(!!B.msgs.find(m => m.type === 'error' && /预设/.test(m.msg || '')), '非白名单返回「只支持预设快捷语」');
+  A.ws.send(JSON.stringify({ type: 'say', text: 'x'.repeat(200) }));
+  await sleep(300);
+  ok(A.msgs.filter(m => m.type === 'say').length === 1, '超长文本同样被拒（不入房内广播）');
+
   /* 取消匹配：C 入队后取消，队列清空 */
   const C = await connect('dev_matchCCCC00003', '小陈');
   await sleep(200);
