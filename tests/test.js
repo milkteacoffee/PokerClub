@@ -959,6 +959,21 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   const exitCoins = ctx.player.coins; ctx.exitGame();
   ok(ctx.player.coins === exitCoins && ctx.player.stats.totalNet === 0 && ctx.profile15('holdem').redeemPoints===1, '重复离桌不重复扣款或统计');
 
+  // ---- 邀请链接（房间分享）----
+  const rsl = ctx.roomShareLink, prs = ctx.parseRoomShare;
+  ok(typeof rsl === 'function' && typeof prs === 'function', 'roomShareLink/parseRoomShare 存在于主作用域');
+  eq(rsl('646685', 'guandan'), 'https://milkteacoffee.github.io/PokerClub/?room=646685&game=guandan', '无 location 环境回落线上地址（含 game）');
+  eq(rsl('646685', ''), 'https://milkteacoffee.github.io/PokerClub/?room=646685', '无 game 只带房号');
+  ctx.location = { protocol: 'https:', origin: 'https://demo.example', pathname: '/games/', search: '?room=123456&game=holdem' };
+  eq(rsl('888888', ''), 'https://demo.example/games/?room=888888', 'http(s) 环境用当前页面地址拼链接');
+  eq(prs(), { room: '123456', game: 'holdem' }, '解析 room+game 参数');
+  ctx.location = { protocol: 'file:', search: '?code=646685' };
+  eq(prs(), { room: '646685', game: '' }, '兼容 ?code= 且 file 协议可解析');
+  eq(rsl('646685', ''), 'https://milkteacoffee.github.io/PokerClub/?room=646685', 'file 协议拼链回落线上地址');
+  ctx.location = { protocol: 'file:', search: '?room=12345&room2=646685' };
+  eq(prs(), { room: '', game: '' }, '非 6 位房号拒绝解析');
+  ctx.location = undefined;
+
   // ---- 汇总 ----
   console.log('\n============================');
   console.log('  通过 ' + pass + ' / 失败 ' + fail);

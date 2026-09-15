@@ -2284,6 +2284,32 @@ function onlineDeviceId(){
 function onlineApi() {
   return (typeof window !== 'undefined' && window.Online) ? window.Online : null;
 }
+/* ---- 房间邀请链接（主作用域纯函数，可单测） ----
+   链接形如 https://…/?room=646685&game=guandan；file:// 等本地预览环境回落线上正式地址。 */
+function roomShareLink(code, game) {
+  var base = 'https://milkteacoffee.github.io/PokerClub/';
+  try {
+    if (typeof location !== 'undefined' && (location.protocol === 'http:' || location.protocol === 'https:')) {
+      base = location.origin + location.pathname;
+    }
+  } catch (e) {}
+  return base + '?room=' + encodeURIComponent(code || '') + (game ? '&game=' + encodeURIComponent(game) : '');
+}
+/* 解析分享参数：?room=（兼容 ?code=）6 位房号 + 可选 game=guandan|holdem；无参数返回空串 */
+function parseRoomShare() {
+  var out = { room: '', game: '' };
+  try {
+    if (typeof location === 'undefined' || !location.search) return out;
+    location.search.replace(/^\?/, '').split('&').forEach(function (kv) {
+      var i = kv.indexOf('='); if (i < 0) return;
+      var k = kv.slice(0, i), v = kv.slice(i + 1);
+      try { v = decodeURIComponent(v); } catch (e) {}
+      if (k === 'room' || k === 'code') { if (/^\d{6}$/.test(v)) out.room = v; }
+      else if (k === 'game') { if (v === 'guandan' || v === 'holdem') out.game = v; }
+    });
+  } catch (e) {}
+  return out;
+}
 
 /* ---- 云存档：全量上推 / 拉取（X-Device-Id 认证，服务器零迁移接管换绑） ---- */
 var CLOUD_SYNC_KEY = 'poker_cloud_sync_v1';
@@ -8793,8 +8819,14 @@ function onlineInitUI(){
   var cr = $('onlineCreate'); if (cr) cr.onclick = onlineCreate;
   var jn = $('onlineJoin'); if (jn) jn.onclick = onlineJoin;
   var cp = $('roomCopy'); if (cp) cp.onclick = function(){
-    try { navigator.clipboard.writeText(Online.code); setOnlineTip('房号已复制：' + Online.code); }
-    catch(e){ setOnlineTip('房号：' + Online.code); }
+    if (!Online.code) return setOnlineTip('尚未创建房间');
+    var link = roomShareLink(Online.code, Online.game);
+    try {
+      var p = navigator.clipboard.writeText(link);
+      if (p && p.catch) p.catch(function(){ setOnlineTip('自动复制失败，请手动复制链接：' + link); });
+      setOnlineTip('邀请链接已复制，发给牌友即可直接进房（房号 ' + Online.code + '）');
+    }
+    catch(e){ setOnlineTip('自动复制失败，请手动复制链接：' + link); }
   };
   var ucc = $('userCodeCopy'); if (ucc) ucc.onclick = function(){
     if (!Online.userCode) return setOnlineTip('玩家号尚未生成，请稍候');
@@ -8850,6 +8882,28 @@ function onlineInitUI(){
     if (Online.picked.has(id)) Online.picked.delete(id); else Online.picked.add(id);
     renderOnlineGuandan(Online.state);
   };
+  onlineAutoJoin();
+}
+
+/* ---- 邀请链接自动进房：?room=6位房号(&game=guandan|holdem) 打开联机面板并自动连接加入 ---- */
+function onlineAutoJoin(){
+  var s = parseRoomShare();
+  if (!s.room || !onlineAvailable() || Online.code) return;
+  if (s.game) {
+    Online.game = s.game;
+    var gi = $('onlineGames');
+    if (gi) gi.querySelectorAll('[data-ogame]').forEach(function(b){
+      b.classList.toggle('selected', b.getAttribute('data-ogame') === s.game);
+    });
+  }
+  openOnline();
+  var ci = $('onlineCode'); if (ci) ci.value = s.room;
+  setOnlineTip('检测到邀请链接，正在加入房间 ' + s.room + ' …');
+  onlineConnect(function(ok, err){
+    if (!ok) return setOnlineTip((err || '连接失败') + ' · 可点击「加入房间」手动重试');
+    onlineSend('nick', { nickname: Online.nickname || ($('onlineNick') && $('onlineNick').value.trim()) || (player && player.name) || '牌友' });
+    onlineSend('join', { code: s.room });
+  });
 }
 
 /* 联机 UI 的初始化：独立函数名，避免覆盖既有的 init() */
