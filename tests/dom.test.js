@@ -138,8 +138,8 @@ function click(el) {
   click($('lbBtnShop'));
   await tick(30);
   ok($('ovShop').classList.contains('show'), '打开商城面板');
-  ok($('shopList').querySelectorAll('.shop-item').length === 11,
-     '商城渲染 11 件商品（实际 ' + $('shopList').querySelectorAll('.shop-item').length + '）');
+  ok($('shopList').querySelectorAll('.shop-item').length === 15,
+     '商城渲染 15 件商品（实际 ' + $('shopList').querySelectorAll('.shop-item').length + '）');
   ok($('shopCoins').textContent === '500', '商城顶栏显示金币');
   click($('ovShop').querySelector('[data-close="ovShop"]'));
   await tick(20);

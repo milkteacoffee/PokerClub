@@ -1,0 +1,20 @@
+{
+  "name": "pokerclub-server",
+  "version": "1.0.0",
+  "description": "赌途 · 好友开房联机 + 段位排行后端（Node.js + WebSocket）",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node tests/run-all.js"
+  },
+  "dependencies": {
+    "ws": "^8.21.3"
+  },
+  "license": "MIT",
+  "private": true
+}

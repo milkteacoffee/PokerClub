@@ -850,7 +850,7 @@ const sleepTick = () => new Promise(r => setImmediate(r));
     achievements: {}, newbieTasks: {}, newbieProgress: {}
   };
   var mg = ctx.migratePlayer(legacy);
-  ok(mg.version === 15, '迁移后版本号升级到 15');
+  ok(mg.version === 16, '迁移后版本号升级到 16');
   ok(mg.coins === 4242 && mg.level === 7, '迁移保留原有金币与等级');
   ok(mg.rankPoints === 0 && typeof mg.musicOn === 'boolean', '迁移补齐段位与音乐字段');
   ok(!!mg.stats && mg.stats.vpip === 0, '迁移补齐统计结构');

@@ -33,7 +33,7 @@ function check(value, msg) { assert.ok(value, msg); checks++; }
     name.click(); input.value = '<测试>123456789012345'; key('Enter');
     check(!saved().includes('<') && Array.from(saved()).length === 12, 'Sanitizes markup and limits length');
     check(d.getElementById('slotList').textContent.includes(saved()), 'Save slot display synced');
-    check(d.querySelectorAll('.lobby-topbtns button').length === 9, 'Nine stable functions; unfinished friend rooms not published');
+    check(d.querySelectorAll('.lobby-topbtns button').length === 11, 'Eleven stable functions: 9 originals + online + leaderboard');
     check(!d.querySelector('.lobby-quickbtns'), 'Duplicate bottom navigation removed');
     for (const id of ['lbQTasks', 'lbQAchieve', 'lbQShop', 'lbQStorage', 'lbQTaskBadge']) check(!d.getElementById(id), 'Removed duplicate: ' + id);
     for (const id of ['lbQCheckin', 'lbQStats', 'lbQHelp']) check(d.querySelector('.lobby-topbtns').contains(d.getElementById(id)), 'Moved to top: ' + id);

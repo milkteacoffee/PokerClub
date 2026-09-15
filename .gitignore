@@ -14,6 +14,12 @@ assets/*
 .workbuddy/
 .wbapp_*
 
+# 后端（server/）：不提交依赖与运行时数据
+server/node_modules/
+server/data/
+server/tests/tmp/
+server/npm-debug.log*
+
 # 系统/编辑器
 .DS_Store
 Thumbs.db

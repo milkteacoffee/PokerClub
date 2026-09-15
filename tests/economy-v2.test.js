@@ -8,7 +8,7 @@ const w=dom.window; w.setTimeout=()=>0; w.requestAnimationFrame=()=>0;
 w.eval(code);
 let count=0;function test(name,fn){fn();count++;console.log('PASS '+name);}
 test('新版独立key旧档不覆盖',()=>{w.localStorage.setItem(w.LEGACY_SAVE_KEY,'{"old":true}');w.loadAllSaves();assert.equal(w.localStorage.getItem(w.LEGACY_SAVE_KEY),'{"old":true}');assert.notEqual(w.LEGACY_SAVE_KEY,w.SAVE_KEY_ALL);});
-test('单机新档直接500且无领取接口',()=>{assert.equal(w.START_COINS,500);assert.equal(w.player.coins,500);assert.equal(w.SAVE_VERSION,15);assert(!html.includes('GRANT_ENDPOINT'));assert(!w.document.getElementById('initialGrant'));});
+test('单机新档直接500且无领取接口',()=>{assert.equal(w.START_COINS,500);assert.equal(w.player.coins,500);assert.equal(w.SAVE_VERSION,16);assert(!html.includes('GRANT_ENDPOINT'));assert(!w.document.getElementById('initialGrant'));});
 test('每日按游戏各一项再加通用项，总额随表计算',()=>{w.ensureDailyTasks();const pool=w.TASK_POOL;
  assert.equal(w.player.dailyTasks.ids.length,pool.length,'每日项数应等于任务池（每游戏一项 + 通用一项）');
  w.GAME_IDS.forEach(g=>assert.ok(w.player.dailyTasks.ids.includes('d15_'+g),g+' 应有日常'));
