@@ -9,6 +9,7 @@ const files = [
   ['好友搜索接口', 'friends-search.test.js', []],
   ['资料/云存档/接管', 'profile-state.test.js', []],
   ['端到端联机', 'e2e.test.js', []],
+  ['炸金花/骰子联机', 'gold-diceduel.test.js', []],
   ['双客户端联机冒烟', 'smoke-online.js', []],
 ];
 

@@ -33,7 +33,9 @@ function ok(c, m) { if (c) pass++; else { fail++; failures.push(m); } }
 
     /* ---- 联机弹窗内部结构 ---- */
     ok(!!id('onlineGames'), '玩法选择存在');
-    ok(id('onlineGames').querySelectorAll('[data-ogame]').length === 2, '恰好两个联机玩法');
+    ok(id('onlineGames').querySelectorAll('[data-ogame]').length === 4, '四个联机玩法（掼蛋/德州/炸金花/骰子比大小）');
+    ok(!!id('onlineGames').querySelector('[data-ogame="gold"]') && !!id('onlineGames').querySelector('[data-ogame="diceduel"]'), '炸金花与骰子比大小 chips 存在');
+    ok(!!id('roomGame'), '房间玩法显示元素存在');
     ok(!!id('onlineCreate') && !!id('onlineJoin'), '创建与加入按钮存在');
     ok(!!id('onlineCode'), '房号输入框存在');
     ok(!!id('onlineNick'), '昵称输入框存在');
@@ -41,6 +43,10 @@ function ok(c, m) { if (c) pass++; else { fail++; failures.push(m); } }
     ok(!!id('roomReady') && !!id('roomStart') && !!id('roomLeave'), '房间操作按钮齐全');
     ok(id('onlineRoom').hidden === true, '房间面板默认隐藏');
     ok(id('onlineSetup').hidden === false, '设置面板默认显示');
+    /* 娱乐声明三处 */
+    ok(!!id('roomDisclaimer') && id('roomDisclaimer').textContent.indexOf('严禁赌博') >= 0, '房间内含娱乐声明');
+    ok(id('ovOnline').textContent.indexOf('严禁用于赌博') >= 0, '联机面板含赌博警告');
+    ok(d.body.textContent.indexOf('严禁赌博') >= 0 && d.body.textContent.indexOf('违者后果自负') >= 0, '大厅页脚含娱乐声明');
 
     /* ---- 联机牌桌结构 ---- */
     ['odBack', 'odTitle', 'odRoom', 'odTurn', 'odWaiting', 'odBoard', 'odSeats', 'odHand', 'odActions', 'odLog', 'odResult'].forEach(x => {

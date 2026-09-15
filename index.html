@@ -1449,6 +1449,7 @@
     <div class="lobby-bottom">
       <button class="btn-primary lobby-start-btn" id="lbStartBtn">开始游戏</button>
       <div class="lobby-hint" id="hubHint">已选德州扑克 · 所有对手均为本地AI</div>
+      <div style="font-size:10px;color:#7d8b96;letter-spacing:1px;text-align:center;line-height:1.6">仅供娱乐 · 严禁赌博 · 虚拟金币不可充值兑现 · 违者后果自负</div>
     </div>
   </div>
 
@@ -1763,7 +1764,8 @@
         <button class="closebtn" data-close="ovOnline">✕ 返回</button>
       </h2>
       <div style="font-size:11.5px;color:#8fa0b4;margin-bottom:12px;line-height:1.7;">
-        联机支持<b style="color:#f2c14e">掼蛋（4 人）</b>与<b style="color:#f2c14e">德州扑克（2~6 人）</b>，牌局判定全部在服务端完成。纯单机玩法不受影响。
+        联机支持<b style="color:#f2c14e">掼蛋（4 人）</b>、<b style="color:#f2c14e">德州扑克（2~6 人）</b>、<b style="color:#f2c14e">炸金花（2~6 人）</b>与<b style="color:#f2c14e">骰子比大小（2~6 人）</b>，牌局判定全部在服务端完成。其余玩法为单机对 AI，不受影响。<br>
+        <b style="color:#c41a1a">本游戏仅供娱乐，严禁用于赌博；虚拟金币不可充值、不可兑现、不可转让。违者后果自负。</b>
       </div>
       <div id="onlineSetup">
         <div class="online-row">
@@ -1771,6 +1773,8 @@
           <div class="online-games" id="onlineGames">
             <button class="online-gchip selected" data-ogame="guandan">掼蛋 <small>4 人</small></button>
             <button class="online-gchip" data-ogame="holdem">德州扑克 <small>2~6 人</small></button>
+            <button class="online-gchip" data-ogame="gold">炸金花 <small>2~6 人</small></button>
+            <button class="online-gchip" data-ogame="diceduel">骰子比大小 <small>2~6 人</small></button>
           </div>
         </div>
         <div class="online-row">
@@ -1798,7 +1802,9 @@
         <div class="online-codebar">
           <span>房号</span><b id="roomCode">------</b>
           <button class="online-btn tiny" id="roomCopy">复制</button>
+          <span style="margin-left:12px">玩法</span><b id="roomGame" style="color:#f2c14e">--</b>
         </div>
+        <div class="online-tip" id="roomDisclaimer" style="margin-top:6px">仅供娱乐，严禁赌博；虚拟金币不可充值兑现，违者后果自负。</div>
         <div class="online-seats" id="onlineSeats"></div>
         <div class="online-actions">
           <button class="online-btn" id="roomReady">准备</button>
@@ -2698,7 +2704,7 @@ var TITLES = [
   { id:'tt_top_diceduel',  name:'神手骰王',   icon:'⚄', desc:'骰子比大小排位达到最高段位「神手骰王」',   check:function(p){ return gameIsTopTier(p,'diceduel'); } },
   { id:'tt_top_guandan',   name:'掼蛋的神',   icon:'🀄', desc:'掼蛋累计获胜 200 局，封顶「掼蛋的神」',    check:function(p){ return gameIsTopTier(p,'guandan'); } },
   { id:'tt_six_crowns',    name:'六冠赌神',   icon:'👑', desc:'六大游戏全部达到最高段位（德州王牌 · 二十一之神 · 金花炸王 · 心眼财神 · 神手骰王 · 掼蛋的神）', check:function(p){ return crownCount(p) >= 6; } },
-  /* 好友联机（开房对战，仅掼蛋与德州） */
+  /* 好友联机（开房对战：掼蛋/德州/炸金花/骰子比大小） */
   { id:'tt_online_1',      name:'初入牌局',   icon:'🚪', desc:'首次完成一局好友房对战',      check:function(p){ return onlineStat(p,'games') >= 1; } },
   { id:'tt_online_10',     name:'常来常往',   icon:'🛋️', desc:'累计完成 10 局好友房对战',    check:function(p){ return onlineStat(p,'games') >= 10; } },
   { id:'tt_online_50',     name:'牌友满座',   icon:'🏠', desc:'累计完成 50 局好友房对战',    check:function(p){ return onlineStat(p,'games') >= 50; } },
@@ -8389,6 +8395,7 @@ function renderOnlineLobby(room){
   if (!room) return;
   var seats = room.seats || [];
   if (room.waiting) {
+    var rg = $('roomGame'); if (rg) rg.textContent = ONLINE_GAME_LABEL[room.game] || room.game || '--';
     var box = $('onlineSeats');
     if (box) {
       box.innerHTML = seats.map(function(s){
@@ -8407,17 +8414,21 @@ function renderOnlineLobby(room){
 }
 
 /* ---- 联机牌局渲染 ---- */
+var ONLINE_GAME_LABEL = { guandan: '掼蛋', holdem: '德州扑克', gold: '炸金花', diceduel: '骰子比大小' };
 function onlineApplyState(st){
   if (!st) return;
   Online.state = st;
+  Online.cmpPick = false;
   $('onlineSetup').hidden = true; $('onlineRoom').hidden = true;
   showScreen('online');
   $('odWaiting').hidden = true;
   $('odBoard').hidden = false; $('odSeats').hidden = false; $('odHand').hidden = false;
   $('odActions').hidden = false; $('odLog').hidden = false; $('odResult').hidden = true;
   $('odRoom').textContent = '房号 ' + (Online.code || '------');
-  $('odTitle').textContent = st.game === 'guandan' ? '掼蛋 · 好友房' : '德州扑克 · 好友房';
+  $('odTitle').textContent = (ONLINE_GAME_LABEL[st.game] || st.game) + ' · 好友房';
   if (st.game === 'guandan') renderOnlineGuandan(st);
+  else if (st.game === 'gold') renderOnlineGold(st);
+  else if (st.game === 'diceduel') renderOnlineDice(st);
   else renderOnlineHoldem(st);
 }
 function onlineBackToWait(){
@@ -8525,6 +8536,75 @@ function renderOnlineHoldem(st){
     return '<div>' + esc(p.name || ('座位' + h.seat)) + '：' + act + '</div>';
   }).join('') || '<div style="color:#7e929b">等待行动…</div>';
 }
+function renderOnlineGold(st){
+  var names = {}; (st.seatInfo || []).forEach(function(s){ names[s.seat] = s.name; });
+  $('odBoard').innerHTML = '<div style="font-size:12px;color:#8fa0b4">第 ' + st.round + ' 轮 · 单注 ' + st.unit +
+    '（看牌 ×2，上限 ' + st.maxUnit + '）</div><div style="margin-left:16px;font-size:13px;color:#f2c14e;font-weight:800">底池 ' + fmt(st.pot) + '</div>';
+  $('odTurn').textContent = st.done ? '本局结束' : (st.turn === Online.seat ? '轮到你行动' : '等待其他玩家');
+  $('odSeats').innerHTML = (st.players || []).map(function(p){
+    var cls = 'od-seat' + (p.seat === st.turn && !st.done && !p.folded ? ' turn' : '') + (p.folded ? ' folded' : '');
+    var hole = (p.hand || []).map(function(c){ return '<div class="od-mini' + (c === '??' ? ' back' : '') + '">' + (c === '??' ? '✦' : c.slice(0, -1)) + '</div>'; }).join('');
+    return '<div class="' + cls + '"><span class="n">' + esc(p.name || ('座位' + p.seat)) + (p.seat === Online.seat ? '（你）' : '') + '</span>' +
+      '<span class="odh">' + hole + '</span>' +
+      '<span class="b">' + (p.folded ? '已弃牌' : (p.seen ? '看牌' : '闷牌')) + (p.paid ? ' · 已投 ' + p.paid : '') + '</span>' +
+      '<span class="c">' + fmt(p.chips) + '</span></div>';
+  }).join('');
+  /* 自己的 3 张手牌（服务端始终把真牌发给自己） */
+  var me = (st.players || []).find(function(p){ return p.seat === Online.seat; }) || {};
+  $('odHand').innerHTML = (me.hand || []).map(function(c){ return cardHTML(c); }).join('');
+  /* 操作 */
+  var myTurn = !st.done && st.turn === Online.seat;
+  var cost = st.cost || 0;
+  var canPay = myTurn && cost <= (me.chips || 0);
+  var nu = (st.unit || 0) + (st.base || 0);
+  var canRaise = myTurn && nu <= st.maxUnit && nu * (me.seen ? 2 : 1) <= (me.chips || 0);
+  var canCmp = myTurn && st.round >= 3 && canPay(cost);
+  if (Online.cmpPick && myTurn) {
+    $('odActions').innerHTML = '<div style="font-size:12px;color:#8fa0b4;width:100%">选择比牌对象（付 ' + cost + '，输者弃牌）：</div>' +
+      (st.players || []).filter(function(p){ return p.seat !== Online.seat && !p.folded; }).map(function(p){
+        return '<button class="online-btn" id="odCmp-' + p.seat + '">' + esc(p.name || ('座位' + p.seat)) + '</button>';
+      }).join('') + '<button class="online-btn" id="odCmpCancel">取消</button>';
+    (st.players || []).forEach(function(p){
+      var b = $('odCmp-' + p.seat); if (b) b.onclick = function(){ Online.cmpPick = false; onlineSend('act', { payload: { action: 'compare', target: p.seat } }); };
+    });
+    var cc = $('odCmpCancel'); if (cc) cc.onclick = function(){ Online.cmpPick = false; renderOnlineGold(st); };
+    return;
+  }
+  $('odActions').innerHTML =
+    (!me.seen ? '<button class="online-btn" id="odLook"' + (myTurn ? '' : ' disabled') + '>看牌</button>' : '') +
+    '<button class="online-btn primary" id="odGCall"' + (canPay ? '' : ' disabled') + '>跟注 ' + cost + '</button>' +
+    '<button class="online-btn" id="odGRaise"' + (canRaise ? '' : ' disabled') + '>加注到 ' + nu + '</button>' +
+    '<button class="online-btn" id="odGCmp"' + (canCmp ? '' : ' disabled') + '>比牌</button>' +
+    '<button class="online-btn danger" id="odGFold"' + (myTurn ? '' : ' disabled') + '>弃牌</button>';
+  var lk = $('odLook'); if (lk) lk.onclick = function(){ onlineSend('act', { payload: { action: 'look' } }); };
+  var gc = $('odGCall'); if (gc) gc.onclick = function(){ onlineSend('act', { payload: { action: 'call' } }); };
+  var gr = $('odGRaise'); if (gr) gr.onclick = function(){ onlineSend('act', { payload: { action: 'raise' } }); };
+  var gp = $('odGCmp'); if (gp) gp.onclick = function(){ Online.cmpPick = true; renderOnlineGold(st); };
+  var gf = $('odGFold'); if (gf) gf.onclick = function(){ onlineSend('act', { payload: { action: 'fold' } }); };
+  $('odLog').innerHTML = (st.log || []).map(function(l){
+    return '<div>' + esc(names[l.seat] || ('座位' + l.seat)) + '：' + esc(l.text) + '</div>';
+  }).join('') || '<div style="color:#7e929b">等待行动…</div>';
+}
+function renderOnlineDice(st){
+  var names = {}; (st.seatInfo || []).forEach(function(s){ names[s.seat] = s.name; });
+  var face = function(v){ return ['','⚀','⚁','⚂','⚃','⚄','⚅'][v] || v; };
+  $('odBoard').innerHTML = '<div style="font-size:12px;color:#8fa0b4">各掷 3 骰 · 点数最大者通吃（豹子压一切）</div><div style="margin-left:16px;font-size:13px;color:#f2c14e;font-weight:800">底池 ' + fmt(st.pot) + '</div>';
+  $('odTurn').textContent = st.done ? '本局结束' : (st.turn === Online.seat ? '轮到你掷骰' : '等待其他玩家掷骰');
+  $('odSeats').innerHTML = (st.players || []).map(function(p){
+    var cls = 'od-seat' + (p.seat === st.turn && !st.done ? ' turn' : '');
+    var d = p.dice;
+    var dtxt = d ? '<span class="odh">' + d.map(function(v){ return '<div class="od-mini">' + face(v) + '</div>'; }).join('') + '</span>' +
+      '<span class="b">' + p.sum + ' 点' + (p.triple ? ' · 豹子！' : '') + '</span>' : '<span class="b">未掷</span>';
+    return '<div class="' + cls + '"><span class="n">' + esc(p.name || ('座位' + p.seat)) + (p.seat === Online.seat ? '（你）' : '') + '</span>' + dtxt + '</div>';
+  }).join('');
+  $('odHand').innerHTML = '';
+  var myTurn = !st.done && st.turn === Online.seat;
+  $('odActions').innerHTML = '<button class="online-btn primary" id="odRoll"' + (myTurn ? '' : ' disabled') + '>掷骰</button>';
+  var rl = $('odRoll'); if (rl) rl.onclick = function(){ onlineSend('act', { payload: { action: 'roll' } }); };
+  $('odLog').innerHTML = (st.log || []).map(function(l){
+    return '<div>' + esc(names[l.seat] || ('座位' + l.seat)) + '：' + esc(l.text) + '</div>';
+  }).join('') || '<div style="color:#7e929b">等待掷骰…</div>';
+}
 /* 联机战绩：累加到 player.online，驱动联机类称号与个人面板 */
 function onlineRecordResult(game, won){
   if (!player) return;
@@ -8545,6 +8625,35 @@ function onlineShowSettle(m){
     won = win;
     html = '<div class="big">' + (win ? '本局获胜' : '本局惜败') + '</div>' +
       '<div class="sub">升级 ' + res.up + ' 级 · 出完顺序：' + (res.order || []).map(function(s){ return esc(names[s] || ('座位' + s)); }).join(' → ') + '</div>';
+  } else if (res.game === 'gold') {
+    var winG = (res.winners || []).indexOf(Online.seat) >= 0;
+    won = winG;
+    var payG = (res.payouts || {})[Online.seat] || 0;
+    var handsG = res.hands || {};
+    var toC = function(id){ var s = id.slice(-1), r = id.slice(0, -1); return { r: r === 'A' ? 14 : r === 'K' ? 13 : r === 'Q' ? 12 : r === 'J' ? 11 : Number(r), s: s }; };
+    var rowsG = Object.keys(handsG).map(function(seat){
+      var cards = handsG[seat].map(toC);
+      return esc(names[seat] || ('座位' + seat)) + '：' + handsG[seat].map(function(c){ return c.slice(0, -1) + { s: '♠', h: '♥', d: '♦', c: '♣' }[c.slice(-1)]; }).join(' ') + '（' + goldLabel(cards) + '）';
+    }).join('<br>');
+    html = '<div class="big">' + (winG ? '你赢了这一局' : '本局结束') + '</div>' +
+      '<div class="sub">赢家：' + (res.winners || []).map(function(s){ return esc(names[s] || ('座位' + s)); }).join('、') +
+      '<br>底池 ' + fmt(res.pot || 0) + ' · 你的所得 ' + (payG > 0 ? '+' + payG : '0') +
+      (rowsG ? '<br>' + rowsG : '') + '</div>';
+  } else if (res.game === 'diceduel') {
+    var winD = (res.winners || []).indexOf(Online.seat) >= 0;
+    won = winD;
+    var payD = (res.payouts || {})[Online.seat] || 0;
+    var diceM = res.dice || {};
+    var faceD = function(v){ return ['','⚀','⚁','⚂','⚃','⚄','⚅'][v] || v; };
+    var rowsD = Object.keys(diceM).map(function(seat){
+      var d = diceM[seat] || [];
+      var triple = d.length === 3 && d[0] === d[1] && d[1] === d[2];
+      return esc(names[seat] || ('座位' + seat)) + '：' + d.map(faceD).join('') + ' ' + (d[0] + d[1] + d[2]) + ' 点' + (triple ? '（豹子）' : '');
+    }).join('<br>');
+    html = '<div class="big">' + (winD ? '你赢了这一局' : '本局结束') + '</div>' +
+      '<div class="sub">赢家：' + (res.winners || []).map(function(s){ return esc(names[s] || ('座位' + s)); }).join('、') +
+      '<br>底池 ' + fmt(res.pot || 0) + ' · 你的所得 ' + (payD > 0 ? '+' + payD : '0') +
+      (rowsD ? '<br>' + rowsD : '') + '</div>';
   } else {
     var winH = (res.winners || []).indexOf(Online.seat) >= 0;
     won = winH;
@@ -8557,6 +8666,7 @@ function onlineShowSettle(m){
   }
   /* 联机战绩落地（用于称号收集与个人面板展示） */
   onlineRecordResult(res.game, won);
+  html += '<div style="font-size:10px;color:#7d8b96;margin-top:4px">仅供娱乐 · 严禁赌博 · 虚拟金币不可充值兑现 · 违者后果自负</div>';
   html += '<div style="display:flex;gap:10px;margin-top:6px"><button class="online-btn primary" id="odAgain">再来一局</button><button class="online-btn" id="odQuit">返回大厅</button></div>';
   $('odResult').innerHTML = html;
   var ag = $('odAgain'); if (ag) ag.onclick = function(){

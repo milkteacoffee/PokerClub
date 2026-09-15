@@ -102,9 +102,9 @@ async function main() {
   /* ---- 2. 服务信息 ---- */
   {
     const r = await api('GET', '/api/info');
-    ok(r.status === 200 && r.body.games.length === 2, '仅掼蛋与德州支持联机');
+    ok(r.status === 200 && r.body.games.length === 4, '四个玩法支持联机');
     const ids = r.body.games.map(g => g.id).sort();
-    ok(ids.join(',') === 'guandan,holdem', '联机玩法为 guandan+holdem');
+    ok(ids.join(',') === 'diceduel,gold,guandan,holdem', '联机玩法为 guandan+holdem+gold+diceduel');
     ok(r.body.leaderboardGames.length === 6, '排行榜覆盖六个游戏');
   }
 

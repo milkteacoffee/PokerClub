@@ -275,9 +275,224 @@ const holdemAdapter = (() => {
   };
 })();
 
-/* ---- 通用小游戏适配器（21点 / 炸金花 / 猜骰子 / 骰子比大小）都退化为 1 人 vs 服务端 AI 不适用联机，
-         故好友房只支持「掼蛋（4人）」与「德州（2~6人）」两个真人对战玩法 ---- */
-const ADAPTERS = { guandan: guandanAdapter, holdem: holdemAdapter };
+/* ---- 炸金花（2~6 人真人桌：闷牌/看牌/跟注/加注/比牌，服务端权威） ---- */
+const goldAdapter = (() => {
+  const SUITS = ['s', 'h', 'd', 'c'];
+  function makeDeck() {
+    const d = [];
+    for (const s of SUITS) for (let r = 2; r <= 14; r++) {
+      const rr = r === 14 ? 'A' : r === 13 ? 'K' : r === 12 ? 'Q' : r === 11 ? 'J' : String(r);
+      d.push({ r, s, id: rr + s });
+    }
+    return d;
+  }
+  function shuffle(d) {
+    const a = d.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = crypto.randomBytes(4).readUInt32BE(0) % (i + 1);
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  /* 牌型与前端单机 goldValue 逐字对齐：豹子>顺金>金花>顺子>对子>单张，A23 为顺（high=3） */
+  function goldValue(cards) {
+    const v = cards.map(c => c.r).sort((a, b) => b - a);
+    const flush = cards.every(c => c.s === cards[0].s);
+    let straight = v[0] - v[1] === 1 && v[1] - v[2] === 1, high = v[0];
+    if (v.join(',') === '14,3,2') { straight = true; high = 3; }
+    if (v[0] === v[2]) return [5, v[0]];
+    if (flush && straight) return [4, high];
+    if (flush) return [3].concat(v);
+    if (straight) return [2, high];
+    if (v[0] === v[1]) return [1, v[0], v[2]];
+    if (v[1] === v[2]) return [1, v[1], v[0]];
+    return [0].concat(v);
+  }
+  function cmp(a, b) {
+    for (let i = 0; i < Math.max(a.length, b.length); i++) {
+      const x = a[i] || 0, y = b[i] || 0;
+      if (x !== y) return x - y;
+    }
+    return 0;
+  }
+  return {
+    id: 'gold', minPlayers: 2, maxPlayers: 6, seatsExact: 0,
+    init(seats, opts) {
+      const ante = (opts && opts.ante) || 50, stack = (opts && opts.stack) || 1000;
+      const deck = shuffle(makeDeck());
+      const players = seats.map((s) => ({
+        seat: s.seat, name: s.name, deviceId: s.deviceId,
+        hand: [deck.pop(), deck.pop(), deck.pop()],
+        seen: false, folded: false, chips: stack - ante, paid: ante,
+      }));
+      return {
+        game: 'gold', ante, base: ante, stack, unit: ante,
+        pot: players.length * ante, turn: 0, round: 1, roundStart: 0, step: 0,
+        deck, players, done: false, winners: null, showdown: false,
+        log: [], startedAt: Date.now(),
+      };
+    },
+    _finishIf(st) {
+      const live = st.players.filter(p => !p.folded);
+      if (live.length <= 1) { st.done = true; st.winners = live.map(p => p.seat); return true; }
+      return false;
+    },
+    _showdown(st) {
+      st.done = true; st.showdown = true;
+      const live = st.players.filter(x => !x.folded);
+      const sorted = live.slice().sort((a, b) => cmp(goldValue(b.hand), goldValue(a.hand)));
+      const best = goldValue(sorted[0].hand);
+      st.winners = sorted.filter(x => cmp(goldValue(x.hand), best) === 0).map(x => x.seat);
+    },
+    _nextTurn(st) {
+      const n = st.players.length;
+      let t = (st.turn + 1) % n, guard = 0;
+      while (st.players[t].folded && guard++ < n) t = (t + 1) % n;
+      st.turn = t;
+      st.step++;
+      if (st.turn === st.roundStart) { st.round++; st.roundStart = st.turn; }
+      if (st.round > 10 || st.step > 60) this._showdown(st);
+    },
+    act(st, seat, payload) {
+      if (st.done) return { ok: false, msg: '本局已结束' };
+      if (seat !== st.turn) return { ok: false, msg: '还没轮到你' };
+      const p = st.players.find(x => x.seat === seat);
+      if (!p) return { ok: false, msg: '座位无效' };
+      if (p.folded) return { ok: false, msg: '你已弃牌' };
+      const action = payload && payload.action;
+      const cost = st.unit * (p.seen ? 2 : 1);
+      if (action === 'look') {
+        if (p.seen) return { ok: false, msg: '你已看过牌' };
+        p.seen = true;
+        st.log.push({ seat, text: '看了牌' });
+      } else if (action === 'call') {
+        if (cost > p.chips) return { ok: false, msg: '筹码不足，只能弃牌' };
+        p.chips -= cost; p.paid += cost; st.pot += cost;
+        st.log.push({ seat, text: (p.seen ? '看牌跟注 ' : '闷牌跟注 ') + cost });
+      } else if (action === 'raise') {
+        const nu = st.unit + st.base;
+        if (nu > st.base * 4) return { ok: false, msg: '已达加注上限' };
+        const c = nu * (p.seen ? 2 : 1);
+        if (c > p.chips) return { ok: false, msg: '筹码不足' };
+        st.unit = nu; p.chips -= c; p.paid += c; st.pot += c;
+        st.log.push({ seat, text: '加注，单注到 ' + nu });
+      } else if (action === 'fold') {
+        p.folded = true;
+        st.log.push({ seat, text: '弃牌' });
+        if (this._finishIf(st)) return { ok: true };
+      } else if (action === 'compare') {
+        if (st.round < 3) return { ok: false, msg: '第 3 轮起才能比牌' };
+        const tSeat = Number(payload.target);
+        const t = st.players.find(x => x.seat === tSeat);
+        if (!t || tSeat === seat || t.folded) return { ok: false, msg: '比牌目标无效' };
+        if (cost > p.chips) return { ok: false, msg: '筹码不足' };
+        p.chips -= cost; p.paid += cost; st.pot += cost;
+        const loser = cmp(goldValue(p.hand), goldValue(t.hand)) > 0 ? t : p;
+        loser.folded = true;
+        st.log.push({ seat, text: '与 ' + t.name + ' 比牌，' + loser.name + ' 落败' });
+        if (this._finishIf(st)) return { ok: true };
+      } else return { ok: false, msg: '未知动作' };
+      this._nextTurn(st);
+      return { ok: true };
+    },
+    autoAct(st, seat) {
+      const p = st.players.find(x => x.seat === seat);
+      if (!p || p.folded) return null;
+      const cost = st.unit * (p.seen ? 2 : 1);
+      if (cost <= p.chips) return { action: 'call' };
+      return { action: 'fold' };
+    },
+    publicView(st, seat) {
+      const me = st.players.find(x => x.seat === seat);
+      return {
+        game: 'gold', round: st.round, pot: st.pot, unit: st.unit, base: st.base,
+        maxUnit: st.base * 4, turn: st.turn, done: st.done, winners: st.winners,
+        showdown: st.showdown, mySeat: seat,
+        cost: st.unit * (me && me.seen ? 2 : 1),
+        players: st.players.map(p => ({
+          seat: p.seat, name: p.name, seen: p.seen, folded: p.folded, paid: p.paid, chips: p.chips,
+          hand: (seat === p.seat || (st.done && st.showdown && !p.folded)) ? p.hand.map(c => c.id) : ['??', '??', '??'],
+        })),
+        log: st.log.slice(-12),
+      };
+    },
+    isDone(st) { return st.done; },
+    settlement(st) {
+      const winners = st.winners || [];
+      const share = winners.length ? Math.floor(st.pot / winners.length) : 0;
+      const payouts = {};
+      st.players.forEach(p => { payouts[p.seat] = winners.includes(p.seat) ? share : 0; });
+      const hands = {};
+      st.players.forEach(p => { if (!p.folded) hands[p.seat] = p.hand.map(c => c.id); });
+      return { game: 'gold', winners, pot: st.pot, payouts, hands };
+    },
+  };
+})();
+
+/* ---- 骰子比大小（2~6 人真人桌：轮流掷 3 骰，点数最大者通吃底注池，并列平分；豹子最大） ---- */
+const diceDuelAdapter = {
+  id: 'diceduel', minPlayers: 2, maxPlayers: 6, seatsExact: 0,
+  init(seats, opts) {
+    const ante = (opts && opts.ante) || 50;
+    const players = seats.map(s => ({ seat: s.seat, name: s.name, deviceId: s.deviceId, dice: null, sum: 0, triple: false }));
+    return {
+      game: 'diceduel', ante, pot: players.length * ante, turn: 0,
+      players, done: false, winners: null, log: [], startedAt: Date.now(),
+    };
+  },
+  _rank(d) {
+    const t = d[0] === d[1] && d[1] === d[2];
+    const sum = d[0] + d[1] + d[2];
+    return { t, sum, key: (t ? 1000 : 0) + sum };
+  },
+  act(st, seat, payload) {
+    if (st.done) return { ok: false, msg: '本局已结束' };
+    if (seat !== st.turn) return { ok: false, msg: '还没轮到你' };
+    const p = st.players.find(x => x.seat === seat);
+    if (!p) return { ok: false, msg: '座位无效' };
+    if (p.dice) return { ok: false, msg: '你已经掷过了' };
+    if (payload && payload.action && payload.action !== 'roll') return { ok: false, msg: '未知动作' };
+    const buf = crypto.randomBytes(3);
+    p.dice = [buf[0] % 6 + 1, buf[1] % 6 + 1, buf[2] % 6 + 1];
+    const rk = this._rank(p.dice);
+    p.sum = rk.sum; p.triple = rk.t;
+    st.log.push({ seat, text: (rk.t ? '掷出豹子 ' : '掷出 ') + rk.sum + ' 点' });
+    const next = st.players.find(x => !x.dice);
+    if (!next) {
+      const ranked = st.players.map(x => ({ seat: x.seat, key: this._rank(x.dice).key })).sort((a, b) => b.key - a.key);
+      const best = ranked[0].key;
+      st.winners = ranked.filter(x => x.key === best).map(x => x.seat);
+      st.done = true;
+      st.turn = -1;
+    } else {
+      st.turn = next.seat;
+    }
+    return { ok: true };
+  },
+  autoAct() { return { action: 'roll' }; },
+  publicView(st, seat) {
+    return {
+      game: 'diceduel', pot: st.pot, ante: st.ante, turn: st.turn, done: st.done,
+      winners: st.winners, mySeat: seat,
+      players: st.players.map(p => ({ seat: p.seat, name: p.name, dice: p.dice, sum: p.sum, triple: p.triple })),
+      log: st.log.slice(-12),
+    };
+  },
+  isDone(st) { return st.done; },
+  settlement(st) {
+    const winners = st.winners || [];
+    const share = winners.length ? Math.floor(st.pot / winners.length) : 0;
+    const payouts = {};
+    st.players.forEach(p => { payouts[p.seat] = winners.includes(p.seat) ? share : 0; });
+    const dice = {};
+    st.players.forEach(p => { dice[p.seat] = p.dice; });
+    return { game: 'diceduel', winners, pot: st.pot, ante: st.ante, payouts, dice };
+  },
+};
+
+/* ---- 通用小游戏适配器（21点 / 猜骰子为 1 人 vs 服务端 AI 不适用联机；
+         炸金花与骰子比大小已有真人房实现） ---- */
+const ADAPTERS = { guandan: guandanAdapter, holdem: holdemAdapter, gold: goldAdapter, diceduel: diceDuelAdapter };
 
 let roomSeq = 0;
 
@@ -407,6 +622,18 @@ class Room {
         if (payload && payload.ids) ad.act(this.state, seat, { ids: payload.ids });
         else if (payload && payload.pass) ad.act(this.state, seat, null);
       }
+      return;
+    }
+    if (this.game === 'gold' || this.game === 'diceduel') {
+      /* 炸金花/骰子比大小：当前行动座位离线则代操作（call-or-fold / roll） */
+      const seat = this.state.turn;
+      if (typeof seat === 'number' && seat >= 0) {
+        const s = this.seats.find(x => x.seat === seat);
+        if (!s || !s.online) {
+          const payload = ad.autoAct(this.state, seat);
+          if (payload) ad.act(this.state, seat, payload);
+        }
+      }
     }
   }
 
@@ -446,7 +673,7 @@ class RoomManager {
   }
 
   create(game, deviceId, name, opts) {
-    if (!ADAPTERS[game]) return { ok: false, msg: '该玩法暂不支持好友联机（仅掼蛋、德州）' };
+    if (!ADAPTERS[game]) return { ok: false, msg: '该玩法暂不支持好友联机' };
     /* 一个设备同时只在一个房间 */
     this.leaveCurrent(deviceId);
     let code, guard = 0;
