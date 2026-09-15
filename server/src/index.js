@@ -83,7 +83,7 @@ const server = http.createServer(async (req, res) => {
       if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
       const body = await readBody(req);
       const p = store.ensurePlayer(deviceId, cleanNick(body.nickname));
-      return json(res, 200, { ok: true, deviceId, nickname: p.nickname, rank: store.getRank(deviceId), items: store.getItems(deviceId) });
+      return json(res, 200, { ok: true, deviceId, nickname: p.nickname, userCode: p.user_code, rank: store.getRank(deviceId), items: store.getItems(deviceId) });
     }
 
     /* 同步本地段位到服务端（单机模式也上榜） */
@@ -146,10 +146,17 @@ const server = http.createServer(async (req, res) => {
       if (method === 'POST') {
         const body = await readBody(req);
         /* 兼容两种字段名：deviceId / friendId / targetId */
-        const target = String(body.deviceId || body.friendId || body.targetId || '');
-        if (!validDeviceId(target)) return json(res, 400, { ok: false, msg: '非法目标设备ID' });
+        const raw = String(body.deviceId || body.friendId || body.targetId || '').trim();
+        if (!raw) return json(res, 400, { ok: false, msg: '请填写对方玩家号或设备ID' });
+        /* 解析目标：优先当设备ID；否则当短玩家号（大小写不敏感） */
+        let target = raw;
+        let targetPlayer = validDeviceId(raw) ? store.getPlayer(raw) : null;
+        if (!targetPlayer) {
+          const byCode = store.getUserByCode(raw);
+          if (byCode) { targetPlayer = byCode; target = byCode.device_id; }
+        }
+        if (!targetPlayer) return json(res, 404, { ok: false, msg: '对方不存在（请确认玩家号或设备ID）' });
         if (target === deviceId) return json(res, 400, { ok: false, msg: '不能加自己为好友' });
-        if (!store.getPlayer(target)) return json(res, 404, { ok: false, msg: '对方不存在（对方需先连过服务）' });
         store.ensurePlayer(deviceId, '牌友');
         const r = store.requestFriend(deviceId, target);
         return json(res, 200, r);
@@ -261,7 +268,8 @@ wss.on('connection', (ws, req) => {
 
   const conn = { ws, deviceId, nickname, roomCode: null, msgs: [] };
   conns.set(deviceId, conn);
-  send(ws, 'hello', { deviceId, nickname, games: Object.keys(ADAPTERS) });
+  const meP = store.getPlayer(deviceId);
+  send(ws, 'hello', { deviceId, nickname, userCode: meP ? meP.user_code : '', games: Object.keys(ADAPTERS) });
 
   ws.on('message', (raw) => {
     /* 限流 */

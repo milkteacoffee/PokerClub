@@ -1231,6 +1231,11 @@
     box-shadow:0 4px 14px rgba(207,168,91,.28)}
   .online-btn.danger{color:#e8a098;background:rgba(200,80,60,.14)}
   .online-btn.tiny{padding:5px 12px;font-size:11.5px}
+  .online-idbox{display:flex;align-items:center;gap:8px;flex:1}
+  .online-code{font-family:'Courier New',monospace;font-size:16px;letter-spacing:3px;font-weight:800;
+    color:#f2c14e;background:rgba(207,168,91,.1);padding:7px 12px;border-radius:8px;
+    box-shadow:0 0 0 1px rgba(207,168,91,.2) inset;flex:1;text-align:center}
+  .online-sub{width:100%;font-size:11px;color:#8fa0b4;margin-top:-6px;line-height:1.5}
   .online-join{display:flex;gap:8px;flex:1;min-width:200px}
   .online-join input{flex:1;background:rgba(255,255,255,.05);border:none;border-radius:9px;padding:10px 14px;
     color:#f2c14e;font-family:inherit;font-size:15px;letter-spacing:3px;text-align:center;
@@ -1736,6 +1741,14 @@
           <label>我的昵称</label>
           <input id="onlineNick" maxlength="16" placeholder="输入昵称">
         </div>
+        <div class="online-row">
+          <label>我的玩家号</label>
+          <div class="online-idbox">
+            <code id="onlineUserCode" class="online-code">----</code>
+            <button class="online-btn tiny" id="userCodeCopy" type="button">复制</button>
+          </div>
+          <small class="online-sub">把玩家号发给好友，对方即可搜索并加你为好友</small>
+        </div>
         <div class="online-actions">
           <button class="online-btn primary" id="onlineCreate">创建房间</button>
           <div class="online-join">
@@ -1786,7 +1799,7 @@
         <div id="friendSearchList" class="friend-searchlist"></div>
         <div class="friend-req-title">待处理请求</div>
         <div id="friendReqList" class="friend-reqs"><span class="board-empty" style="padding:6px 0">暂无待处理的好友请求</span></div>
-        <div class="friend-hint">提示：建房后把<b>房间号</b>发给朋友，或让朋友用<b>昵称</b>搜索你，即可互加好友。</div>
+        <div class="friend-hint">提示：把你的<b>玩家号</b>发给好友，对方用「玩家ID」模式粘贴即可加你；也可建房后发<b>房间号</b>，或用<b>昵称</b>搜索互加。</div>
       </div>
       <div class="board-list" id="boardList"><div class="board-empty">加载中…</div></div>
       <div class="online-tip" id="boardTip"></div>
@@ -7904,7 +7917,7 @@ var Online = {
   deviceId: '', nickname: '', ws: null, connected: false,
   game: 'guandan', code: '', seat: -1, host: null,
   room: null, state: null, picked: new Set(), ready: false, boardGame: 'holdem', boardScope: 'global',
-  friendMode: 'id',
+  friendMode: 'id', userCode: '',
   server: ONLINE_SERVER,
 };
 /* 暴露到 window：便于宿主页面注入服务器地址（window.POKERCLUB_SERVER）及调试 */
@@ -7958,6 +7971,7 @@ function onlineConnect(cb){
     if (m.type === 'hello') {
       Online.connected = true; settled = true; clearTimeout(timer);
       if (m.nickname) Online.nickname = m.nickname;
+      if (m.userCode) Online.userCode = m.userCode;
       refreshOnlineUI();
       if (cb) cb(true);
       return;
@@ -7990,6 +8004,7 @@ function refreshOnlineUI(){
   onlineSyncStatus();
   if (Online.code) $('onlineSetup').hidden = true, $('onlineRoom').hidden = false;
   var rc = $('roomCode'); if (rc) rc.textContent = Online.code || '------';
+  var uc = $('onlineUserCode'); if (uc) uc.textContent = Online.userCode || '----';
 }
 
 /* ---- 房间操作 ---- */
@@ -8301,7 +8316,7 @@ function onlineFriendModeChange(m){
     inp.value = '';
     inp.placeholder = m === 'nick' ? '输入昵称搜索玩家'
       : m === 'room' ? '输入房间号（6位数字）'
-      : '输入对方的玩家ID（设备ID）';
+      : '输入对方玩家号或设备ID';
   }
   if (btn) btn.textContent = m === 'id' ? '发送好友请求' : '搜索';
   var sl = $('friendSearchList'); if (sl) sl.innerHTML = '';
@@ -8438,6 +8453,11 @@ function onlineInitUI(){
   var cp = $('roomCopy'); if (cp) cp.onclick = function(){
     try { navigator.clipboard.writeText(Online.code); setOnlineTip('房号已复制：' + Online.code); }
     catch(e){ setOnlineTip('房号：' + Online.code); }
+  };
+  var ucc = $('userCodeCopy'); if (ucc) ucc.onclick = function(){
+    if (!Online.userCode) return setOnlineTip('玩家号尚未生成，请稍候');
+    try { navigator.clipboard.writeText(Online.userCode); setOnlineTip('玩家号已复制：' + Online.userCode); }
+    catch(e){ setOnlineTip('玩家号：' + Online.userCode); }
   };
   var rd = $('roomReady'); if (rd) rd.onclick = function(){ Online.ready = !Online.ready; onlineSend('ready', { ready: Online.ready }); };
   var st = $('roomStart'); if (st) st.onclick = function(){ onlineSend('start', {}); };

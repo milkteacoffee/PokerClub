@@ -16,7 +16,7 @@ const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'poker-search-'));
 process.env.DATA_DIR = tmpDir;
 process.env.ALLOW_ORIGIN = '*';
 
-const { server, rooms } = require('../src/index');
+const { server, rooms, store } = require('../src/index');
 
 const results = [];
 function check(name, cond, extra) {
@@ -108,6 +108,28 @@ async function run() {
     const s8 = await req('GET', '/room/members?code=' + room.code, '');
     check('匿名也能查房间成员', s8.body.ok === true, s8.status);
   }
+
+  /* 7. 短玩家号：注册后返回 userCode，8 位且字符集合法，全局唯一 */
+  const pa = await req('POST', '/player', A, { nickname: NICK_A });
+  const codeA = pa.body.userCode;
+  check('注册返回 userCode', !!codeA, codeA);
+  check('userCode 为 8 位', typeof codeA === 'string' && codeA.length === 8, codeA);
+  check('userCode 字符集合法', /^[2-9A-HJKMNP-Z]{8}$/.test(codeA || ''), codeA);
+  const pb = await req('POST', '/player', B, { nickname: NICK_B });
+  check('不同玩家 userCode 不同', pb.body.userCode && pb.body.userCode !== codeA, pb.body.userCode);
+
+  /* 8. 按短码解析：getUserByCode 命中，且大小写不敏感 */
+  const byCode = store.getUserByCode(codeA);
+  check('getUserByCode 命中 A', byCode && byCode.device_id === A, byCode && byCode.device_id);
+  const byCodeLow = store.getUserByCode(codeA.toLowerCase());
+  check('userCode 大小写不敏感', byCodeLow && byCodeLow.device_id === A);
+
+  /* 9. 用短码加好友：A 以 B 的 userCode 为 target 发请求，B 应收到来自 A 的请求 */
+  const fr = await req('POST', '/friends', A, { friendId: pb.body.userCode });
+  check('用短码发好友请求成功', fr.body.ok === true, JSON.stringify(fr.body));
+  const bFriends = await req('GET', '/friends', B);
+  const reqFromA = (bFriends.body.requests || []).some(r => r.deviceId === A);
+  check('B 收到来自 A 的好友请求', reqFromA, JSON.stringify((bFriends.body.requests || []).map(r => r.deviceId)));
 
   await wait(50);
   server.close();

@@ -8,6 +8,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { DatabaseSync } = require('node:sqlite');
 
 const GAMES = ['holdem', 'blackjack', 'gold', 'dice', 'diceduel', 'guandan'];
@@ -59,6 +60,30 @@ class Store {
       );
       CREATE INDEX IF NOT EXISTS idx_freq_to ON friend_requests(to_id);
     `);
+    /* 短玩家号：每位玩家一个唯一、易分享的 8 位码（好友互加用，区别于内部设备ID） */
+    try { this.db.exec('ALTER TABLE players ADD COLUMN user_code TEXT'); } catch (e) { /* 列已存在则忽略 */ }
+    /* 回填历史玩家（老数据 user_code 为 NULL） */
+    const needCode = this.db.prepare('SELECT device_id FROM players WHERE user_code IS NULL OR user_code = ?');
+    for (const r of needCode.all('')) {
+      const code = this._genUserCode();
+      this.db.prepare('UPDATE players SET user_code = ? WHERE device_id = ?').run(code, r.device_id);
+    }
+    /* 回填后再建唯一索引，避免 NULL 冲突 */
+    this.db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_players_code ON players(user_code)');
+  }
+
+  /* 生成全局唯一的短玩家号：8 位，去掉易混字符 0/O/1/I/L */
+  _genUserCode() {
+    const ABC = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+    for (let attempt = 0; attempt < 50; attempt++) {
+      let s = '';
+      const buf = crypto.randomBytes(8);
+      for (let i = 0; i < 8; i++) s += ABC[buf[i] % ABC.length];
+      const hit = this.db.prepare('SELECT 1 FROM players WHERE user_code = ?').get(s);
+      if (!hit) return s;
+    }
+    /* 极小概率碰撞：时间戳兜底（仍唯一性极高） */
+    return 'P' + Date.now().toString(36).slice(-7).toUpperCase();
   }
 
   _prepare() {
@@ -71,6 +96,8 @@ class Store {
       updateRank: d.prepare('UPDATE players SET rank_json = ?, updated_at = ? WHERE device_id = ?'),
       updateItem: d.prepare('UPDATE players SET item_json = ?, updated_at = ? WHERE device_id = ?'),
       updateStats: d.prepare('UPDATE players SET stats_json = ?, updated_at = ? WHERE device_id = ?'),
+      updateCode: d.prepare('UPDATE players SET user_code = ? WHERE device_id = ?'),
+      getByCode: d.prepare('SELECT * FROM players WHERE user_code = ?'),
       touch: d.prepare('UPDATE players SET last_seen = ? WHERE device_id = ?'),
 
       listAllRatings: d.prepare('SELECT device_id,nickname,rank_json,stats_json FROM players WHERE last_seen >= ?'),
@@ -112,11 +139,23 @@ class Store {
       this.q.updateNick.run(nick, now, deviceId);
       p.nickname = nick;
     }
+    /* 确保每位玩家都有短玩家号 */
+    if (!p.user_code) {
+      const code = this._genUserCode();
+      this.q.updateCode.run(code, deviceId);
+      p.user_code = code;
+    }
     this.q.touch.run(now, deviceId);
     return p;
   }
 
   getPlayer(deviceId) { return this.q.getPlayer.get(deviceId); }
+
+  /* 按短玩家号解析玩家（好友互加时，target 可能是设备ID或短码） */
+  getUserByCode(code) {
+    if (!code) return null;
+    return this.q.getByCode.get(String(code).toUpperCase()) || null;
+  }
 
   getRank(deviceId) {
     const p = this.getPlayer(deviceId);
