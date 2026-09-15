@@ -1308,6 +1308,25 @@
   .board-row .tr{font-size:11px;color:#8fa0b4}
   .board-row .pt{font-size:13.5px;font-weight:800;color:#f2c14e}
   .board-empty{font-size:12.5px;color:#7e929b;text-align:center;padding:30px 0;line-height:1.8}
+  /* ==== 好友管理（排行榜弹窗内） ==== */
+  .friend-panel{margin:0 0 12px;padding:11px 12px;border-radius:10px;background:rgba(255,255,255,.04);
+    border:1px solid rgba(240,215,154,.12)}
+  .friend-add{display:flex;gap:8px}
+  .friend-input{flex:1;min-width:0;padding:9px 11px;border-radius:8px;border:1px solid rgba(255,255,255,.14);
+    background:rgba(0,0,0,.25);color:#e0e6ec;font-family:inherit;font-size:12.5px;outline:none}
+  .friend-input:focus{border-color:#cfa85b}
+  .friend-addbtn{padding:9px 14px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;
+    font-size:12.5px;font-weight:800;color:#2a1d0c;background:linear-gradient(160deg,#f0d79a,#cfa85b);white-space:nowrap}
+  .friend-addbtn:active{transform:translateY(1px)}
+  .friend-reqs{margin-top:9px;display:flex;flex-direction:column;gap:6px}
+  .friend-req{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04)}
+  .friend-req .fn{font-size:12.5px;color:#d6dee6;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .friend-req .fn small{display:block;color:#7e929b;font-size:10.5px}
+  .friend-req button{padding:6px 12px;border:none;border-radius:7px;cursor:pointer;font-family:inherit;font-size:11.5px;font-weight:800}
+  .friend-req .acc{color:#1d3a27;background:linear-gradient(160deg,#9fe0b4,#5fb884)}
+  .friend-req .dec{color:#e0e6ec;background:rgba(255,255,255,.1)}
+  .friend-hint{margin-top:7px;font-size:11px;color:#8fa0b4;line-height:1.6}
+  .friend-hint b{color:#f2c14e;font-weight:800}
 </style>
 </head>
 <body>
@@ -1742,6 +1761,14 @@
         <button class="board-tab" data-scope="friends">好友榜</button>
       </div>
       <div class="board-games" id="boardGames"></div>
+      <!-- 好友管理：添加好友 + 待处理请求（仅好友榜可见） -->
+      <div id="friendPanel" class="friend-panel" style="display:none">
+        <div class="friend-add">
+          <input id="friendInput" class="friend-input" maxlength="64" placeholder="输入对方的玩家ID（设备ID）">
+          <button id="friendAddBtn" class="friend-addbtn">发送好友请求</button>
+        </div>
+        <div id="friendReqList" class="friend-reqs"><span class="board-empty" style="padding:6px 0">暂无待处理的好友请求</span></div>
+      </div>
       <div class="board-list" id="boardList"><div class="board-empty">加载中…</div></div>
       <div class="online-tip" id="boardTip"></div>
     </div>
@@ -8187,8 +8214,10 @@ function renderBoardGames(){
 function collectLocalRank(){
   /* 把本机段位同步到服务端，保证单机玩家也能上榜 */
   var rank = {};
+  /* 玩家数据缺失时（极端情况下 player 尚未初始化）优雅降级，避免排行榜整体崩溃 */
+  if (!player) return rank;
   ['holdem', 'blackjack', 'gold', 'dice', 'diceduel', 'guandan'].forEach(function(g){
-    var s = profile15(g);
+    var s = profile15(g) || {};
     rank[g] = { points: s.rankPoints || 0, tier: rankTierFor(s.rankPoints || 0), peak: s.rankPeak || 0 };
   });
   return rank;
@@ -8205,6 +8234,63 @@ function syncRankToServer(cb){
       body: JSON.stringify({ rank: collectLocalRank(), stats: (player && player.stats) || {} }),
     }).then(function(r){ return r.json(); }).then(function(){ cb && cb(true); }).catch(function(e){ cb && cb(false, '同步失败'); });
   });
+}
+/* ---------- 好友管理（好友榜弹窗内） ---------- */
+function onlineFriendApi(method, path, body, cb){
+  if (!onlineAvailable()) return cb && cb(false, '未配置联机服务器');
+  if (typeof fetch !== 'function') return cb && cb(false, '当前环境不支持联网');
+  var opt = { method: method, headers: { 'X-Device-Id': onlineDeviceId() } };
+  if (body) { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
+  fetch(Online.server.replace(/\/$/, '') + path, opt)
+    .then(function(r){ return r.json(); })
+    .then(function(d){ cb && cb(d && d.ok !== false, d); })
+    .catch(function(){ cb && cb(false, '网络错误'); });
+}
+function onlineLoadFriends(){
+  var fp = $('friendPanel'); if (!fp) return;
+  if (Online.boardScope !== 'friends') { fp.style.display = 'none'; return; }
+  fp.style.display = 'block';
+  var list = $('friendReqList'); if (!list) return;
+  onlineFriendApi('GET', '/api/friends', null, function(ok, d){
+    if (!ok || !d) { list.innerHTML = '<span class="board-empty" style="padding:6px 0">加载好友请求失败</span>'; return; }
+    var reqs = (d.requests || []);
+    if (!reqs.length) { list.innerHTML = '<span class="board-empty" style="padding:6px 0">暂无待处理的好友请求</span>'; return; }
+    list.innerHTML = reqs.map(function(r){
+      return '<div class="friend-req"><span class="fn">' + esc(r.nickname || '牌友') +
+        '<small>' + esc(r.deviceId) + ' 请求加你为好友</small></span>' +
+        '<button class="acc" data-acc="' + esc(r.deviceId) + '">接受</button>' +
+        '<button class="dec" data-dec="' + esc(r.deviceId) + '">拒绝</button></div>';
+    }).join('');
+    list.querySelectorAll('[data-acc]').forEach(function(b){
+      b.onclick = function(){ onlineAcceptFriend(b.getAttribute('data-acc'), true); };
+    });
+    list.querySelectorAll('[data-dec]').forEach(function(b){
+      b.onclick = function(){ onlineAcceptFriend(b.getAttribute('data-dec'), false); };
+    });
+  });
+}
+function onlineAddFriend(){
+  var inp = $('friendInput'); if (!inp) return;
+  var id = (inp.value || '').trim();
+  if (!id) { setOnlineTip('请输入对方玩家ID'); return; }
+  var btn = $('friendAddBtn'); if (btn) btn.disabled = true;
+  onlineFriendApi('POST', '/api/friends', { friendId: id }, function(ok, d){
+    if (btn) btn.disabled = false;
+    if (ok) { inp.value = ''; setOnlineTip('已向 ' + id + ' 发送好友请求，等待对方接受'); }
+    else { setOnlineTip('添加失败：' + ((d && d.msg) || '未知错误')); }
+  });
+}
+function onlineAcceptFriend(fromId, accept){
+  if (accept) {
+    onlineFriendApi('POST', '/api/friends/accept', { fromId: fromId }, function(ok, d){
+      setOnlineTip(ok ? ('已与 ' + fromId + ' 成为好友') : ('接受失败：' + ((d && d.msg) || '未知')));
+      onlineLoadFriends(); loadBoard();
+    });
+  } else {
+    onlineFriendApi('DELETE', '/api/friends?friendId=' + encodeURIComponent(fromId), null, function(){
+      setOnlineTip('已忽略 ' + fromId + ' 的好友请求'); onlineLoadFriends();
+    });
+  }
 }
 function loadBoard(){
   var list = $('boardList'); if (!list) return;
@@ -8267,9 +8353,14 @@ function onlineInitUI(){
     b.onclick = function(){
       Online.boardScope = b.getAttribute('data-scope');
       bs.querySelectorAll('[data-scope]').forEach(function(x){ x.classList.toggle('selected', x === b); });
+      onlineLoadFriends();
       loadBoard();
     };
   });
+  var fab = $('friendAddBtn'); if (fab) fab.onclick = onlineAddFriend;
+  var fin = $('friendInput'); if (fin) fin.onkeydown = function(e){ if (e.key === 'Enter') onlineAddFriend(); };
+  // 打开排行榜时，好友面板按需加载
+  var obb = $('lbBtnBoard'); if (obb) obb.addEventListener('click', function(){ setTimeout(onlineLoadFriends, 0); });
   /* 联机手牌点击（事件委托） */
   var oh = $('odHand');
   if (oh) oh.onclick = function(e){
