@@ -649,11 +649,11 @@ class Room {
 
   viewFor(deviceId) {
     if (!this.started || !this.state) {
-      return { game: this.game, waiting: true, seats: this.seats.map(s => ({ seat: s.seat, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), ready: s.ready, online: s.online })), host: this.hostDevice };
+      return { game: this.game, waiting: true, seats: this.seats.map(s => ({ seat: s.seat, deviceId: s.deviceId, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), ready: s.ready, online: s.online })), host: this.hostDevice };
     }
     const seat = this.seatOf(deviceId);
     const v = this.adapter.publicView(this.state, seat);
-    v.seatInfo = this.seats.map(s => ({ seat: s.seat, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), online: s.online, ready: s.ready }));
+    v.seatInfo = this.seats.map(s => ({ seat: s.seat, deviceId: s.deviceId, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), online: s.online, ready: s.ready }));
     v.host = this.hostDevice;
     /* 思考倒计时：与「行动超时自动代打」严格对齐。下发剩余毫秒（而非绝对时间戳），
        避免客户端时钟与服务器不一致导致倒计时错乱。 */

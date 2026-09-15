@@ -59,6 +59,23 @@ class Store {
         PRIMARY KEY (from_id, to_id)
       );
       CREATE INDEX IF NOT EXISTS idx_freq_to ON friend_requests(to_id);
+      /* 拉黑（UGC 处置）：玩家级黑名单，主键天然去重 */
+      CREATE TABLE IF NOT EXISTS blocks (
+        device_id   TEXT NOT NULL,
+        target_id   TEXT NOT NULL,
+        created_at  INTEGER NOT NULL,
+        PRIMARY KEY (device_id, target_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_blocks_dev ON blocks(device_id);
+      /* 举报记录：仅留证与统计用，不做自动处罚 */
+      CREATE TABLE IF NOT EXISTS reports (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        device_id   TEXT NOT NULL,
+        target_id   TEXT NOT NULL,
+        reason      TEXT NOT NULL DEFAULT '',
+        created_at  INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_reports_target ON reports(target_id, created_at DESC);
     `);
     /* 短玩家号：每位玩家一个唯一、易分享的 8 位码（好友互加用，区别于内部设备ID） */
     try { this.db.exec('ALTER TABLE players ADD COLUMN user_code TEXT'); } catch (e) { /* 列已存在则忽略 */ }
@@ -201,6 +218,37 @@ class Store {
   /* 个性签名（路由层已清洗控制字符并截断） */
   setBio(deviceId, bio) {
     this.q.updateBio.run(String(bio || ''), Date.now(), deviceId);
+  }
+
+  /* ---------- 拉黑 / 举报 ---------- */
+  addBlock(deviceId, targetId) {
+    if (!deviceId || !targetId || deviceId === targetId) return false;
+    this.db.prepare('INSERT OR IGNORE INTO blocks (device_id, target_id, created_at) VALUES (?, ?, ?)')
+      .run(String(deviceId), String(targetId), Date.now());
+    return true;
+  }
+  removeBlock(deviceId, targetId) {
+    this.db.prepare('DELETE FROM blocks WHERE device_id = ? AND target_id = ?')
+      .run(String(deviceId), String(targetId));
+    return true;
+  }
+  listBlocks(deviceId) {
+    try {
+      return this.db.prepare('SELECT target_id FROM blocks WHERE device_id = ? ORDER BY created_at DESC')
+        .all(String(deviceId)).map(r => r.target_id);
+    } catch (e) { return []; }
+  }
+  addReport(deviceId, targetId, reason) {
+    if (!deviceId || !targetId || deviceId === targetId) return false;
+    this.db.prepare('INSERT INTO reports (device_id, target_id, reason, created_at) VALUES (?, ?, ?, ?)')
+      .run(String(deviceId), String(targetId), String(reason || '').slice(0, 40), Date.now());
+    return true;
+  }
+  reportCount(targetId) {
+    try {
+      const r = this.db.prepare('SELECT COUNT(*) AS n FROM reports WHERE target_id = ?').get(String(targetId));
+      return (r && r.n) || 0;
+    } catch (e) { return 0; }
   }
 
   getState(deviceId) {

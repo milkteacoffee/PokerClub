@@ -184,6 +184,26 @@ async function main() {
   ok(got429, 'claim 同 IP 超 10 次/分钟 返回 429');
 
   /* ---- 汇总 ---- */
+  /* ---- 6) 拉黑 / 举报（UGC 处置） ---- */
+  const bl0 = await api('GET', '/api/blocks', A);
+  ok(bl0.body.ok && Array.isArray(bl0.body.list), '拉黑名单接口可用（初始 ' + JSON.stringify(bl0.body.list) + '）');
+  const bl1 = await api('POST', '/api/blocks', A, { targetId: B });
+  ok(bl1.body.ok && bl1.body.list.indexOf(B) >= 0, '拉黑成功并回传名单');
+  const bl2 = await api('GET', '/api/blocks', A);
+  ok(bl2.body.list.indexOf(B) >= 0, '名单可读回');
+  const bl3 = await api('POST', '/api/blocks', A, { targetId: A });
+  ok(bl3.body.ok === false, '不允许拉黑自己');
+  const bl3b = await api('POST', '/api/blocks', A, { targetId: 'x' });
+  ok(bl3b.body.ok === false, '非法目标被拒');
+  const rp = await api('POST', '/api/report', A, { targetId: B, reason: '广告导流' });
+  ok(rp.body.ok && rp.body.count >= 1, '举报落库并返回被举报次数（count=' + rp.body.count + '）');
+  const rp2 = await api('POST', '/api/report', A, { targetId: A, reason: 'x' });
+  ok(rp2.body.ok === false, '不允许举报自己');
+  const bl4 = await api('DELETE', '/api/blocks', A, { targetId: B });
+  ok(bl4.body.ok && bl4.body.list.indexOf(B) < 0, '解除拉黑生效');
+  const bl5 = await api('GET', '/api/blocks');
+  ok(bl5.status === 400 || bl5.body.ok === false, '缺设备ID时拒绝访问');
+
   console.log('\n===== profile-state 测试结果 =====');
   console.log('通过 ' + pass + ' / 失败 ' + fail);
   if (fail) { failures.slice(0, 30).forEach(f => console.log('  - ' + f)); process.exitCode = 1; }

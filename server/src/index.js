@@ -271,6 +271,33 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, q, list });
     }
 
+    /* ---- 拉黑名单（UGC 处置）：GET 列表 / POST 拉黑 / DELETE 解除 ---- */
+    if (path === '/api/blocks') {
+      if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
+      if (method === 'GET') return json(res, 200, { ok: true, list: store.listBlocks(deviceId) });
+      let body = {};
+      try { body = await readBody(req); } catch (e) { return json(res, 400, { ok: false, msg: '请求体不合法' }); }
+      const targetId = String((body && (body.targetId || body.deviceId)) || '').slice(0, 64);
+      if (!validDeviceId(targetId)) return json(res, 400, { ok: false, msg: '目标玩家不合法' });
+      if (targetId === deviceId) return json(res, 400, { ok: false, msg: '不能对自己操作' });
+      if (method === 'POST') { store.addBlock(deviceId, targetId); return json(res, 200, { ok: true, blocked: true, list: store.listBlocks(deviceId) }); }
+      if (method === 'DELETE') { store.removeBlock(deviceId, targetId); return json(res, 200, { ok: true, blocked: false, list: store.listBlocks(deviceId) }); }
+      return json(res, 405, { ok: false, msg: '方法不支持' });
+    }
+
+    /* ---- 举报（留证用，不自动处罚）---- */
+    if (path === '/api/report' && method === 'POST') {
+      if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
+      let body = {};
+      try { body = await readBody(req); } catch (e) { return json(res, 400, { ok: false, msg: '请求体不合法' }); }
+      const targetId = String((body && (body.targetId || body.deviceId)) || '').slice(0, 64);
+      const reason = String((body && body.reason) || '').replace(/[\u0000-\u001f<>]/g, '').slice(0, 40);
+      if (!validDeviceId(targetId)) return json(res, 400, { ok: false, msg: '目标玩家不合法' });
+      if (targetId === deviceId) return json(res, 400, { ok: false, msg: '不能举报自己' });
+      store.addReport(deviceId, targetId, reason);
+      return json(res, 200, { ok: true, count: store.reportCount(targetId) });
+    }
+
     /* 房间号搜索成员：通过房号查房内现时成员（无需身份也能围观成员，用于"房间号互加"）
        —— 返回成员 deviceId/nickname/seat/online/ready，并相对查询者标记 isMe / isFriend。 */
     if (path === '/api/room/members' && method === 'GET') {
