@@ -642,13 +642,18 @@ class Room {
     try { const p = this.store.getPlayer(deviceId); return (p && p.avatar) || 'a01'; } catch (e) { return 'a01'; }
   }
 
+  /* 座位签名：从玩家档案实时查（个人简介，可为空） */
+  bioOf(deviceId) {
+    try { const p = this.store.getPlayer(deviceId); return (p && p.bio) || ''; } catch (e) { return ''; }
+  }
+
   viewFor(deviceId) {
     if (!this.started || !this.state) {
-      return { game: this.game, waiting: true, seats: this.seats.map(s => ({ seat: s.seat, name: s.name, avatar: this.avatarOf(s.deviceId), ready: s.ready, online: s.online })), host: this.hostDevice };
+      return { game: this.game, waiting: true, seats: this.seats.map(s => ({ seat: s.seat, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), ready: s.ready, online: s.online })), host: this.hostDevice };
     }
     const seat = this.seatOf(deviceId);
     const v = this.adapter.publicView(this.state, seat);
-    v.seatInfo = this.seats.map(s => ({ seat: s.seat, name: s.name, avatar: this.avatarOf(s.deviceId), online: s.online, ready: s.ready }));
+    v.seatInfo = this.seats.map(s => ({ seat: s.seat, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), online: s.online, ready: s.ready }));
     v.host = this.hostDevice;
     return v;
   }

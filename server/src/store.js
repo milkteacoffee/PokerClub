@@ -128,13 +128,13 @@ class Store {
       touch: d.prepare('UPDATE players SET last_seen = ? WHERE device_id = ?'),
 
       listAllRatings: d.prepare('SELECT device_id,nickname,rank_json,stats_json FROM players WHERE last_seen >= ?'),
-      topByGame: d.prepare('SELECT device_id,nickname,avatar,rank_json,stats_json FROM players'),
+      topByGame: d.prepare('SELECT device_id,nickname,avatar,bio,rank_json,stats_json FROM players'),
 
       listFriends: d.prepare('SELECT friend_id FROM friends WHERE device_id = ?'),
       addFriend: d.prepare('INSERT OR IGNORE INTO friends (device_id,friend_id,created_at) VALUES (?,?,?)'),
       delFriend: d.prepare('DELETE FROM friends WHERE device_id = ? AND friend_id = ?'),
       isFriend: d.prepare('SELECT 1 FROM friends WHERE device_id = ? AND friend_id = ?'),
-      getMany: d.prepare(`SELECT device_id,nickname,avatar,rank_json,stats_json FROM players WHERE device_id IN (SELECT friend_id FROM friends WHERE device_id = ?)`),
+      getMany: d.prepare(`SELECT device_id,nickname,avatar,bio,rank_json,stats_json FROM players WHERE device_id IN (SELECT friend_id FROM friends WHERE device_id = ?)`),
 
       addReq: d.prepare('INSERT OR IGNORE INTO friend_requests (from_id,to_id,created_at) VALUES (?,?,?)'),
       delReq: d.prepare('DELETE FROM friend_requests WHERE from_id = ? AND to_id = ?'),
@@ -272,6 +272,7 @@ class Store {
       deviceId: r.device_id,
       nickname: r.nickname,
       avatar: r.avatar || 'a01',
+      bio: r.bio || '',
       points: (JSON.parse(r.rank_json || '{}')[game] || {}).points || 0,
       tier: (JSON.parse(r.rank_json || '{}')[game] || {}).tier || 0,
     })).sort((a, b) => b.points - a.points);
@@ -286,6 +287,7 @@ class Store {
       deviceId: r.device_id,
       nickname: r.nickname,
       avatar: r.avatar || 'a01',
+      bio: r.bio || '',
       points: (JSON.parse(r.rank_json || '{}')[game] || {}).points || 0,
       tier: (JSON.parse(r.rank_json || '{}')[game] || {}).tier || 0,
     }));
@@ -294,6 +296,7 @@ class Store {
         deviceId,
         nickname: me.nickname,
         avatar: me.avatar || 'a01',
+        bio: me.bio || '',
         points: (JSON.parse(me.rank_json || '{}')[game] || {}).points || 0,
         tier: (JSON.parse(me.rank_json || '{}')[game] || {}).tier || 0,
       });

@@ -93,8 +93,8 @@ ok(np.buffs.goldBoost === 0 && np.buffs.diceLucky === 0, 'buffs 含 goldBoost/di
 /* 3. 称号注册 */
 const titles = g.TITLES || [];
 const onlineTitles = titles.filter(t => String(t.id).indexOf('tt_online') === 0);
-ok(onlineTitles.length === 8, '新增 8 个联机称号（实际 ' + onlineTitles.length + '）');
-ok(titles.length === 34, '称号总数 34（实际 ' + titles.length + '）');
+ok(onlineTitles.length === 13, '联机称号共 13 个（8 通用 + 5 新增玩法专属，实际 ' + onlineTitles.length + '）');
+ok(titles.length === 39, '称号总数 39（实际 ' + titles.length + '）');
 
 /* 4. 战绩累加 */
 const pl = g.createNewPlayer('牌友');

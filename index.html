@@ -1282,6 +1282,11 @@
   .od-seat .c{font-size:12px;color:#f2c14e;margin-left:auto}
   .od-seat .b{font-size:11px;color:#8fa0b4}
   .od-seat .odh{display:flex;gap:3px}
+  .odav{display:inline-flex;flex:0 0 auto;line-height:0}
+  .od-seat .odav svg{border-radius:6px;flex:0 0 auto}
+  .online-seat .odav{display:flex;justify-content:center;margin-bottom:4px}
+  .online-seat .bio{font-size:10px;color:#6f7f8c;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .board-row .bio{font-size:10px;color:#7e929b;margin-left:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px}
   .od-mini{width:22px;height:31px;border-radius:3px;background:#f4efe2;color:#1a0f0a;font-size:9px;
     display:flex;align-items:center;justify-content:center;font-weight:800}
   .od-mini.back{background:linear-gradient(150deg,#3d2b1f,#1a0f0a);color:#d4a847}
@@ -1371,6 +1376,11 @@
   .pf-grid .pf-opt:active{transform:scale(.95)}
   .pf-form{display:flex;flex-direction:column;gap:8px}
   .pf-cloud{padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04);font-size:11.5px;color:#9fb0c2;line-height:1.7}
+  .pf-online{padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04);font-size:11.5px;color:#9fb0c2;line-height:1.8}
+  .pf-online .pf-row{display:flex;justify-content:space-between;gap:10px}
+  .pf-online .pf-row b{color:#f2c14e;font-weight:800}
+  .pf-online .pf-games{margin-top:5px;display:grid;grid-template-columns:repeat(2,1fr);gap:3px 12px}
+  .pf-online .pf-games span{display:flex;justify-content:space-between;font-size:10.5px;color:#8fa0b4}
   .pf-ghostbtn{width:100%;margin-top:8px;padding:8px;border:1px solid rgba(255,255,255,.16);border-radius:8px;cursor:pointer;font-family:inherit;font-size:11.5px;font-weight:700;color:#aeb9c4;background:rgba(255,255,255,.03)}
   .pf-ghostbtn:active{transform:translateY(1px)}
   .pf-ghostbtn:hover{color:#e6edf3;border-color:rgba(240,215,154,.4)}
@@ -1890,6 +1900,8 @@
         <input id="pfBio" class="friend-input" maxlength="60" placeholder="个性签名（最多60字）" autocomplete="off" spellcheck="false">
         <button id="pfSave" class="friend-addbtn" type="button">保存资料</button>
       </div>
+      <div class="pf-sec">联机战绩（好友房，不含单机）</div>
+      <div class="pf-online" id="pfOnlineStats">—</div>
       <div class="pf-sec">云存档</div>
       <div class="pf-cloud" id="pfCloud">—</div>
       <div class="pf-sec">恢复码（跨设备接管凭据，请妥善保管）</div>
@@ -2459,6 +2471,25 @@ function renderProfile() {
         (Online.nickname ? '<br>联机昵称：' + esc(Online.nickname) : '');
     }
   }
+  renderOnlineStats();
+}
+/* 联机战绩面板：好友房对局统计（不含单机），资料面板展示 */
+function renderOnlineStats(){
+  var box = $('pfOnlineStats');
+  if (!box || !player) return;
+  var o = player.online || {};
+  var g = o.games || 0, w = o.wins || 0;
+  var rate = g ? Math.round(w / g * 100) : 0;
+  var names = { holdem: '德州扑克', guandan: '掼蛋', gold: '炸金花', blackjack: '21点', dice: '猜骰子', diceduel: '骰子比大小' };
+  var bg = o.byGame || {};
+  var rows = Object.keys(names).map(function(k){
+    var b = bg[k] || {};
+    return '<span>' + names[k] + '<b>' + (b.games || 0) + ' 局 / ' + (b.wins || 0) + ' 胜</b></span>';
+  }).join('');
+  box.innerHTML = '<div class="pf-row"><span>对局 / 胜场</span><b>' + g + ' 局 · ' + w + ' 胜</b></div>' +
+    '<div class="pf-row"><span>胜率 / 最高连胜</span><b>' + rate + '% · ' + (o.maxStreak || 0) + ' 连胜</b></div>' +
+    (!g ? '<div class="pf-hint">还没有联机对局 — 去「好友开房」约一局即可累计</div>' : '') +
+    '<div class="pf-games">' + rows + '</div>';
 }
 /* 昵称/签名/头像推送到服务器档案（榜单与好友列表显示用） */
 function onlinePushProfile(cb) {
@@ -2712,7 +2743,12 @@ var TITLES = [
   { id:'tt_online_win_20', name:'房中之王',   icon:'🀄', desc:'好友房累计获胜 20 局',        check:function(p){ return onlineStat(p,'wins') >= 20; } },
   { id:'tt_online_win_100',name:'一方霸主',   icon:'🏯', desc:'好友房累计获胜 100 局',       check:function(p){ return onlineStat(p,'wins') >= 100; } },
   { id:'tt_online_streak5', name:'五连霸桌',  icon:'🔥', desc:'好友房达成 5 连胜',           check:function(p){ return onlineStat(p,'maxStreak') >= 5; } },
-  { id:'tt_online_both',   name:'掼蛋德州双修', icon:'🎴', desc:'掼蛋与德州的好友房各完成 10 局', check:function(p){ return onlineGame(p,'guandan','games') >= 10 && onlineGame(p,'holdem','games') >= 10; } }
+  { id:'tt_online_both',   name:'掼蛋德州双修', icon:'🎴', desc:'掼蛋与德州的好友房各完成 10 局', check:function(p){ return onlineGame(p,'guandan','games') >= 10 && onlineGame(p,'holdem','games') >= 10; } },
+  { id:'tt_online_gold_10',    name:'金花常客', icon:'🌼', desc:'炸金花好友房完成 10 局',         check:function(p){ return onlineGame(p,'gold','games') >= 10; } },
+  { id:'tt_online_gold_win20', name:'金花圣手', icon:'🀄', desc:'炸金花好友房累计获胜 20 局',     check:function(p){ return onlineGame(p,'gold','wins') >= 20; } },
+  { id:'tt_online_dd_10',      name:'骰桌常客', icon:'🎲', desc:'骰子比大小好友房完成 10 局',     check:function(p){ return onlineGame(p,'diceduel','games') >= 10; } },
+  { id:'tt_online_dd_win20',   name:'赌桌骰王', icon:'👑', desc:'骰子比大小好友房累计获胜 20 局', check:function(p){ return onlineGame(p,'diceduel','wins') >= 20; } },
+  { id:'tt_online_all4',       name:'四桌通吃', icon:'🏮', desc:'四种玩法的好友房各完成 3 局',    check:function(p){ return ['guandan','holdem','gold','diceduel'].every(function(g){ return onlineGame(p,g,'games') >= 3; }); } }
 ];
 function titleMetric(p, game, ev) {
   var g = p && p.games ? p.games[game] : null;
@@ -8400,8 +8436,9 @@ function renderOnlineLobby(room){
     if (box) {
       box.innerHTML = seats.map(function(s){
         var cls = 'online-seat' + (s.deviceId === onlineDeviceId() ? ' me' : '') + (s.ready ? ' ready' : '') + (s.online === false ? ' off' : '');
-        return '<div class="' + cls + '"><div class="n">' + esc(s.name) + '</div><div class="s">' +
-          (s.online === false ? '离线' : s.ready ? '已准备' : '未准备') + '</div></div>';
+        return '<div class="' + cls + '"><span class="odav">' + avatarSVG(s.avatar || 'a01', 30) + '</span><div class="n">' + esc(s.name) + '</div>' +
+          '<div class="s">' + (s.online === false ? '离线' : s.ready ? '已准备' : '未准备') + '</div>' +
+          (s.bio ? '<div class="bio">' + esc(s.bio) + '</div>' : '') + '</div>';
       }).join('') || '<div class="online-seat"><div class="n">等待玩家…</div></div>';
     }
     /* 自己是否已准备 */
@@ -8410,11 +8447,41 @@ function renderOnlineLobby(room){
     var rb = $('roomReady'); if (rb) rb.textContent = Online.ready ? '取消准备' : '准备';
     var sb = $('roomStart'); if (sb) sb.disabled = !(Online.host === onlineDeviceId());
     setOnlineTip(Online.host === onlineDeviceId() ? '你是房主，人齐且全部准备后可开始' : '等待房主开始牌局');
+    onlineRenderWaitView(room);
   }
 }
 
 /* ---- 联机牌局渲染 ---- */
 var ONLINE_GAME_LABEL = { guandan: '掼蛋', holdem: '德州扑克', gold: '炸金花', diceduel: '骰子比大小' };
+/* 牌桌屏等待视图：座位/准备/开始状态统一刷新（结算回等待、好友进出房都会走到这里） */
+function onlineRenderWaitView(room){
+  var r = room || Online.room;
+  if (!r) return;
+  var seats = r.seats || [];
+  var box = $('odSeatList');
+  if (box) {
+    box.innerHTML = seats.map(function(s){
+      var cls = 'od-seat' + (s.deviceId === onlineDeviceId() ? ' me' : '') + (s.ready ? ' turn' : '') + (s.online === false ? ' folded' : '');
+      return '<div class="' + cls + '"><span class="odav">' + avatarSVG(s.avatar || 'a01', 18) + '</span>' +
+        '<span class="n" title="' + esc(s.bio || '') + '">' + esc(s.name || '牌友') + (s.deviceId === onlineDeviceId() ? '（你）' : '') + '</span>' +
+        '<span class="b">' + (s.online === false ? '掉线中' : s.ready ? '已准备' : '未准备') + '</span></div>';
+    }).join('') || '<div style="color:#7e929b;font-size:12px">等待玩家加入…</div>';
+  }
+  var me = seats.filter(function(s){ return s.deviceId === onlineDeviceId(); })[0];
+  Online.ready = !!(me && me.ready);
+  var rb = $('odReady'); if (rb) rb.textContent = Online.ready ? '取消准备' : '准备';
+  var isHost = Online.host === onlineDeviceId();
+  var enough = seats.length >= 2;
+  var allReady = enough && seats.every(function(s){ return s.ready; });
+  var sb = $('odStart'); if (sb) sb.disabled = !(isHost && allReady);
+  var wt = $('odWaitText');
+  if (wt) {
+    wt.textContent = !enough
+      ? '等待玩家加入…（至少 2 人，当前 ' + seats.length + ' 人）'
+      : (isHost ? (allReady ? '全员已准备 · 可以开始下一局' : '等待全员准备（你是房主）')
+               : (Online.ready ? '你已准备 · 等待房主开始' : '准备后等待房主开始下一局…'));
+  }
+}
 function onlineApplyState(st){
   if (!st) return;
   Online.state = st;
@@ -8442,17 +8509,33 @@ function cardHTML(id, cls){
   var red = (s === 'h' || s === 'd') ? ' red' : '';
   return '<div class="od-card' + red + (cls ? ' ' + cls : '') + '">' + r + '<span style="font-size:13px">' + sym + '</span></div>';
 }
+/* 座位头像与签名：服务端 viewFor 的 seatInfo 已实时下发（档案变更立即生效） */
+function onlineSeatAvatar(st, seat){
+  var s = (st.seatInfo || []).filter(function(x){ return x.seat === seat; })[0];
+  return (s && s.avatar) || 'a01';
+}
+function onlineSeatBio(st, seat){
+  var s = (st.seatInfo || []).filter(function(x){ return x.seat === seat; })[0];
+  return (s && s.bio) || '';
+}
+/* 牌桌掉线提示：服务端每秒驱动，断线座位在宽限期内保留并重连 */
+function onlineOfflineSuffix(st){
+  var offs = (st.seatInfo || []).filter(function(s){ return s.online === false; });
+  if (!offs.length) return '';
+  return ' · ' + offs.map(function(s){ return esc(s.name || ('座位' + s.seat)) + '掉线重连中'; }).join('、');
+}
 function renderOnlineGuandan(st){
   /* 公共信息 */
   $('odBoard').innerHTML = '<div style="font-size:12px;color:#8fa0b4">打 ' + st.level + ' · 已出 ' + st.moves + ' 手</div>';
-  $('odTurn').textContent = st.done ? '本局结束' : (st.turn === Online.seat ? '轮到你出牌' : '等待其他玩家');
+  $('odTurn').textContent = (st.done ? '本局结束' : (st.turn === Online.seat ? '轮到你出牌' : '等待其他玩家')) + onlineOfflineSuffix(st);
   /* 座位 */
   var names = {}; (st.seatInfo || []).forEach(function(s){ names[s.seat] = s; });
   var seatNames = ['你', '右侧对手', '队友', '左侧对手'];
   $('odSeats').innerHTML = (st.handCounts || []).map(function(n, i){
     var info = names[i] || {};
     var cls = 'od-seat' + (i === st.turn && !st.done ? ' turn' : '') + (i === Online.seat ? ' me' : '');
-    return '<div class="' + cls + '"><span class="n">' + esc(info.name || seatNames[i] || ('座位' + i)) +
+    return '<div class="' + cls + '"><span class="odav">' + avatarSVG((info && info.avatar) || 'a01', 20) + '</span>' +
+      '<span class="n" title="' + esc((info && info.bio) || '') + '">' + esc(info.name || seatNames[i] || ('座位' + i)) +
       (i === Online.seat ? '（你）' : '') + '</span><span class="b">剩 ' + n + ' 张</span></div>';
   }).join('');
   /* 手牌 */
@@ -8498,11 +8581,12 @@ function renderOnlineHoldem(st){
   $('odBoard').innerHTML = (st.board || []).map(function(c){ return cardHTML(c); }).join('') ||
     '<div style="font-size:12px;color:#8fa0b4">等待翻牌</div>';
   var stageName = { preflop: '翻牌前', flop: '翻牌', turn: '转牌', river: '河牌', showdown: '摊牌' }[st.stage] || st.stage;
-  $('odTurn').textContent = st.done ? '本局结束' : (st.turn === Online.seat ? '轮到你行动' : '等待其他玩家');
+  $('odTurn').textContent = (st.done ? '本局结束' : (st.turn === Online.seat ? '轮到你行动' : '等待其他玩家')) + onlineOfflineSuffix(st);
   $('odSeats').innerHTML = (st.players || []).map(function(p){
     var cls = 'od-seat' + (p.seat === st.turn && !st.done && !p.folded ? ' turn' : '') + (p.folded ? ' folded' : '');
     var hole = (p.hole || []).map(function(c){ return '<div class="od-mini' + (c === '??' ? ' back' : '') + '">' + (c === '??' ? '✦' : (c.slice(0, -1))) + '</div>'; }).join('');
-    return '<div class="' + cls + '"><span class="n">' + esc(p.name || ('座位' + p.seat)) + (p.seat === Online.seat ? '（你）' : '') + '</span>' +
+    return '<div class="' + cls + '"><span class="odav">' + avatarSVG(onlineSeatAvatar(st, p.seat), 20) + '</span>' +
+      '<span class="n" title="' + esc(onlineSeatBio(st, p.seat)) + '">' + esc(p.name || ('座位' + p.seat)) + (p.seat === Online.seat ? '（你）' : '') + '</span>' +
       '<span class="odh">' + hole + '</span>' +
       '<span class="b">' + (p.bet ? '下注 ' + p.bet : '') + '</span>' +
       '<span class="c">' + fmt(p.chips) + '</span></div>';
@@ -8540,11 +8624,12 @@ function renderOnlineGold(st){
   var names = {}; (st.seatInfo || []).forEach(function(s){ names[s.seat] = s.name; });
   $('odBoard').innerHTML = '<div style="font-size:12px;color:#8fa0b4">第 ' + st.round + ' 轮 · 单注 ' + st.unit +
     '（看牌 ×2，上限 ' + st.maxUnit + '）</div><div style="margin-left:16px;font-size:13px;color:#f2c14e;font-weight:800">底池 ' + fmt(st.pot) + '</div>';
-  $('odTurn').textContent = st.done ? '本局结束' : (st.turn === Online.seat ? '轮到你行动' : '等待其他玩家');
+  $('odTurn').textContent = (st.done ? '本局结束' : (st.turn === Online.seat ? '轮到你行动' : '等待其他玩家')) + onlineOfflineSuffix(st);
   $('odSeats').innerHTML = (st.players || []).map(function(p){
     var cls = 'od-seat' + (p.seat === st.turn && !st.done && !p.folded ? ' turn' : '') + (p.folded ? ' folded' : '');
     var hole = (p.hand || []).map(function(c){ return '<div class="od-mini' + (c === '??' ? ' back' : '') + '">' + (c === '??' ? '✦' : c.slice(0, -1)) + '</div>'; }).join('');
-    return '<div class="' + cls + '"><span class="n">' + esc(p.name || ('座位' + p.seat)) + (p.seat === Online.seat ? '（你）' : '') + '</span>' +
+    return '<div class="' + cls + '"><span class="odav">' + avatarSVG(onlineSeatAvatar(st, p.seat), 20) + '</span>' +
+      '<span class="n" title="' + esc(onlineSeatBio(st, p.seat)) + '">' + esc(p.name || ('座位' + p.seat)) + (p.seat === Online.seat ? '（你）' : '') + '</span>' +
       '<span class="odh">' + hole + '</span>' +
       '<span class="b">' + (p.folded ? '已弃牌' : (p.seen ? '看牌' : '闷牌')) + (p.paid ? ' · 已投 ' + p.paid : '') + '</span>' +
       '<span class="c">' + fmt(p.chips) + '</span></div>';
@@ -8589,13 +8674,14 @@ function renderOnlineDice(st){
   var names = {}; (st.seatInfo || []).forEach(function(s){ names[s.seat] = s.name; });
   var face = function(v){ return ['','⚀','⚁','⚂','⚃','⚄','⚅'][v] || v; };
   $('odBoard').innerHTML = '<div style="font-size:12px;color:#8fa0b4">各掷 3 骰 · 点数最大者通吃（豹子压一切）</div><div style="margin-left:16px;font-size:13px;color:#f2c14e;font-weight:800">底池 ' + fmt(st.pot) + '</div>';
-  $('odTurn').textContent = st.done ? '本局结束' : (st.turn === Online.seat ? '轮到你掷骰' : '等待其他玩家掷骰');
+  $('odTurn').textContent = (st.done ? '本局结束' : (st.turn === Online.seat ? '轮到你掷骰' : '等待其他玩家掷骰')) + onlineOfflineSuffix(st);
   $('odSeats').innerHTML = (st.players || []).map(function(p){
     var cls = 'od-seat' + (p.seat === st.turn && !st.done ? ' turn' : '');
     var d = p.dice;
     var dtxt = d ? '<span class="odh">' + d.map(function(v){ return '<div class="od-mini">' + face(v) + '</div>'; }).join('') + '</span>' +
       '<span class="b">' + p.sum + ' 点' + (p.triple ? ' · 豹子！' : '') + '</span>' : '<span class="b">未掷</span>';
-    return '<div class="' + cls + '"><span class="n">' + esc(p.name || ('座位' + p.seat)) + (p.seat === Online.seat ? '（你）' : '') + '</span>' + dtxt + '</div>';
+    return '<div class="' + cls + '"><span class="odav">' + avatarSVG(onlineSeatAvatar(st, p.seat), 20) + '</span>' +
+      '<span class="n" title="' + esc(onlineSeatBio(st, p.seat)) + '">' + esc(p.name || ('座位' + p.seat)) + (p.seat === Online.seat ? '（你）' : '') + '</span>' + dtxt + '</div>';
   }).join('');
   $('odHand').innerHTML = '';
   var myTurn = !st.done && st.turn === Online.seat;
@@ -8670,10 +8756,11 @@ function onlineShowSettle(m){
   html += '<div style="display:flex;gap:10px;margin-top:6px"><button class="online-btn primary" id="odAgain">再来一局</button><button class="online-btn" id="odQuit">返回大厅</button></div>';
   $('odResult').innerHTML = html;
   var ag = $('odAgain'); if (ag) ag.onclick = function(){
-    Online.ready = false;
+    /* 再来一局 = 自动置准备：房主可立刻开下一局，无需全员重新点准备 */
+    Online.ready = true;
     onlineBackToWait();
-    $('odWaitText').textContent = '等待房主开始下一局…';
-    onlineSend('ready', { ready: false });
+    onlineSend('ready', { ready: true });
+    onlineRenderWaitView(Online.room);
   };
   var qt = $('odQuit'); if (qt) qt.onclick = function(){ onlineLeaveRoom(); };
 }
@@ -8899,6 +8986,7 @@ function loadBoard(){
         return '<div class="' + cls + '"><span class="rk">' + x.rank + '</span>' +
           '<span class="bavatar">' + avatarSVG(x.avatar, 22) + '</span>' +
           '<span class="nm">' + esc(x.nickname) + (x.isMe ? '（我）' : '') + '</span>' +
+          (x.bio ? '<span class="bio">' + esc(x.bio) + '</span>' : '') +
           '<span class="tr">' + tn + '</span>' +
           '<span class="pt">' + fmt(x.points) + '</span></div>';
       }).join('');

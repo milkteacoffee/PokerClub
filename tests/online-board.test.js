@@ -53,6 +53,21 @@ function ok(c, m) { if (c) pass++; else { fail++; failures.push(m); } }
       ok(!!id(x), '联机牌桌元素存在: ' + x);
     });
 
+    /* ---- 联机战绩面板（B 项） ---- */
+    ok(!!id('pfOnlineStats') && id('pfOnlineStats').classList.contains('pf-online'), '资料面板有联机战绩区块');
+    id('lbAvatar').click();
+    await new Promise(r => setTimeout(r, 80));
+    ok(id('ovProfile').classList.contains('show'), '点头像打开资料弹窗');
+    const pfo = id('pfOnlineStats').textContent;
+    ok(/对局/.test(pfo) && /胜率/.test(pfo) && /最高连胜/.test(pfo), '联机战绩含对局/胜率/最高连胜: ' + pfo.slice(0, 40));
+    ['掼蛋', '德州', '炸金花', '骰子'].forEach(g => ok(pfo.indexOf(g) >= 0, '联机战绩含玩法行: ' + g));
+    try { id('ovProfile').classList.remove('show'); } catch (e) {}
+
+    /* ---- 头像与签名样式（A 项，静态 CSS 断言） ---- */
+    ok(/\.odav\s*\{/.test(html), '联机座位头像样式 .odav 存在');
+    ok(/\.online-seat\s+\.bio\s*\{/.test(html), '联机座位签名样式存在');
+    ok(/\.board-row\s+\.bio\s*\{/.test(html), '排行榜签名样式存在');
+
     /* ---- 排行榜结构 ---- */
     ok(!!id('boardScope') && id('boardScope').querySelectorAll('[data-scope]').length === 2, '全服榜/好友榜两个 tab');
     ok(!!id('boardGames'), '游戏筛选容器存在');

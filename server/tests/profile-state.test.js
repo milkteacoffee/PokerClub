@@ -126,14 +126,22 @@ async function main() {
   ok(cr.ok, '建房成功');
   const room = rooms.get(cr.code);
   rooms.join(cr.code, B, '乙', null);
+  store.setBio(B, '今天手气不错');
   const vWait = room.viewFor(null);
   ok(vWait.waiting && vWait.seats.length === 2 && vWait.seats.every(s => typeof s.avatar === 'string' && s.avatar), 'waiting seats 带 avatar: ' + JSON.stringify(vWait.seats.map(s => s.avatar)));
+  ok(vWait.seats.some(s => s.bio === '今天手气不错'), 'waiting seats 带 bio: ' + JSON.stringify(vWait.seats.map(s => s.bio)));
 
   room.seats.forEach(s => s.ready = true);
   const st = room.start();
   ok(st.ok, '开局成功');
   const vPlay = room.viewFor(A);
   ok(Array.isArray(vPlay.seatInfo) && vPlay.seatInfo.every(s => typeof s.avatar === 'string' && s.avatar), '开局 seatInfo 带 avatar');
+  ok(vPlay.seatInfo.some(s => s.bio === '今天手气不错'), '开局 seatInfo 带 bio: ' + JSON.stringify(vPlay.seatInfo.map(s => s.bio)));
+  /* 排行榜下发 bio */
+  const gb = store.globalBoard('holdem');
+  ok(Array.isArray(gb) && gb.every(r => typeof r.bio === 'string'), '全服榜每行带 bio 字段');
+  const fb = store.friendBoard(A, 'holdem');
+  ok(Array.isArray(fb) && fb.length >= 2 && fb.every(r => typeof r.bio === 'string'), '好友榜每行带 bio 字段');
   rooms.leaveCurrent(A); rooms.leaveCurrent(B);
 
   /* 改头像后房间视图实时反映 */
