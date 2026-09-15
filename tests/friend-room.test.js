@@ -33,7 +33,7 @@ assert(html.includes("data-ogame=\"guandan\"") && html.includes("data-ogame=\"ho
 
 /* 5) 单机+联机两相宜定位保留 */
 assert(html.includes('纯单机'), '保留纯单机说明');
-assert(html.includes('一张牌桌，六种乐趣 · 单机联机两相宜'), '大厅副标题保留');
+assert(html.includes('一张牌桌，七种乐趣 · 单机联机两相宜'), '大厅副标题保留');
 
 /* 6) 排行榜覆盖六游戏 */
 assert(html.includes('renderBoardGames'), '排行榜渲染存在');

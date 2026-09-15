@@ -133,7 +133,7 @@ test('大厅：两行三列、游戏名水印、六冠进度与皇冠角标', ()
   w.localStorage.setItem('poker_guandan_stats_v1', JSON.stringify({ hands: 200, wins: 200 }));
   w.renderLobby();
   const tiles = [...doc.querySelectorAll('.game-tile')];
-  assert.equal(tiles.length, 6, '应有 6 个游戏入口');
+  assert.equal(tiles.length, 7, '应有 7 个游戏入口');
   tiles.forEach(t => {
     const bg = t.querySelector('.tile-bg');
     assert.ok(bg, t.dataset.game + ' 应有名称水印');

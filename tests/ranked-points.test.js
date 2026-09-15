@@ -84,7 +84,7 @@ test('小游戏排位同样受门槛限制（内部入口也拦）', () => {
   assert.equal(w.openArcade('dice'), false, '内部入口同样拒绝');
   assert.equal(w.App.screen !== 'arcade', true);
   s.rankPoints = w.RANKED_ENTRY_MIN;
-  assert.equal(w.openArcade('dice'), true, '满 10 分可进入');
+  assert.equal(w.openArcade('gold'), true, '满 10 分可进入（金花）');
   w.arcadeLeave(true);
 });
 

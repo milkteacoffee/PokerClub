@@ -69,10 +69,12 @@ test('金币场进场按难度扣门票', () => {
   assert.equal(w.player.coins, 5000 - w.ENTRY_FEE.hard);
 });
 
-test('排位同样收门票，且不影响比赛筹码结算', () => {
+test('排位同样收门票，且不影响比赛筹码结算（骰类娱乐场拒绝排位）', () => {
+  assert.equal(enter('dice', 'ranked', 'normal'), false, '骰类玩法不参与排位');
+  assert.equal(enter('diceduel', 'ranked', 'normal'), false, '骰子比大小同样不参与排位');
   w.createNewSaveAt(1);
   w.player.coins = 5000;
-  assert.equal(enter('dice', 'ranked', 'normal'), true);
+  assert.equal(enter('blackjack', 'ranked', 'normal'), true);
   assert.equal(w.player.coins, 5000 - w.ENTRY_FEE.normal, '排位也要门票');
   assert.equal(w.Arcade.rankedBank, w.arcadeBank15(), '比赛筹码独立发放，不受门票影响');
 });

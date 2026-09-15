@@ -1458,6 +1458,30 @@
   .acc-form{display:flex;flex-direction:column;gap:9px}
   .acc-tip{font-size:11.5px;color:#c88a80;min-height:17px;margin-top:9px;line-height:1.6}
   .acc-tip.ok{color:#8fd6b0}
+  /* 斗牛（牛牛）牌面 */
+  .niu-area{display:flex;flex-direction:column;gap:12px;align-items:center;padding:8px 0}
+  .niu-side{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .niu-side .who{font-size:12px;color:#8fa0b4}
+  .niu-cards{display:flex;gap:6px}
+  .niu-card{width:44px;height:62px;border-radius:6px;background:#f4efe2;color:#1a0f0a;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-size:15px;font-weight:800;box-shadow:0 3px 10px rgba(0,0,0,.4)}
+  .niu-card span{font-size:12px}
+  .niu-card.red{color:#c41a1a}
+  .niu-card.back{background:linear-gradient(150deg,#3d2b1f,#1a0f0a);color:#d4a847;font-size:15px}
+  .niu-tag{font-size:15px;font-weight:800;color:#f2c14e;letter-spacing:1px;min-height:20px}
+  .niu-vs{font-size:16px;font-weight:800;color:#cfa85b;letter-spacing:3px}
+  .niu-result{margin-top:8px;font-size:14px;font-weight:800;color:#f0d79a}
+  /* 骰盅摇晃与开盅动画（猜骰子 / 骰子比大小） */
+  .dd-cup{width:58px;height:46px;margin:14px auto 6px;border-radius:10px 10px 26px 26px;position:relative;
+    background:linear-gradient(160deg,#8a2f2a,#5c1d1a);box-shadow:0 12px 26px rgba(0,0,0,.5), inset 0 0 0 1px rgba(240,215,154,.18);
+    animation:cupShake .16s infinite}
+  .dd-cup::after{content:'';position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);
+    width:74px;height:15px;border-radius:50%;background:rgba(0,0,0,.4)}
+  @keyframes cupShake{0%,100%{transform:translateX(-7px) rotate(-4deg)}50%{transform:translateX(7px) rotate(4deg)}}
+  .dd-cuphint{text-align:center;font-size:11.5px;color:#b9c6d2;letter-spacing:1px;margin-bottom:6px}
+  .arc-reveal .card,.arc-reveal .die{animation:revealIn .4s cubic-bezier(.22,1,.36,1) both}
+  @keyframes revealIn{from{opacity:0;transform:translateY(-14px) scale(.85)}to{opacity:1;transform:none}}
   /* 局内社交（快捷语气泡）/ 匹配过场 / 结算动效 */
   .ost-bubble{position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);white-space:nowrap;
     background:linear-gradient(160deg,#f0d79a,#cfa85b);color:#2a1d0c;font-size:11.5px;font-weight:800;
@@ -1605,15 +1629,16 @@
     </div>
     <div class="lobby-logo-area">
       <div class="lobby-logo">牌友小馆</div>
-      <div class="lobby-subtitle">一张牌桌，六种乐趣 · 单机联机两相宜</div>
+      <div class="lobby-subtitle">一张牌桌，七种乐趣 · 单机联机两相宜</div>
       <div class="lobby-crowns" id="lbCrowns" hidden></div>
       <div class="game-shelf">
         <button class="game-tile selected" data-game="holdem"><i class="tile-bg" aria-hidden="true">德州扑克</i><span class="tile-art">A<span>♠</span></span><small>读牌与博弈</small><span class="tile-crown" hidden>👑</span></button>
         <button class="game-tile" data-game="blackjack"><i class="tile-bg" aria-hidden="true">21点</i><span class="tile-art">21</span><small>进退之间的判断</small><span class="tile-crown" hidden>👑</span></button>
         <button class="game-tile" data-game="gold"><i class="tile-bg" aria-hidden="true">炸金花</i><span class="tile-art">3<span>♦</span></span><small>闷牌与看牌</small><span class="tile-crown" hidden>👑</span></button>
         <button class="game-tile" data-game="dice"><i class="tile-bg" aria-hidden="true">猜骰子</i><span class="tile-art">6<span>·</span></span><small>3/5骰 · 多项下注</small><span class="tile-crown" hidden>👑</span></button>
-        <button class="game-tile" data-game="diceduel"><i class="tile-bg" aria-hidden="true">骰子比大小</i><span class="tile-art">⚄</span><small>你 + 3 AI · 豹子翻倍</small><span class="tile-crown" hidden>👑</span></button>
+        <button class="game-tile" data-game="diceduel"><i class="tile-bg" aria-hidden="true">骰子比大小</i><span class="tile-art">⚄</span><small>你 + 3 AI · 豹子对决</small><span class="tile-crown" hidden>👑</span></button>
         <button class="game-tile" data-game="guandan"><i class="tile-bg" aria-hidden="true">掼蛋</i><span class="tile-art">对</span><small>四人组队 · 轮流出牌</small><span class="tile-crown" hidden>👑</span></button>
+        <button class="game-tile" data-game="niu"><i class="tile-bg" aria-hidden="true">斗牛</i><span class="tile-art">牛</span><small>凑十成牛 · 倍数对决</small><span class="tile-crown" hidden>👑</span></button>
       </div>
     </div>
     <div class="lobby-bottom">
@@ -4727,9 +4752,12 @@ function showScreen(name) {
 /* 四游戏共享入口与独立规则；不调用德州任务或段位。 */
 var hubGame = 'holdem';
 var guandanSelected = false;
-var ARCADE_NAMES = {blackjack:'21点', gold:'炸金花', dice:'猜骰子', diceduel:'骰子比大小', guandan:'掼蛋'};
+var ARCADE_NAMES = {blackjack:'21点', gold:'炸金花', dice:'猜骰子', diceduel:'骰子比大小', guandan:'掼蛋', niu:'斗牛'};
+/* 娱乐场玩法（不参与排位与段位；金币场与练习照常） */
+var ARCADE_NO_RANK = { dice:1, diceduel:1, niu:1 };
 var Arcade = {game:'blackjack', mode:'coins', practice:500, round:null, message:'选择下注后开始', busy:false};
 var ARCADE_RULES = {
+  niu:'五张牌里任意三张点数之和为 10 的倍数即「有牛」，剩余两张之和的个位定牛几（个位 0 为最大「牛牛」）。倍数：牛七/牛八 ×2、牛九 ×3、牛牛 ×4，其余 ×1。与庄家各发五张直接比牛：有牛压无牛、牛大压牛小，同为牛比最大单张（K 最大、A 最小，同点比花色 ♠>♥>♣>♦），赢家按胜方倍数结算。无平局。娱乐场玩法，不参与排位与段位。',
   blackjack:'一副52张牌，每局重洗。2–10按牌面，J/Q/K按10点；A自动按不爆牌的最高点数取1或11（A+3=14，再来9则为13；多个A最多一张按11）。起手两张A+10点牌为天然21点，净赢下注1.5倍；双方天然21点退本金，庄家天然21点立即结算。三张及以上21点为普通21点，普通赢净赢1倍，同点退本金；玩家爆牌立即输。庄家不足17必须补牌，软17（如A+6）也停牌。仅起手两张可加倍，须余额和本轮限额足够；加倍只补一张，随后停牌。当前不含分牌、保险、投降或五龙等特殊奖励。未完局离开或刷新视为放弃，不退本金。',
   gold:'四人三张牌：豹子 > 顺金 > 金花 > 顺子 > 对子 > 单张；A23为最小顺子，QKA最大；不含235特殊规则。看牌后跟注/加注/比牌费用为闷牌的2倍。第三轮起可比牌，每次比牌支付本人的跟注额；同牌比牌发起者输。第十轮剩余玩家摊牌，完全相同则平分，余数按座位顺序分配。AI按新手/普通/困难/冠军分别带入500/2000/10000/50000；每轮新对手，只按自己的牌与公开行为决策。',
   dice:'三颗公平六面骰：4–10为小，11–17为大；任意豹子（包括111和666）大小都输。猜中返还本金并净赢1倍下注，否则失去下注。每次下注确认后即时结算，不自动连投。中奖概率105/216，非稳赚玩法。',
@@ -4787,6 +4815,8 @@ function arcadeSettle(payout,label) {
 }
 function openArcade(game) {
   if(G.active||!ARCADE_NAMES[game]||(Arcade.round&&!Arcade.round.done))return false;
+  /* 防御：骰类玩法（猜骰子/骰子比大小）为娱乐场，不参与排位 */
+  if(App.mode==='ranked'&&(game==='dice'||game==='diceduel')){showToast('骰子玩法为娱乐场，不参与排位',2200,true);goModeScreen();return false;}
   arcadeRecover();Arcade.game=game;Arcade.round=null;Arcade.message='金币共用，练习筹码不兑换；新游戏不触发德州任务。';
   $('arcadeScreen').dataset.game=game;
   showScreen('arcade');$('arcHelp').hidden=true;renderArcade();return true;
@@ -4811,7 +4841,7 @@ function goldResolve(force){var r=Arcade.round,live=r.seats.filter(function(p){r
   arcadeSettle(share,winners.map(function(p){return p.name;}).join('、')+' 获胜 · 底池 '+r.pot);return true;}
 function goldAITurns(){var r=Arcade.round;for(var i=1;i<4&&!r.done;i++){var p=r.seats[i];if(p.folded)continue;
   if(!p.seen&&randomInt(100)<[30,55,80,95][level15(Arcade.difficulty)])p.seen=true;var strength=p.seen?goldValue(p.hand)[0]:-1,cost=r.unit*(p.seen?2:1);
-  if(p.stack<cost||p.paid+cost>arcadeLimit15()||(p.seen&&strength===0&&randomInt(100)<[15,30,45,60][level15(Arcade.difficulty)])){p.folded=true;r.log.push(p.name+' 弃牌');continue;}
+  if(p.stack<cost||p.paid+cost>arcadeLimit15()||(p.seen&&strength===0&&randomInt(100)<[35,52,68,82][level15(Arcade.difficulty)])){p.folded=true;r.log.push(p.name+' 弃牌');continue;}
   if(p.seen&&strength>=1&&r.unit<r.base*4&&p.stack>=cost*2&&p.paid+cost+r.base*2<=arcadeLimit15()&&randomInt(100)<[10,22,36,50][level15(Arcade.difficulty)]){r.unit+=r.base;cost=r.unit*2;r.log.push(p.name+' 加注');}
   if(p.paid+cost>arcadeLimit15()){p.folded=true;r.log.push(p.name+' 达到单局上限，弃牌');continue;}
   p.stack-=cost;p.paid+=cost;r.pot+=cost;
@@ -4880,6 +4910,8 @@ function renderModeCards() {
 
   ['quick', 'ranked'].forEach(function (key) {
     var m = MODE_CONFIG[key];
+    var noRanked = key === 'ranked' && ARCADE_NO_RANK[Arcade.game];
+    if (noRanked) return;                       /* 骰类玩法不参与排位：直接不渲染排位卡 */
     var card = document.createElement('button');
     card.className = 'mode-card ' + key;
     var html = '<div class="mode-tag2">' + m.tag + '</div>';
@@ -4896,6 +4928,7 @@ function renderModeCards() {
       html += '<div>连胜 <span class="hi">' + (player.streak || 0) + '</span> 局</div>';
     } else {
       m.desc.forEach(function (line) { html += '<div>' + line + '</div>'; });
+      if (ARCADE_NO_RANK[Arcade.game]) html += '<div class="mode-note" style="color:#f0d79a">本玩法为娱乐场 · 不参与排位与段位</div>';
     }
     html += '</div>';
     card.innerHTML = html;
@@ -6665,7 +6698,7 @@ function applyDiceLucky(payout) {
   return Math.floor(payout * (100 + ITEM_EFFECT.diceLuckyPct) / 100);
 }
 function consumeDiceLucky() {
-  if (player.buffs.diceLucky > 0 && (Arcade.game === 'dice' || Arcade.game === 'diceduel')) {
+  if (player.buffs.diceLucky > 0 && ARCADE_NO_RANK[Arcade.game]) {
     player.buffs.diceLucky--;
     if (player.buffs.diceLucky <= 0) { player.buffs.diceLucky = 0; showToast('🎲 幸运骰子卡已用尽', 1800); }
   }
@@ -8788,7 +8821,7 @@ function diceAddBet(choice,n){if((Arcade.round&&!Arcade.round.done)||!Number.isS
  if(total>bank||total>arcadeDiceRoundLimit())return false;  /* 单轮总投入上限：骰子可同轮多押 */
  var b=cur;if(b)b.amount+=n;else Arcade.basket.push({choice:choice,amount:n});renderArcade();return true;}
 function diceRollBasket(){if(!Arcade.basket.length)return false;var bets=Arcade.basket.map(function(b){return Object.assign({},b);}),bet=bets.reduce(function(a,b){return a+b.amount;},0),r=arcadeBegin(bet);if(!r)return false;
- r.bets=bets;r.dice=Array.from({length:Arcade.diceCount},function(){return 1+randomInt(6);});var payout=0;
+ r.bets=bets;r.revealUntil=Date.now()+900;r.dice=Array.from({length:Arcade.diceCount},function(){return 1+randomInt(6);});var payout=0;
  bets.forEach(function(b){b.multiplier=diceMultiplier(r.dice.length,b.choice);b.payout=diceResult(r.dice,b.choice).win?b.amount*b.multiplier:0;payout+=b.payout;});
  Arcade.basket=[];return arcadeSettle(payout,'总点数 '+r.dice.reduce(function(a,b){return a+b;},0)+(diceResult(r.dice,'any').triple?' · 豹子':'')+' · 投入 '+bet+' / 返还 '+payout);}
 dicePlay=function(bet,choice){Arcade.basket=[];if(!diceAddBet(choice,bet))return false;return diceRollBasket();};
@@ -8822,12 +8855,61 @@ function ddStart(bet) {
     else if (c === 0) { ties++; payout += unit; }
     else payout += 0;
   }
-  var doubled = false;
-  if (me.triple) { payout *= 2; doubled = true; }
+  var doubled = me.triple;   /* 豹子本身必赢三家的优势已足够，不再额外翻倍（否则玩家期望 +6%，金币通胀） */
   r.seats = seats; r.unit = unit; r.wins = wins; r.ties = ties; r.losses = 3 - wins - ties; r.doubled = doubled;
   r.rank = me;
   return arcadeSettle(payout, (me.triple ? '豹子 ' + me.sum : '点数 ' + me.sum)
-    + ' · 赢 ' + wins + ' / 平 ' + ties + ' / 负 ' + r.losses + (doubled ? ' · 豹子翻倍' : ''));
+    + ' · 赢 ' + wins + ' / 平 ' + ties + ' / 负 ' + r.losses + (doubled ? ' · 豹子' : ''));
+}
+/* ================= 斗牛（牛牛）· 娱乐场玩法 ================= */
+function niuPoint(c){return c.r===14?1:Math.min(10,c.r);}
+function niuBest(hand){
+  var idx=[[0,1,2],[0,1,3],[0,1,4],[0,2,3],[0,2,4],[0,3,4],[1,2,3],[1,2,4],[1,3,4],[2,3,4]];
+  var total=0,big=null;
+  hand.forEach(function(c){total+=niuPoint(c);var w=(c.r===14?-1:c.r),key=w*10+(3-c.s);if(big===null||key>big)big=key;});
+  var best=null;
+  for(var i=0;i<idx.length;i++){var sum=0;idx[i].forEach(function(k){sum+=niuPoint(hand[k]);});
+    if(sum%10===0){var tail=(total-sum)%10,niu=tail===0?10:tail;if(!best||niu>best.niu)best={niu:niu};}}
+  if(best){var mult=best.niu>=10?4:best.niu===9?3:(best.niu>=7?2:1);return {has:true,niu:best.niu,mult:mult,big:big};}
+  return {has:false,niu:-1,mult:1,big:big};
+}
+function niuCompare(a,b){if(a.has!==b.has)return a.has?1:-1;if(a.has&&a.niu!==b.niu)return a.niu>b.niu?1:-1;return a.big>b.big?1:a.big<b.big?-1:0;}
+function niuLabel(r){if(!r.has)return '无牛';if(r.niu===10)return '牛牛';return '牛'+r.niu;}
+function niuCardsHTML(cards,back){
+  if(!cards||!cards.length)return '';
+  return cards.map(function(c){
+    if(back)return '<div class="niu-card back">牛</div>';
+    var red=(c.s===1||c.s===2),sym=['♠','♥','♦','♣'][c.s]||'';
+    var rr=c.r===14?'A':c.r===13?'K':c.r===12?'Q':c.r===11?'J':c.r;
+    return '<div class="niu-card'+(red?' red':'')+'">'+rr+'<span>'+sym+'</span></div>';
+  }).join('');
+}
+function niuStart(bet){
+  if(!Number.isSafeInteger(bet)||bet<=0)return false;
+  if(Arcade.round&&!Arcade.round.done)return false;
+  var r=arcadeBegin(bet);if(!r)return false;
+  r.deck=shuffle(makeDeck());r.hand=[];r.dealer=[];
+  for(var i=0;i<5;i++){r.hand.push(r.deck.pop());r.dealer.push(r.deck.pop());}
+  r.me=niuBest(r.hand);r.bank=niuBest(r.dealer);
+  r.revealUntil=Date.now()+700;           /* 发牌动画：先亮背面再翻牌 */
+  var c=niuCompare(r.me,r.bank),mult=c>0?r.me.mult:(c<0?r.bank.mult:1);
+  r.cmp=c;r.mult=mult;
+  var payout=c>0?bet*mult:c<0?0:bet;
+  Arcade.message=niuLabel(r.me)+' 对 '+niuLabel(r.bank);
+  return arcadeSettle(payout,(c>0?'你赢':c<0?'庄家赢':'平局')+' · '+niuLabel(r.me)+' 对 '+niuLabel(r.bank)+(mult>1?' · '+mult+' 倍':''));
+}
+function renderNiu15(){
+  var r=Arcade.round,board=$('arcBoard');if(!board)return;
+  var reveal=r&&r.revealUntil&&Date.now()<r.revealUntil;
+  var html='<div class="niu-area'+(reveal?'':' arc-reveal')+'">';
+  if(!r){html+='<div style="color:#7e929b;font-size:12px">设置下注后开始</div>';}
+  else{
+    html+='<div class="niu-side"><div class="who">庄家</div><div class="niu-cards">'+niuCardsHTML(r.dealer,reveal)+'</div><div class="niu-tag">'+(reveal?'?':niuLabel(r.bank))+'</div></div>';
+    html+='<div class="niu-vs">VS</div>';
+    html+='<div class="niu-side"><div class="who">你（下注 '+r.stake+'）</div><div class="niu-cards">'+niuCardsHTML(r.hand,reveal)+'</div><div class="niu-tag">'+(reveal?'?':niuLabel(r.me))+'</div></div>';
+    if(r.done&&!reveal)html+='<div class="niu-result">'+(r.cmp>0?'你赢了 ×'+r.mult:r.cmp<0?'庄家赢了 ×'+r.mult:'意外平局')+'</div>';
+  }
+  board.innerHTML=html+'</div>';
 }
 function renderDiceDuel15() {
   var r = Arcade.round, live = !!(r && !r.done);
@@ -8896,17 +8978,19 @@ renderArcade=function(){oldRenderArcade15();if(!player)return;var live=Arcade.ro
  $('arcDifficulty15').innerHTML=GAME_LEVELS.map(function(k,i){return '<option value="'+k+'">'+LEVEL_NAMES[i]+'</option>';}).join('');$('arcDifficulty15').value=Arcade.difficulty;$('arcDifficulty15').disabled=!!live;
  $('arcDifficulty15').onchange=function(){if(live)return;Arcade.difficulty=this.value;App.difficulty=this.value;Arcade.round=null;Arcade.basket=[];Arcade.rankedBank=arcadeBank15();renderArcade();};
  $('arcMode').onchange=function(){if(live)return;Arcade.mode=this.value;App.mode=this.value==='ranked'?'ranked':'quick';Arcade.round=null;Arcade.basket=[];Arcade.rankedBank=arcadeBank15();renderArcade();};
- var s=profile15(Arcade.game);$('arcStats').textContent='段位 '+s.rankPoints+' · 可兑换积分 '+s.redeemPoints;
+ var s=(profile15(Arcade.game)||{rankPoints:0,redeemPoints:0});$('arcStats').textContent=(ARCADE_NO_RANK[Arcade.game]?'娱乐玩法 · 不参与排位与段位':'段位 '+s.rankPoints+' · 可兑换积分 '+s.redeemPoints);
+ var rankOpt=$('arcMode')?$('arcMode').querySelector('option[value=ranked]'):null;if(rankOpt)rankOpt.hidden=!!ARCADE_NO_RANK[Arcade.game];if(rankOpt&&ARCADE_NO_RANK[Arcade.game]&&Arcade.mode==='ranked'){Arcade.mode='coins';}
  $('arcHistory').textContent=Arcade.mode==='practice'?'练习不计金币、任务和成就':arcadeData().history.filter(function(h){return h.game===Arcade.game;}).slice(0,3).map(function(h){return h.label+' / '+(h.mode==='ranked'?'积分 '+h.points:'金币净 '+h.net);}).join(' · ');
  if(Arcade.game==='dice')renderDice15();
  else if(Arcade.game==='diceduel')renderDiceDuel15();
+ else if(Arcade.game==='niu')renderNiu15();
  else if(Arcade.game==='blackjack'&&level15(Arcade.difficulty)<2){var note=document.createElement('p');note.className='assist15';note.textContent='辅助：A自动按1或11计算；要牌后不能加倍；庄家软17停牌，难度不改变牌概率。';$('arcTable').appendChild(note);}
  var r=Arcade.round,bet=Number($('arcBet').value),note=document.createElement('p');note.className='arc-state';
  if(r&&r.done)note.textContent='本局已结束 · 投入 '+r.stake+' / 返还 '+r.payout+' / 净 '+(r.payout-r.stake>=0?'+':'')+(r.payout-r.stake)+(Arcade.mode==='ranked'?' 比赛筹码':'')+' · 可调整金额或再来一局';
  else if(live&&Arcade.game==='blackjack')note.textContent='轮到你 · 要牌或停牌 · '+(blackjackDoubleReason()?'加倍不可用：'+blackjackDoubleReason():'加倍：补投 '+r.base+'，只拿一张后停牌');
  else if(live&&Arcade.game==='gold')note.textContent='轮到你 · '+(r.turn<3?'第3轮起开放比牌':'可跟注、加注或选择对手比牌')+' · 看牌后跟注翻倍；弃牌不退已投入筹码';
  else if(Arcade.game==='dice')note.textContent='加入清单暂不扣款 · 点击“确认下注”后统一扣款并开奖';
- else if(Arcade.game==='diceduel')note.textContent='下注按 3 位对手均分（30 的倍数）· 掷骰后一次结算，豹子翻倍';
+ else if(Arcade.game==='diceduel')note.textContent='下注按 3 位对手均分（30 的倍数）· 掷骰后一次结算，豹子必赢';
  else note.textContent=arcadeBalance()<bet?'余额不足以按当前金额开局 · 可降低下注，或切换免费练习':'选择金额后开局 · 本轮结束后可切换模式和难度';
  $('arcTable').appendChild(note);
  $('arcRules').textContent=$('arcHelp').hidden?'规则':'收起规则';$('arcRules').setAttribute('aria-expanded',String(!$('arcHelp').hidden));
@@ -9018,7 +9102,9 @@ var oldRenderAch15=renderAchList;
 renderAchList=function(){oldRenderAch15();var host=$('achList');if(!host)return;var bar=document.createElement('div');bar.className='game-filter15';
  ['all'].concat(GAME_IDS).forEach(function(g){var b=document.createElement('button');b.textContent=g==='all'?'全部游戏':GAME_NAMES[g];b.onclick=function(){achGame15=g;achPage=0;renderAchList();};bar.appendChild(b);});host.prepend(bar);};
 var achGame15='all';
-renderRank=function(){if(!player)return;ensureRankGift(hubGame);var s=profile15(hubGame),info=subTierInfo(s.rankPoints),tier=info.tier,cur=RANKS[tier],next=RANKS[tier+1];
+renderRank=function(){if(!player)return;ensureRankGift(hubGame);
+ if(hubGame==='dice'||hubGame==='diceduel'||hubGame==='niu'){var html2='<p><b style="color:#f0d79a">本玩法为娱乐场 · 不参与排位与段位</b></p><p>猜骰子与骰子比大小定位为轻松娱乐，成就与称号照常累计；历史段位与封号保留展示。</p>';$('rankPanel').innerHTML=html2;return;}
+ var s=profile15(hubGame),info=subTierInfo(s.rankPoints),tier=info.tier,cur=RANKS[tier],next=RANKS[tier+1];
  var base=tierDisplayName(hubGame,tier),full=base+' '+info.label,pct=info.pct;
  var nextLabel=info.idx>0?(rankNameOf(hubGame,tier)+' '+SUB_TIER_LABELS[info.idx-1]):(rankNameOf(hubGame,next?tier+1:tier)+' III');
  var html='<div class="rank-row"><div class="mid"><div class="nm">'+GAME_NAMES[hubGame]+' · '+full+'</div><div class="pt">'+s.rankPoints+' 段位分 · 本小段 '+info.got+' / '+info.span+'</div><div class="rank-bar"><div class="rank-fill" style="width:'+pct+'%"></div></div></div></div><div class="stat-grid"><div class="stat-box"><div class="v">'+s.rankPoints+'</div><div class="l">段位分（不可兑换）</div></div><div class="stat-box"><div class="v">'+s.redeemPoints+'</div><div class="l">可兑换积分</div></div><div class="stat-box"><div class="v">'+s.rankedWins+' / '+s.rankedHands+'</div><div class="l">排位胜局 / 总局数</div></div></div>';
