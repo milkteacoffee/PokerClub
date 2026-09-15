@@ -1446,6 +1446,22 @@
   .pf-avup{display:flex;gap:8px;margin-top:8px}
   .pf-avup .pf-ghostbtn{margin-top:0;flex:1}
   .pf-opt-custom svg{display:block}
+  /* 快速匹配面板 + 佩戴称号展示 */
+  .om-box{margin:0 0 14px;padding:12px 13px;border-radius:12px;
+    background:radial-gradient(ellipse at 50% 0%, rgba(212,168,91,.10), rgba(255,255,255,.028));
+    box-shadow:inset 0 0 0 1px rgba(212,168,91,.16)}
+  .om-h{font-size:12.5px;color:#f0d79a;font-weight:800;margin-bottom:9px;letter-spacing:.4px}
+  .om-games{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .om-chip{padding:6px 12px;border:none;border-radius:16px;cursor:pointer;font-family:inherit;
+    font-size:11.5px;color:#b9c6d2;background:rgba(255,255,255,.05);transition:.15s}
+  .om-chip:hover{background:rgba(255,255,255,.1)}
+  .om-chip.selected{color:#2a1d0c;font-weight:800;background:linear-gradient(160deg,#f0d79a,#cfa85b)}
+  .om-status{font-size:11.5px;color:#8fa0b4;line-height:1.75;margin-top:9px;min-height:16px}
+  .om-status b{color:#f0d79a}
+  .ost-title{font-size:10px;color:#f0d79a;font-weight:700;letter-spacing:.5px;max-width:118px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .board-row .tt{font-size:10px;color:#f0d79a;margin-left:6px;white-space:nowrap}
+  #lbTitle{font-size:10.5px;color:#f0d79a;background:rgba(212,168,91,.14);padding:1px 7px;border-radius:9px;margin-left:6px}
   /* 联机重连提示条 + 玩家操作菜单 */
   #odReconnect{position:absolute;top:54px;left:50%;transform:translateX(-50%);z-index:9;
     padding:5px 14px;border-radius:20px;font-size:11.5px;font-weight:700;
@@ -1516,7 +1532,7 @@
           <span class="lobby-lvl" id="lbLevel">Lv.1</span>
           <button type="button" class="lobby-name" id="lbName" title="点击名称即可修改" aria-label="修改用户名">玩家</button>
           <input class="name-input" id="lbNameInput" aria-label="用户名称，1至12个字符" maxlength="24" autocomplete="off" spellcheck="false" hidden>
-          <span class="rank-badge" id="lbRank">🥉 牌桌新人</span>
+          <span class="rank-badge" id="lbRank">🥉 牌桌新人</span><span id="lbTitle" hidden></span>
         </div>
         <div class="lobby-expbar"><div class="lobby-expfill" id="lbExp"></div></div>
       </div>
@@ -1881,6 +1897,16 @@
       <div style="font-size:11.5px;color:#8fa0b4;margin-bottom:12px;line-height:1.7;">
         联机支持<b style="color:#f2c14e">掼蛋（4 人）</b>、<b style="color:#f2c14e">德州扑克（2~6 人）</b>、<b style="color:#f2c14e">炸金花（2~6 人）</b>与<b style="color:#f2c14e">骰子比大小（2~6 人）</b>，牌局判定全部在服务端完成。其余玩法为单机对 AI，不受影响。<br>
         <b style="color:#c41a1a">本游戏仅供娱乐，严禁用于赌博；虚拟金币不可充值、不可兑现、不可转让。违者后果自负。</b>
+      </div>
+      <!-- 快速匹配：真人陌生人凑桌，凑满即开局（无需准备） -->
+      <div class="om-box" id="omBox">
+        <div class="om-h">快速匹配 · 真人开局</div>
+        <div class="om-games" id="omGames"></div>
+        <div style="display:flex;gap:8px">
+          <button class="online-btn primary" id="omStart" style="flex:1">开始匹配</button>
+          <button class="online-btn" id="omCancel" hidden>取消匹配</button>
+        </div>
+        <div class="om-status" id="omStatus">选一个玩法，点「开始匹配」就能和在线牌友凑桌；人够了自动开局，不需要准备。</div>
       </div>
       <div id="onlineSetup">
         <div class="online-row">
@@ -2771,6 +2797,8 @@ function onlinePushProfile(cb) {
     avatar: (player.avatar === 'custom' && player.customAvatar && player.customAvatar.length <= AVATAR_UPLOAD_MAX)
       ? player.customAvatar : (player.avatar || 'a01'),
     bio: player.bio || '',
+    /* 佩戴中的称号随档案同步，好友房座位与榜单都能看到 */
+    title: (player.equipped && player.equipped.title) || '',
   });
 }
 /* 触感反馈：支持的设备上给关键时机一点震动（设置里可关） */
@@ -4882,6 +4910,9 @@ function renderLobby() {
   // 段位徽章（单机版不显示人物头像）
   var ri = rankInfo();
   $('lbRank').innerHTML = icifyHTML(ri.icon + ' ' + ri.name);
+  /* 佩戴中的称号：直接挂在大厅徽章旁边，别人一眼能看到 */
+  var lbt = $('lbTitle'), ti = equippedTitleInfo();
+  if (lbt) { if (ti) { lbt.hidden = false; lbt.textContent = ti.name; } else { lbt.hidden = true; lbt.textContent = ''; } }
 
   ensureDailyTasks();
   ensureCheckin();
@@ -6487,6 +6518,16 @@ function syncTitles(opts) {
   updateTitleBadge();
   return got.length;
 }
+/* 称号 id → 定义（用于展示佩戴中的称号） */
+function titleInfoById(id) {
+  if (!id) return null;
+  for (var i = 0; i < TITLES.length; i++) if (TITLES[i].id === id) return TITLES[i];
+  return null;
+}
+function equippedTitleInfo() {
+  if (!player || !player.equipped) return null;
+  return titleInfoById(player.equipped.title);
+}
 function equipTitle(id) {
   if (!player) return false;
   if (id && !titleUnlocked(id)) return false;
@@ -6494,7 +6535,7 @@ function equipTitle(id) {
   var ok = atomic15(function () {
     if (id) player.equipped.title = id; else delete player.equipped.title;
   });
-  if (ok) { sfx('click'); renderTitleList(); renderLobby(); if (G.active) render(); }
+  if (ok) { sfx('click'); renderTitleList(); renderLobby(); if (G.active) render(); try { onlinePushProfile(); } catch (e) {} }
   return ok;
 }
 function updateTitleBadge() {
@@ -9107,8 +9148,55 @@ function onlineSend(type, data){
   if (!Online.ws || Online.ws.readyState !== 1) return false;
   try { Online.ws.send(JSON.stringify(Object.assign({ type: type }, data || {}))); return true; } catch(e){ return false; }
 }
+/* ---- 快速匹配：真人陌生人凑桌，凑满由服务端建房并直接开局 ---- */
+var OM = { game: 'holdem', active: false };
+var OM_GAMES = ['guandan', 'holdem', 'gold', 'diceduel'];
+function omRenderGames(){
+  var box = $('omGames'); if (!box) return;
+  box.innerHTML = OM_GAMES.map(function(g){
+    return '<button class="om-chip' + (g === OM.game ? ' selected' : '') + '" data-mgame="' + g + '">' +
+      (ONLINE_GAME_LABEL[g] || g) + '</button>';
+  }).join('');
+  box.querySelectorAll('[data-mgame]').forEach(function(b){
+    b.onclick = function(){
+      if (OM.active) return setOnlineTip('匹配中，想换玩法请先取消');
+      OM.game = b.getAttribute('data-mgame');
+      sfx('click');
+      omRenderGames();
+    };
+  });
+}
+function omSetStatus(html){ var el = $('omStatus'); if (el) el.innerHTML = icifyHTML(html); }
+function omStart(){
+  if (OM.active) return;
+  var nick = ($('onlineNick') && $('onlineNick').value.trim()) || Online.nickname || (player && player.name) || '牌友';
+  Online.nickname = nick;
+  omSetStatus('正在连接服务器…');
+  onlineConnect(function(ok, err){
+    if (!ok) return omSetStatus(err || '连接失败，请稍后再试');
+    omSetStatus('正在为你寻找牌友…');
+    onlineSend('match', { game: OM.game });
+  });
+}
+function omCancel(){ if (!OM.active) return; onlineSend('matchCancel', {}); omReset('已取消匹配'); sfx('click'); }
+function omOnMatching(m){
+  OM.active = true;
+  var c = $('omCancel'); if (c) c.hidden = false;
+  var st = $('omStart'); if (st) st.disabled = true;
+  var names = (m.names || []).map(function(x){ return esc(x); }).join('、');
+  omSetStatus('匹配中：<b>' + (m.waiting || 1) + ' / ' + (m.need || 2) + '</b> 人' +
+    (names ? '（' + names + '）' : '') + '<br>人数够了会自动开局，不需要准备');
+  haptic(10);
+}
+function omReset(msg){
+  OM.active = false;
+  var c = $('omCancel'); if (c) c.hidden = true;
+  var st = $('omStart'); if (st) st.disabled = false;
+  if (msg) omSetStatus(msg);
+}
 function onlineHandle(m){
   if (m.type === 'error') { setOnlineTip(m.msg || '操作失败'); onlineSyncStatus(); return; }
+  if (m.type === 'matching') { omOnMatching(m); return; }
   if (m.type === 'room') { onlineApplyRoom(m); return; }
   if (m.type === 'state') { onlineApplyState(m.state); return; }
   if (m.type === 'settle') { onlineShowSettle(m); return; }
@@ -9278,7 +9366,9 @@ function onlineSeatCard(st, seat, pos, inner, extraCls){
   }
   return '<div class="ost' + (extraCls || '') + (seat === Online.seat ? ' me' : '') + off + '" data-oseat="' + seat +
     '" style="left:' + pos.x.toFixed(1) + '%;top:' + pos.y.toFixed(1) + '%">' +
-    '<div class="ost-timer" data-otimer="' + seat + '"></div>' + inner + '</div>';
+    '<div class="ost-timer" data-otimer="' + seat + '"></div>' +
+    (function(){ var t = titleInfoById(info.title); return t ? '<div class="ost-title">' + esc(t.name) + '</div>' : ''; })() +
+    inner + '</div>';
 }
 /* 好友房为积分欢乐局：所有数字以「分」呈现，不展示金币输赢 */
 function onlinePts(n){ return fmt(n) + ' 分'; }
@@ -9317,6 +9407,7 @@ function onlineApplyState(st){
   Online.state = st;
   Online.cmpPick = false;
   $('onlineSetup').hidden = true; $('onlineRoom').hidden = true;
+  try { omReset(); } catch (e) {}
   showScreen('online');
   $('odWaiting').hidden = true;
   $('odTable').hidden = false; $('odHand').hidden = false;
@@ -9917,6 +10008,7 @@ function loadBoard(){
           '<span class="nm">' + esc(x.nickname) + (x.isMe ? '（我）' : '') + '</span>' +
           (x.bio ? '<span class="bio">' + esc(x.bio) + '</span>' : '') +
           '<span class="tr">' + tn + '</span>' +
+          (titleInfoById(x.title) ? '<span class="tt">' + esc(titleInfoById(x.title).name) + '</span>' : '') +
           '<span class="pt">' + fmt(x.points) + '</span></div>';
       }).join('');
       /* 点榜单行 → 玩家操作（举报 / 拉黑） */
@@ -9964,6 +10056,9 @@ function onlineInitUI(){
     }
     catch(e){ setOnlineTip('自动复制失败，请手动复制链接：' + link); }
   };
+  var oms = $('omStart'); if (oms) oms.onclick = omStart;
+  var omc = $('omCancel'); if (omc) omc.onclick = omCancel;
+  omRenderGames();
   var ucc = $('userCodeCopy'); if (ucc) ucc.onclick = function(){
     if (!Online.userCode) return setOnlineTip('玩家号尚未生成，请稍候');
     try { navigator.clipboard.writeText(Online.userCode); setOnlineTip('玩家号已复制：' + Online.userCode); }

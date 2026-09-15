@@ -34,7 +34,8 @@ class Store {
         last_seen     INTEGER NOT NULL DEFAULT 0,
         rank_json     TEXT NOT NULL DEFAULT '{}',
         item_json     TEXT NOT NULL DEFAULT '{}',
-        stats_json    TEXT NOT NULL DEFAULT '{}'
+        stats_json    TEXT NOT NULL DEFAULT '{}',
+        title         TEXT NOT NULL DEFAULT ''
       );
       CREATE TABLE IF NOT EXISTS friends (
         device_id     TEXT NOT NULL,
@@ -82,6 +83,7 @@ class Store {
     /* 用户资料：预设头像 ID（av01~av12）+ 个性签名 */
     try { this.db.exec("ALTER TABLE players ADD COLUMN avatar TEXT NOT NULL DEFAULT ''"); } catch (e) { /* 列已存在则忽略 */ }
     try { this.db.exec("ALTER TABLE players ADD COLUMN bio TEXT NOT NULL DEFAULT ''"); } catch (e) { /* 列已存在则忽略 */ }
+    try { this.db.exec("ALTER TABLE players ADD COLUMN title TEXT NOT NULL DEFAULT ''"); } catch (e) { /* 列已存在则忽略 */ }
     /* 回填历史玩家（老数据 user_code 为 NULL） */
     const needCode = this.db.prepare('SELECT device_id FROM players WHERE user_code IS NULL OR user_code = ?');
     for (const r of needCode.all('')) {
@@ -139,19 +141,20 @@ class Store {
       updateCode: d.prepare('UPDATE players SET user_code = ? WHERE device_id = ?'),
       updateAvatar: d.prepare('UPDATE players SET avatar = ?, updated_at = ? WHERE device_id = ?'),
       updateBio: d.prepare('UPDATE players SET bio = ?, updated_at = ? WHERE device_id = ?'),
+      updateTitle: d.prepare('UPDATE players SET title = ?, updated_at = ? WHERE device_id = ?'),
       updateRecovery: d.prepare('UPDATE players SET recovery_code = ?, updated_at = ? WHERE device_id = ?'),
       updateState: d.prepare('UPDATE players SET state_json = ?, state_updated_at = ?, updated_at = ? WHERE device_id = ?'),
       getByCode: d.prepare('SELECT * FROM players WHERE user_code = ?'),
       touch: d.prepare('UPDATE players SET last_seen = ? WHERE device_id = ?'),
 
       listAllRatings: d.prepare('SELECT device_id,nickname,rank_json,stats_json FROM players WHERE last_seen >= ?'),
-      topByGame: d.prepare('SELECT device_id,nickname,avatar,bio,rank_json,stats_json FROM players'),
+      topByGame: d.prepare('SELECT device_id,nickname,avatar,bio,title,rank_json,stats_json FROM players'),
 
       listFriends: d.prepare('SELECT friend_id FROM friends WHERE device_id = ?'),
       addFriend: d.prepare('INSERT OR IGNORE INTO friends (device_id,friend_id,created_at) VALUES (?,?,?)'),
       delFriend: d.prepare('DELETE FROM friends WHERE device_id = ? AND friend_id = ?'),
       isFriend: d.prepare('SELECT 1 FROM friends WHERE device_id = ? AND friend_id = ?'),
-      getMany: d.prepare(`SELECT device_id,nickname,avatar,bio,rank_json,stats_json FROM players WHERE device_id IN (SELECT friend_id FROM friends WHERE device_id = ?)`),
+      getMany: d.prepare(`SELECT device_id,nickname,avatar,bio,title,rank_json,stats_json FROM players WHERE device_id IN (SELECT friend_id FROM friends WHERE device_id = ?)`),
 
       addReq: d.prepare('INSERT OR IGNORE INTO friend_requests (from_id,to_id,created_at) VALUES (?,?,?)'),
       delReq: d.prepare('DELETE FROM friend_requests WHERE from_id = ? AND to_id = ?'),
@@ -218,6 +221,14 @@ class Store {
   /* 个性签名（路由层已清洗控制字符并截断） */
   setBio(deviceId, bio) {
     this.q.updateBio.run(String(bio || ''), Date.now(), deviceId);
+  }
+
+  /* 佩戴中的称号（存称号 id，如 tt_top_holdem；空串表示未佩戴） */
+  setTitle(deviceId, titleId) {
+    this.q.updateTitle.run(String(titleId || '').slice(0, 32), Date.now(), deviceId);
+  }
+  titleOf(deviceId) {
+    try { const p = this.getPlayer(deviceId); return (p && p.title) || ''; } catch (e) { return ''; }
   }
 
   /* ---------- 拉黑 / 举报 ---------- */
@@ -322,6 +333,7 @@ class Store {
       nickname: r.nickname,
       avatar: r.avatar || 'a01',
       bio: r.bio || '',
+      title: r.title || '',
       points: (JSON.parse(r.rank_json || '{}')[game] || {}).points || 0,
       tier: (JSON.parse(r.rank_json || '{}')[game] || {}).tier || 0,
     })).sort((a, b) => b.points - a.points);
@@ -346,6 +358,7 @@ class Store {
         nickname: me.nickname,
         avatar: me.avatar || 'a01',
         bio: me.bio || '',
+        title: me.title || '',
         points: (JSON.parse(me.rank_json || '{}')[game] || {}).points || 0,
         tier: (JSON.parse(me.rank_json || '{}')[game] || {}).tier || 0,
       });

@@ -11,6 +11,7 @@ const files = [
   ['端到端联机', 'e2e.test.js', []],
   ['炸金花/骰子联机', 'gold-diceduel.test.js', []],
   ['双客户端联机冒烟', 'smoke-online.js', []],
+  ['快速匹配端到端', 'match.test.js', []],
 ];
 
 let failed = 0;

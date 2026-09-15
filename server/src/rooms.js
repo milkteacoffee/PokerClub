@@ -551,7 +551,8 @@ class Room {
     if (this.started) return { ok: false, msg: '已开始' };
     if (ad.seatsExact && this.seats.length !== ad.seatsExact) return { ok: false, msg: this.game === 'guandan' ? '掼蛋需要正好 4 人' : '人数不符' };
     if (this.seats.length < ad.minPlayers) return { ok: false, msg: '至少 ' + ad.minPlayers + ' 人才能开始' };
-    if (!this.seats.every(s => s.ready)) return { ok: false, msg: '还有玩家未准备' };
+    /* 快速匹配房由服务端凑满即开，不需要玩家点准备；好友房仍需全员准备 */
+    if (!this.matched && !this.seats.every(s => s.ready)) return { ok: false, msg: '还有玩家未准备' };
     return { ok: true };
   }
 
@@ -642,6 +643,11 @@ class Room {
     try { const p = this.store.getPlayer(deviceId); return (p && p.avatar) || 'a01'; } catch (e) { return 'a01'; }
   }
 
+  /* 座位佩戴称号（称号 id，前端转成名称与图标） */
+  titleOf(deviceId) {
+    try { return this.store.titleOf(deviceId) || ''; } catch (e) { return ''; }
+  }
+
   /* 座位签名：从玩家档案实时查（个人简介，可为空） */
   bioOf(deviceId) {
     try { const p = this.store.getPlayer(deviceId); return (p && p.bio) || ''; } catch (e) { return ''; }
@@ -649,11 +655,11 @@ class Room {
 
   viewFor(deviceId) {
     if (!this.started || !this.state) {
-      return { game: this.game, waiting: true, seats: this.seats.map(s => ({ seat: s.seat, deviceId: s.deviceId, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), ready: s.ready, online: s.online })), host: this.hostDevice };
+      return { game: this.game, waiting: true, seats: this.seats.map(s => ({ seat: s.seat, deviceId: s.deviceId, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), title: this.titleOf(s.deviceId), ready: s.ready, online: s.online })), host: this.hostDevice };
     }
     const seat = this.seatOf(deviceId);
     const v = this.adapter.publicView(this.state, seat);
-    v.seatInfo = this.seats.map(s => ({ seat: s.seat, deviceId: s.deviceId, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), online: s.online, ready: s.ready }));
+    v.seatInfo = this.seats.map(s => ({ seat: s.seat, deviceId: s.deviceId, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), title: this.titleOf(s.deviceId), online: s.online, ready: s.ready }));
     v.host = this.hostDevice;
     /* 思考倒计时：与「行动超时自动代打」严格对齐。下发剩余毫秒（而非绝对时间戳），
        避免客户端时钟与服务器不一致导致倒计时错乱。 */

@@ -96,8 +96,13 @@ const server = http.createServer(async (req, res) => {
         const bio = String(body.bio).replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 60);
         store.setBio(deviceId, bio);
       }
+      /* 佩戴中的称号：只接受称号 id 形式的短 token（如 tt_top_holdem） */
+      if (body && body.title !== undefined) {
+        const tid = String(body.title || '').trim();
+        if (!tid || /^[A-Za-z0-9_]{1,32}$/.test(tid)) store.setTitle(deviceId, tid);
+      }
       const fresh = store.getPlayer(deviceId);
-      return json(res, 200, { ok: true, deviceId, nickname: fresh.nickname, avatar: fresh.avatar || 'a01', bio: fresh.bio || '', userCode: fresh.user_code, recoveryCode: fresh.recovery_code, rank: store.getRank(deviceId), items: store.getItems(deviceId) });
+      return json(res, 200, { ok: true, deviceId, nickname: fresh.nickname, avatar: fresh.avatar || 'a01', bio: fresh.bio || '', title: fresh.title || '', userCode: fresh.user_code, recoveryCode: fresh.recovery_code, rank: store.getRank(deviceId), items: store.getItems(deviceId) });
     }
 
     /* 云存档：全量状态 blob 的读取 / 上推（最后写入胜出，客户端凭 updatedAt 比对） */
@@ -337,6 +342,60 @@ const server = http.createServer(async (req, res) => {
 const wss = new WebSocketServer({ server, path: '/ws' });
 const conns = new Map();   // deviceId -> { ws, roomCode, lastMsgs: [] }
 
+/* ============ 快速匹配（陌生人匹配：凑满即建房并直接开局）============
+   设计取舍：真人优先，凑不满就继续等（不做 AI 补位，避免"以为是真人"的误解）；
+   匹配房无需准备，建房即开局，与好友房的准备流程互不影响。 */
+const matchQueue = new Map();   // game -> [ { deviceId, nickname, ws } ]
+const matchMin = (game) => { const ad = ADAPTERS[game]; return (ad && ad.minPlayers) || 2; };
+function broadcastMatch(game) {
+  const q = matchQueue.get(game) || [];
+  for (const e of q) if (e.ws && e.ws.readyState === 1) {
+    send(e.ws, 'matching', { game, name: GAME_NAMES[game] || game, waiting: q.length, need: matchMin(game), names: q.map(x => x.nickname) });
+  }
+}
+function matchRemove(deviceId) {
+  for (const [g, q] of matchQueue) {
+    const i = q.findIndex(e => e.deviceId === deviceId);
+    if (i >= 0) { q.splice(i, 1); broadcastMatch(g); }
+  }
+}
+function matchPush(game, deviceId, nickname, ws) {
+  if (!ADAPTERS[game]) return { ok: false, msg: '该玩法暂不支持快速匹配' };
+  matchRemove(deviceId);
+  rooms.leaveCurrent(deviceId);
+  let q = matchQueue.get(game);
+  if (!q) { q = []; matchQueue.set(game, q); }
+  q.push({ deviceId, nickname, ws });
+  return { ok: true };
+}
+function tryMatch(game) {
+  const q = matchQueue.get(game) || [];
+  const need = matchMin(game);
+  if (q.length < need) { broadcastMatch(game); return; }
+  const group = q.splice(0, need);
+  broadcastMatch(game);
+  const host = group[0];
+  const r = rooms.create(game, host.deviceId, host.nickname, { matched: true });
+  if (!r.ok) { for (const e of group) if (e.ws) send(e.ws, 'error', { msg: r.msg }); return; }
+  const room = r.room, code = r.code;
+  room.matched = true;
+  const hs = room.seats.find(x => x.deviceId === host.deviceId); if (hs) hs.ws = host.ws;
+  const hc = conns.get(host.deviceId); if (hc) hc.roomCode = code;
+  for (let i = 1; i < group.length; i++) {
+    const e = group[i];
+    const jr = rooms.join(code, e.deviceId, e.nickname, e.ws);
+    if (jr.ok) { const c = conns.get(e.deviceId); if (c) c.roomCode = code; }
+    else if (e.ws) send(e.ws, 'error', { msg: '匹配失败：' + jr.msg });
+  }
+  const st = room.start();
+  if (st.ok) startTick(room);
+  for (const s of room.seats) if (s.online && s.ws) send(s.ws, 'room', { code, seat: s.seat, room: room.viewFor(s.deviceId), matched: true });
+  for (const s of room.seats) if (s.online && s.ws) send(s.ws, 'state', { state: room.viewFor(s.deviceId) });
+  console.log('[match] ' + game + ' 匹配成功 ' + code + '（' + group.map(x => x.nickname).join('、') + '）');
+}
+
+
+
 function send(ws, type, data) {
   if (ws && ws.readyState === 1) {
     let payload;
@@ -457,7 +516,21 @@ wss.on('connection', (ws, req) => {
         }
         conn.roomCode = null;
         rooms.byDevice.delete(deviceId);
+        matchRemove(deviceId);
         return;
+      }
+
+      if (t === 'match') {
+        const game = String(msg.game || 'holdem');
+        const r = matchPush(game, deviceId, conn.nickname, ws);
+        if (!r.ok) return send(ws, 'error', { msg: r.msg });
+        tryMatch(game);
+        return;
+      }
+
+      if (t === 'matchCancel') {
+        matchRemove(deviceId);
+        return send(ws, 'left', { cancelled: true });
       }
 
       if (t === 'ping') return send(ws, 'pong', { t: Date.now() });
@@ -471,6 +544,7 @@ wss.on('connection', (ws, req) => {
   ws.on('close', () => {
     const c = conns.get(deviceId);
     if (c && c.ws === ws) conns.delete(deviceId);
+    matchRemove(deviceId);
     const room = conn.roomCode ? rooms.get(conn.roomCode) : null;
     if (room) {
       room.leave(deviceId);
