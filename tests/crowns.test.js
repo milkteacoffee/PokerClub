@@ -181,7 +181,10 @@ test('顶栏段位徽章登顶显示德州王牌', () => {
   w.player.games.holdem.rankPoints = 6000;
   w.player.games.holdem.rankPeak = 6;
   w.renderLobby();
-  assert.equal(doc.getElementById('lbRank').textContent, '👑 德州王牌 III');
+  /* 去 emoji 后段位徽章渲染为内联 SVG 图标（.icn-crown），文本只留段位名 */
+  const badge = doc.getElementById('lbRank');
+  assert.equal(badge.textContent.trim(), '德州王牌 III');
+  assert.ok(/icn-crown/.test(badge.innerHTML), '段位徽章渲染为内联 SVG 皇冠图标');
 });
 
 test('掼蛋战绩栏显示段位与封顶进度', () => {

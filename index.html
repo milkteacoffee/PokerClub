@@ -84,6 +84,9 @@
     font-size:14px; font-weight:900; color:#f2c14e;
     text-shadow:0 2px 4px rgba(0,0,0,.4); }
   .lobby-coins .icon { font-size:15px; }
+  /* 内联图标（emoji → SVG 后的统一载体）：随字号缩放，跟随文字色 */
+  .icn { display:inline-block; width:1em; height:1em; vertical-align:-.14em; flex:none; overflow:visible; }
+  .icn path, .icn circle, .icn rect, .icn ellipse, .icn polygon { vector-effect:non-scaling-stroke; }
   .lobby-topbtns { margin-left:auto; display:flex; gap:7px; }
   .lobby-iconbtn { width:40px; height:40px; border-radius:11px;
     border:1px solid rgba(255,255,255,.06);
@@ -1384,6 +1387,10 @@
   .pf-ghostbtn{width:100%;margin-top:8px;padding:8px;border:1px solid rgba(255,255,255,.16);border-radius:8px;cursor:pointer;font-family:inherit;font-size:11.5px;font-weight:700;color:#aeb9c4;background:rgba(255,255,255,.03)}
   .pf-ghostbtn:active{transform:translateY(1px)}
   .pf-ghostbtn:hover{color:#e6edf3;border-color:rgba(240,215,154,.4)}
+  /* 自定义头像上传行：两个按钮并排，各占一半 */
+  .pf-avup{display:flex;gap:8px;margin-top:8px}
+  .pf-avup .pf-ghostbtn{margin-top:0;flex:1}
+  .pf-opt-custom svg{display:block}
   .friend-addbtn.warn{background:linear-gradient(160deg,#f0b48a,#d97b4a);color:#2b1408}
   /* 榜单 / 好友 / 房间座位头像 */
   .bavatar{width:22px;height:22px;border-radius:6px;overflow:hidden;flex:none;line-height:0}
@@ -1894,6 +1901,12 @@
       </div>
       <div class="pf-sec">选择头像</div>
       <div class="pf-grid" id="pfGrid"></div>
+      <div class="pf-avup">
+        <button id="pfAvatarUpload" class="pf-ghostbtn" type="button">上传自定义头像</button>
+        <button id="pfAvatarRemove" class="pf-ghostbtn" type="button">移除自定义</button>
+        <input type="file" id="pfAvatarFile" accept="image/*" hidden>
+      </div>
+      <div class="pf-hint">自定义头像会裁成方形并压缩（≤12KB）；联机时同步给好友，超出 8KB 只在本机生效。</div>
       <div class="pf-sec">昵称与签名</div>
       <div class="pf-form">
         <input id="pfNick" class="friend-input" maxlength="12" placeholder="昵称（最多12字）" autocomplete="off" spellcheck="false">
@@ -2266,14 +2279,76 @@ var AVATARS = {
   a12: { name: '朱砂印章', svg: '<rect x="16" y="13" width="32" height="31" rx="4" fill="#c41a1a"/><rect x="22" y="19" width="20" height="19" fill="none" stroke="#f5f0e8" stroke-width="2.5"/><path d="M27 24.5 h10 M27 31.5 h10 M32 24.5 v13" stroke="#f5f0e8" stroke-width="2.5"/>' },
 };
 /* 渲染预设头像为内联 SVG（暗底鎏金描边；未知 id 回落 a01；离线/无 player 也可用） */
+/* 存档入口：资料面板 / 头像 / 云同步等处统一调用（内部走 saveAllSaves + 防抖上云）。
+   历史坑：这些地方原先直接调用 savePlayer()，而该函数从未定义 → ReferenceError，
+   会中断「保存资料」后续的同步与重绘，看起来就是点了没反应。 */
+function savePlayer(silent) {
+  try { return saveAllSaves(silent !== false); } catch (e) { return Promise.resolve(false); }
+}
 function avatarSVG(id, size) {
-  var a = AVATARS[id] ? id : 'a01';
   var s = size || 24;
+  /* 自定义头像：id 为 'custom'（本人）或直接是 dataURL（他人，服务器原样下发） */
+  var data = '';
+  if (typeof id === 'string' && id.indexOf('data:') === 0) data = id;
+  else if (id === 'custom' && player && player.customAvatar) data = player.customAvatar;
+  if (data) {
+    return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<defs><clipPath id="pavclip"><rect x="1.5" y="1.5" width="61" height="61" rx="14"/></clipPath></defs>' +
+      '<image href="' + data + '" x="1.5" y="1.5" width="61" height="61" preserveAspectRatio="xMidYMid slice" clip-path="url(#pavclip)"/>' +
+      '<rect x="1.5" y="1.5" width="61" height="61" rx="14" fill="none" stroke="#cfa85b" stroke-width="2.5"/></svg>';
+  }
+  var a = AVATARS[id] ? id : 'a01';
   return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
     '<defs><linearGradient id="pavbg" x1="0" y1="0" x2="0" y2="1">' +
     '<stop offset="0" stop-color="#2b3a4d"/><stop offset="1" stop-color="#141d27"/></linearGradient></defs>' +
     '<rect x="1.5" y="1.5" width="61" height="61" rx="14" fill="url(#pavbg)" stroke="#cfa85b" stroke-width="2.5"/>' +
     AVATARS[a].svg + '</svg>';
+}
+/* ---- 自定义头像：居中裁方 + 压缩（云存档 512KB / 服务器字段限制，控制在 12KB 内）---- */
+var AVATAR_MAX_BYTES = 12000;      /* 存档与同步上限 */
+var AVATAR_UPLOAD_MAX = 8000;      /* 上传服务器的 dataURL 上限（超出只本地生效） */
+function avatarCompress(img, size, q) {
+  var c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  var ctx = c.getContext('2d');
+  var s = Math.min(img.width, img.height);
+  ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+  return c.toDataURL('image/jpeg', q);
+}
+function avatarFileToData(file, cb) {
+  if (!file || !/^image\//.test(file.type || '')) return cb(null, '请选择图片文件');
+  var fr = new FileReader();
+  fr.onerror = function () { cb(null, '读取失败'); };
+  fr.onload = function () {
+    var img = new Image();
+    img.onerror = function () { cb(null, '图片解析失败'); };
+    img.onload = function () {
+      try {
+        var d = avatarCompress(img, 128, 0.72);
+        if (d.length > AVATAR_MAX_BYTES) d = avatarCompress(img, 96, 0.62);
+        if (d.length > AVATAR_MAX_BYTES + 2000) return cb(null, '图片过大，请换一张');
+        cb(d);
+      } catch (e) { cb(null, '浏览器不支持图片压缩'); }
+    };
+    img.src = String(fr.result);
+  };
+  fr.readAsDataURL(file);
+}
+function setCustomAvatar(data) {
+  if (!player) return;
+  player.customAvatar = data;
+  player.avatar = 'custom';
+  try { savePlayer(); } catch (e) {}          /* 存档失败也不该卡住界面 */
+  renderProfile();
+  try { renderLobby(); } catch (e) {}
+  onlinePushProfile();
+  showToast('头像已更新', 1600);
+}
+function handleAvatarFile(file) {
+  avatarFileToData(file, function (data, err) {
+    if (!data) { showToast(err || '头像设置失败', 2000, true); return; }
+    setCustomAvatar(data);
+  });
 }
 
 /* ---- 设备身份（主作用域持有：云存档 / 资料面板 / 联机嵌套 IIFE 共用）----
@@ -2444,18 +2519,59 @@ function renderProfile() {
   var box = $('pfAvatar'); if (box) box.innerHTML = avatarSVG(av, 60);
   var g = $('pfGrid');
   if (g) {
+    var hasCustom = !!(player && player.customAvatar);
     g.innerHTML = AVATAR_IDS.map(function (id) {
       return '<button type="button" class="pf-opt' + (id === av ? ' selected' : '') + '" data-pav="' + id + '" title="' + AVATARS[id].name + '">' + avatarSVG(id, 44) + '</button>';
-    }).join('');
+    }).join('') +
+      '<button type="button" class="pf-opt pf-opt-custom' + (av === 'custom' ? ' selected' : '') + '" data-pav="custom" title="自定义头像">' +
+      (hasCustom ? avatarSVG('custom', 44) :
+        '<svg width="44" height="44" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<rect x="1.5" y="1.5" width="61" height="61" rx="14" fill="#22303f" stroke="#cfa85b" stroke-width="2.5" stroke-dasharray="6 4"/>' +
+        '<path d="M32 20v24M20 32h24" stroke="#cfa85b" stroke-width="4" stroke-linecap="round"/></svg>') +
+      '</button>';
     g.querySelectorAll('[data-pav]').forEach(function (b) {
       b.onclick = function () {
-        player.avatar = b.getAttribute('data-pav');
+        var id = b.getAttribute('data-pav');
+        if (id === 'custom' && !(player && player.customAvatar)) {
+          var f = $('pfAvatarFile'); if (f) f.click();
+          return;
+        }
+        player.avatar = id;
         sfx('click');
         renderProfile();
         savePlayer();            /* 落地本机 + 防抖云同步 */
         onlinePushProfile();     /* 同步服务器档案（榜单/好友/房间立即生效） */
       };
     });
+  }
+  /* 自定义头像：上传 / 移除 */
+  var upBtn = $('pfAvatarUpload');
+  if (upBtn && !upBtn.__bound) {
+    upBtn.__bound = true;
+    upBtn.onclick = function () { var f = $('pfAvatarFile'); if (f) f.click(); };
+  }
+  var fi = $('pfAvatarFile');
+  if (fi && !fi.__bound) {
+    fi.__bound = true;
+    fi.onchange = function () { handleAvatarFile(fi.files && fi.files[0]); fi.value = ''; };
+  }
+  var rmBtn = $('pfAvatarRemove');
+  if (rmBtn) {
+    var has = !!(player && player.customAvatar);
+    rmBtn.hidden = !has;
+    if (!rmBtn.__bound) {
+      rmBtn.__bound = true;
+      rmBtn.onclick = function () {
+        if (!player) return;
+        player.customAvatar = '';
+        if (player.avatar === 'custom') player.avatar = 'a01';
+        try { savePlayer(); } catch (e) {}    /* 存档失败也不该卡住界面 */
+        renderProfile();
+        try { renderLobby(); } catch (e) {}
+        onlinePushProfile();
+        showToast('已移除自定义头像', 1600);
+      };
+    }
   }
   var nm = $('pfNick'); if (nm && document.activeElement !== nm) nm.value = player.name || '';
   var bio = $('pfBio'); if (bio && document.activeElement !== bio) bio.value = player.bio || '';
@@ -2498,7 +2614,9 @@ function onlinePushProfile(cb) {
   if (!api || !api.fetchIdentity) return cb && cb(false, 'offline');
   api.fetchIdentity(cb, {
     nickname: player.name || '',
-    avatar: player.avatar || 'a01',
+    /* 自定义头像：dataURL 超过上传上限时只本地生效，服务器回落默认头像 */
+    avatar: (player.avatar === 'custom' && player.customAvatar && player.customAvatar.length <= AVATAR_UPLOAD_MAX)
+      ? player.customAvatar : (player.avatar || 'a01'),
     bio: player.bio || '',
   });
 }
@@ -2554,7 +2672,7 @@ function updateSaveIndicator(state) {
       }
     }, 2000);
   } else if (state === 'error') {
-    txt.textContent = '⚠️ 保存失败';
+    txt.innerHTML = icifyHTML('⚠️ 保存失败');
   }
 }
 
@@ -3971,7 +4089,8 @@ var toastTimer = null;
 function showToast(msg, dur, danger, type) {
   var el = $('toast');
   if (!el) return;
-  el.textContent = msg;
+  /* toast 文案都是内部常量 + 数字，先 esc 再渲染成内联图标（emoji → SVG） */
+  el.innerHTML = icifyHTML(esc(msg));
   el.classList.toggle('danger', !!danger);
   el.classList.toggle('success', type === 'success');
   el.classList.add('show');
@@ -4107,7 +4226,7 @@ function initOverlayUX() {
       var back = document.createElement('button');
       back.type = 'button';
       back.className = 'ov-backbtn';
-      back.textContent = '← 返回';
+      back.innerHTML = icifyHTML('← 返回');
       back.setAttribute('data-close', o.id);
       back.addEventListener('click', function () { sfx('click'); closeOverlay(o.id); });
       bar.appendChild(back);
@@ -4546,7 +4665,7 @@ function renderLobby() {
 
   // 段位徽章（单机版不显示人物头像）
   var ri = rankInfo();
-  $('lbRank').textContent = ri.icon + ' ' + ri.name;
+  $('lbRank').innerHTML = icifyHTML(ri.icon + ' ' + ri.name);
 
   ensureDailyTasks();
   ensureCheckin();
@@ -4587,7 +4706,7 @@ function renderTopbar() {
   var need = player.level * 100;
   var pct = Math.min(100, (player.exp / need) * 100);
   $('pExp').style.width = pct + '%';
-  $('btnSound').textContent = player.soundOn ? '🔊' : '🔇';
+  $('btnSound').innerHTML = icifyHTML(player.soundOn ? '🔊' : '🔇');
   $('btnSound').classList.toggle('off', !player.soundOn);
 }
 
@@ -4687,7 +4806,7 @@ function renderControls() {
     el.innerHTML = '';
     var b1 = document.createElement('button');
     b1.className = 'abtn start';
-    b1.textContent = '下一手 ▶';
+    b1.innerHTML = icifyHTML('下一手 ▶');
     b1.addEventListener('click', function(){ sfx('click'); nextHand(); });
     el.appendChild(b1);
     var b2 = document.createElement('button');
@@ -7240,9 +7359,9 @@ function openSettings() {
   $('volMasterV').textContent = Math.round(player.volMaster * 100) + '%';
   $('volSfxV').textContent = Math.round(player.volSfx * 100) + '%';
   $('volMusicV').textContent = Math.round(player.volMusic * 100) + '%';
-  $('setSfxToggle').textContent = player.soundOn ? '🔊 音效 开' : '🔇 音效 关';
-  $('setMusicToggle').textContent = player.musicOn ? '🎵 音乐 开' : '🎵 音乐 关';
-  $('setSettleToggle').textContent = (player.settlePanel === false) ? '📋 每手结算 关' : '📋 每手结算 开';
+  $('setSfxToggle').innerHTML = icifyHTML(player.soundOn ? '🔊 音效 开' : '🔇 音效 关');
+  $('setMusicToggle').innerHTML = icifyHTML(player.musicOn ? '🎵 音乐 开' : '🎵 音乐 关');
+  $('setSettleToggle').innerHTML = icifyHTML((player.settlePanel === false) ? '📋 每手结算 关' : '📋 每手结算 开');
   $('bgmSrcLabel').textContent = bgmSourceLabel();
   openOverlay('ovSettings');
 }
@@ -7812,7 +7931,7 @@ function syncCrowns(){
       var n=crownCount(player);
       var done=CROWN_ORDER.filter(function(g){return gameIsTopTier(player,g);}).map(crownNameOf);
       elc.hidden=false;
-      elc.textContent='👑 六冠赌神进度 '+n+' / 6'+(n?' · 已封顶：'+done.join('、'):' · 六大游戏排位全部达到最高段位，可获得永久称号「六冠赌神」');
+      elc.innerHTML = icifyHTML('👑 六冠赌神进度 '+n+' / 6'+(n?' · 已封顶：'+done.join('、'):' · 六大游戏排位全部达到最高段位，可获得永久称号「六冠赌神」'));
     }
   }
   document.querySelectorAll('.game-tile').forEach(function(b){
@@ -8235,6 +8354,176 @@ if (document.readyState === 'loading') {
 }
 
 /* Guandan offline engine: independent from coins, saves and cloud. */
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+/* ================= 内联图标库：把 UI 里的 emoji 渲染成内联 SVG（零 emoji 视觉） =================
+   设计约定：
+   1) 图形一律 32×32 viewBox，尺寸 1em 跟随字号；currentColor 描边 → 亮/暗底自动适配，
+      只有金币/王冠/火焰等需要品牌色的才写死颜色。
+   2) 渲染链路三处生效：① innerHTML setter 拦截（动态拼接）② icifyStatic（首屏静态 DOM）
+      ③ showToast（toast 走 textContent，单独处理）。所以业务代码**不需要**逐个改字符串。
+   3) 牌面花色 ♠♥♦♣ 与骰面 ⚀-⚅ 是牌局内容，不在映射表内，保持字符原样。            */
+var ICONS = {
+  coin:'<circle cx="16" cy="16" r="11" fill="#d4a847"/><rect x="12.6" y="12.6" width="6.8" height="6.8" rx="1" fill="#3a2a12"/><circle cx="16" cy="16" r="11" fill="none" stroke="#a8802a" stroke-width="1.6"/>',
+  crown:'<path d="M5 25 3 11l7.5 5.5L16 6l5.5 10.5L29 11l-2 14z" fill="#d4a847"/><rect x="5" y="26" width="22" height="3" rx="1.5" fill="#a8802a"/>',
+  medal:'<path d="M10 3h12l-3 9h-6z" fill="#c41a1a"/><circle cx="16" cy="21" r="8" fill="#d4a847"/><circle cx="16" cy="21" r="3" fill="#a8802a"/>',
+  trophy:'<path d="M9 5h14v7a7 7 0 0 1-14 0z" fill="#d4a847"/><path d="M9 7H5.5v3.5A4.5 4.5 0 0 0 10 15M23 7h3.5v3.5A4.5 4.5 0 0 1 22 15" fill="none" stroke="#d4a847" stroke-width="2"/><rect x="14" y="19" width="4" height="5" fill="#d4a847"/><rect x="9" y="25" width="14" height="3.5" rx="1.5" fill="#a8802a"/>',
+  gift:'<rect x="5" y="12" width="22" height="15" rx="2" fill="#c41a1a"/><rect x="4" y="8" width="24" height="5" rx="1.5" fill="#d4a847"/><path d="M16 8v19" stroke="#f5f0e8" stroke-width="2"/><path d="M16 8c0-3-4-6-6-4s3 5 6 4zM16 8c0-3 4-6 6-4s-3 5-6 4z" fill="#d4a847"/>',
+  cal:'<rect x="5" y="7" width="22" height="20" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 13h22M11 4v5M21 4v5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+  clock:'<circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 8.5V16l5.5 3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+  list:'<rect x="7" y="5" width="18" height="22" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 11h10M11 16h10M11 21h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  scroll:'<rect x="8" y="4" width="16" height="24" rx="2" fill="#f5f0e8" stroke="currentColor" stroke-width="2"/><path d="M12 10h8M12 15h8M12 20h5" stroke="#8a6a20" stroke-width="1.8"/>',
+  lock:'<rect x="7" y="14" width="18" height="13" rx="2.5" fill="currentColor"/><path d="M11 14v-4a5 5 0 0 1 10 0v4" fill="none" stroke="currentColor" stroke-width="2.4"/>',
+  key:'<circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15 15l11 11M22 22l-3 3M25 25l-3 3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+  sound:'<path d="M6 12h4.5L17 6v20l-6.5-6H6z" fill="currentColor"/><path d="M21 11.5a6 6 0 0 1 0 9M24.5 8a10 10 0 0 1 0 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  mute:'<path d="M6 12h4.5L17 6v20l-6.5-6H6z" fill="currentColor"/><path d="M21 12l7 8M28 12l-7 8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+  music:'<path d="M13 24V9l12-2.5V20" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="10" cy="24" r="3.5" fill="currentColor"/><circle cx="22" cy="21" r="3.5" fill="currentColor"/>',
+  warn:'<path d="M16 4l13 24H3z" fill="none" stroke="#e05656" stroke-width="2.4" stroke-linejoin="round"/><path d="M16 11v7.5" stroke="#e05656" stroke-width="2.6" stroke-linecap="round"/><circle cx="16" cy="23.5" r="1.5" fill="#e05656"/>',
+  fire:'<path d="M16 3s1 5-3 8c-3 2.5-4 5-4 8a7 7 0 0 0 14 0c0-6-7-7-7-16z" fill="#e0662a"/>',
+  target:'<circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="16" r="6" fill="none" stroke="#c41a1a" stroke-width="2"/><circle cx="16" cy="16" r="2" fill="#c41a1a"/>',
+  gem:'<path d="M10 5h12l6 8-12 15L4 13z" fill="#4a7a9c"/><path d="M4 13h24M10 5l6 8 6-8" fill="none" stroke="#a8cfe4" stroke-width="1.6"/>',
+  door:'<path d="M9 27V6a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v21" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M9 27h14" stroke="currentColor" stroke-width="2.2"/><circle cx="18" cy="16" r="1.6" fill="currentColor"/>',
+  purse:'<path d="M8 11h16l2.5 16H5.5z" fill="#8a6a20"/><path d="M12 11a4 4 0 0 1 8 0" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M13 17h6M16 17v6" stroke="#d4a847" stroke-width="2" stroke-linecap="round"/>',
+  money:'<rect x="3" y="9" width="17" height="12" rx="2.5" transform="rotate(-8 11.5 15)" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19 12h6M22.5 9l3.5 3-3.5 3" fill="none" stroke="#d4a847" stroke-width="2" stroke-linecap="round"/>',
+  card:'<rect x="8" y="5" width="16" height="22" rx="3" fill="#f5f0e8" stroke="currentColor" stroke-width="2"/><path d="M12 10h8M12 15h8" stroke="#c41a1a" stroke-width="2" stroke-linecap="round"/>',
+  joker:'<rect x="8" y="5" width="16" height="22" rx="3" fill="#f5f0e8" stroke="currentColor" stroke-width="2"/><path d="M16 9l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L13.8 14.3l5-.7z" fill="#c41a1a"/>',
+  dice:'<rect x="5" y="5" width="22" height="22" rx="5" fill="#f5f0e8" stroke="currentColor" stroke-width="2"/><circle cx="11" cy="11" r="2.2" fill="#2c1810"/><circle cx="21" cy="21" r="2.2" fill="#2c1810"/><circle cx="16" cy="16" r="2.2" fill="#2c1810"/>',
+  mahjong:'<rect x="8" y="5" width="16" height="22" rx="3" fill="#2e7d52"/><circle cx="16" cy="13" r="4" fill="#f5f0e8"/><path d="M11 22h10" stroke="#f5f0e8" stroke-width="2" stroke-linecap="round"/>',
+  bolt:'<path d="M18 3L7 18h6.5L11 29l13-16h-7.5z" fill="#d4a847"/>',
+  phone:'<rect x="9" y="3" width="14" height="26" rx="3.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M14 26.5h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  save:'<path d="M6 6h15l5 5v15H6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 6v6h9V6M11 26v-7h10v7" fill="currentColor"/>',
+  redpacket:'<rect x="7" y="6" width="18" height="21" rx="2.5" fill="#c41a1a"/><path d="M7 12h18" stroke="#d4a847" stroke-width="2"/><circle cx="16" cy="18" r="3.2" fill="#d4a847"/>',
+  gold:'<path d="M11 3h10l-2.5 8h-5z" fill="#c41a1a"/><circle cx="16" cy="21" r="8.5" fill="#d4a847"/><path d="M13 19l2.5 3 4-5" fill="none" stroke="#7a5c14" stroke-width="2"/>',
+  silver:'<path d="M11 3h10l-2.5 8h-5z" fill="#c41a1a"/><circle cx="16" cy="21" r="8.5" fill="#c9d1d9"/><path d="M13 19l2.5 3 4-5" fill="none" stroke="#7b8794" stroke-width="2"/>',
+  bronze:'<path d="M11 3h10l-2.5 8h-5z" fill="#c41a1a"/><circle cx="16" cy="21" r="8.5" fill="#c98a4b"/><path d="M13 19l2.5 3 4-5" fill="none" stroke="#7a4f1c" stroke-width="2"/>',
+  flag:'<path d="M8 28V4l16 5.5-4 4 4 4L8 19" fill="#d4a847"/>',
+  sprout:'<path d="M16 28V15" stroke="#4a7a9c" stroke-width="2.4" stroke-linecap="round"/><path d="M16 17c-5 0-8-3.5-8-8 5.5 0 8 3 8 8z" fill="#6fc2a0"/><path d="M16 19c4.5 0 7-3 7-7-5 0-7 2.5-7 7z" fill="#4a7a9c"/>',
+  check:'<circle cx="16" cy="16" r="11" fill="#2e7d52"/><path d="M10.5 16.5l4 4 7.5-8" fill="none" stroke="#f5f0e8" stroke-width="2.6" stroke-linecap="round"/>',
+  cross:'<circle cx="16" cy="16" r="11" fill="#c41a1a"/><path d="M11.5 11.5l9 9M20.5 11.5l-9 9" stroke="#f5f0e8" stroke-width="2.6" stroke-linecap="round"/>',
+  star:'<path d="M16 4l3.6 8.6L28.5 16l-8.9 3.4L16 28l-3.6-8.6L3.5 16l8.9-3.4z" fill="#d4a847"/>',
+  lantern:'<ellipse cx="16" cy="16" rx="9.5" ry="11" fill="#c41a1a"/><rect x="11" y="3" width="10" height="3.5" rx="1" fill="#d4a847"/><rect x="11" y="25.5" width="10" height="3.5" rx="1" fill="#d4a847"/><path d="M16 6.5v19" stroke="#d4a847" stroke-width="1.6"/>',
+  flower:'<circle cx="16" cy="10" r="4" fill="#e8c34a"/><circle cx="16" cy="22" r="4" fill="#e8c34a"/><circle cx="10" cy="16" r="4" fill="#e8c34a"/><circle cx="22" cy="16" r="4" fill="#e8c34a"/><circle cx="16" cy="16" r="3.6" fill="#c41a1a"/>',
+  wheat:'<path d="M16 28V10" stroke="#c9a24a" stroke-width="2.2"/><path d="M16 12c-3-2-5-2-6 0 1 2 3 3 6 3zM16 12c3-2 5-2 6 0-1 2-3 3-6 3zM16 19c-3-2-5-2-6 0 1 2 3 3 6 3zM16 19c3-2 5-2 6 0-1 2-3 3-6 3z" fill="#c9a24a"/>',
+  tea:'<path d="M8 13h13v6a6.5 6.5 0 0 1-13 0z" fill="#f5f0e8" stroke="currentColor" stroke-width="1.8"/><path d="M21 14h3a3 3 0 0 1 0 6h-3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 26h15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13 9c0-2 2-2 2-4M18 9c0-2 2-2 2-4" stroke="#6fc2a0" stroke-width="1.8" fill="none"/>',
+  home:'<path d="M4 15L16 5l12 10v13H4z" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 28v-8h8v8" fill="none" stroke="currentColor" stroke-width="2"/>',
+  castle:'<path d="M4 27V12l5 3 7-6 7 6 5-3v15z" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M13 27v-6h6v6" fill="currentColor"/>',
+  seat:'<path d="M6 18V11a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v7" fill="none" stroke="currentColor" stroke-width="2"/><rect x="6" y="18" width="20" height="7" rx="2.5" fill="currentColor"/><path d="M4 25h24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  crystal:'<circle cx="16" cy="19" r="9" fill="#4a7a9c"/><path d="M10 4h12l-2 5H12z" fill="#d4a847"/><circle cx="13" cy="17" r="2.6" fill="#a8cfe4"/>',
+  wave:'<path d="M4 13c4-4 8 4 12 0s8-4 12 0M4 21c4-4 8 4 12 0s8-4 12 0" fill="none" stroke="#4a7a9c" stroke-width="2.4" stroke-linecap="round"/>',
+  rainbow:'<path d="M4 26a12 12 0 0 1 24 0" fill="none" stroke="#c41a1a" stroke-width="2.4"/><path d="M8 26a8 8 0 0 1 16 0" fill="none" stroke="#d4a847" stroke-width="2.4"/><path d="M12 26a4 4 0 0 1 8 0" fill="none" stroke="#4a7a9c" stroke-width="2.4"/>',
+  boom:'<path d="M16 3l3 7 7 2-5 5 1 8-6-4-6 4 1-8-5-5 7-2z" fill="#e0662a"/>',
+  dazzle:'<path d="M16 4v6M16 22v6M4 16h6M22 16h6" stroke="#d4a847" stroke-width="2.4" stroke-linecap="round"/><circle cx="16" cy="16" r="5" fill="none" stroke="#d4a847" stroke-width="2.4"/>',
+  diamond:'<path d="M16 4l12 12-12 12L4 16z" fill="none" stroke="#4a7a9c" stroke-width="2.2"/><path d="M16 10l6 6-6 6-6-6z" fill="#4a7a9c"/>',
+  doty:'<circle cx="16" cy="16" r="9" fill="#d4a847"/>',
+  dotg:'<circle cx="16" cy="16" r="9" fill="#2e7d52"/>',
+  dotr:'<circle cx="16" cy="16" r="9" fill="#c41a1a"/>',
+  frame:'<rect x="5" y="5" width="22" height="22" rx="2.5" fill="none" stroke="#d4a847" stroke-width="2.4"/><path d="M5 21l6-6 5 5 4-4 7 7" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="11" cy="11" r="2" fill="#d4a847"/>',
+  chart:'<path d="M6 26h20M9 26V14M16 26V7M23 26v-8" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>',
+  chartdown:'<path d="M6 8h20M9 8l6 8 4-4 7 9" fill="none" stroke="#c41a1a" stroke-width="2.4" stroke-linecap="round"/>',
+  bag:'<path d="M5 8h4l3 13h12l3-10H9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="13" cy="25" r="2" fill="currentColor"/><circle cx="22" cy="25" r="2" fill="currentColor"/>',
+  shield:'<path d="M16 4l11 4v9c0 7-5 11-11 13-6-2-11-6-11-13V8z" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M11 16l4 4 7-7" fill="none" stroke="#d4a847" stroke-width="2.4" stroke-linecap="round"/>',
+  eye:'<path d="M3 16s5-8 13-8 13 8 13 8-5 8-13 8S3 16 3 16z" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="16" cy="16" r="3.5" fill="currentColor"/>',
+  trash:'<path d="M6 9h20M12 9V6h8v3M8 9l2 18h12l2-18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>',
+  gear:'<circle cx="16" cy="16" r="5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M16 3v5M16 24v5M3 16h5M24 16h5M7 7l3.5 3.5M21.5 21.5L25 25M25 7l-3.5 3.5M10.5 21.5L7 25" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+  refresh:'<path d="M26 16a10 10 0 1 1-3.5-7.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M26 5v7h-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+  link:'<path d="M13 19a5 5 0 0 1 0-7l3-3a5 5 0 0 1 7 7l-1.5 1.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M19 13a5 5 0 0 1 0 7l-3 3a5 5 0 0 1-7-7l1.5-1.5" fill="none" stroke="currentColor" stroke-width="2.4"/>',
+  idcard:'<rect x="4" y="7" width="24" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="15" r="3.5" fill="currentColor"/><path d="M19 13h6M19 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  brain:'<path d="M13 6a5 5 0 0 0-5 5 4 4 0 0 0 1 7.8V22a3 3 0 0 0 3 3h1V6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19 6a5 5 0 0 1 5 5 4 4 0 0 1-1 7.8V22a3 3 0 0 1-3 3h-1V6z" fill="none" stroke="currentColor" stroke-width="2"/>',
+  cloud:'<path d="M9 22a5 5 0 0 1 .5-10 7 7 0 0 1 13 2 4.5 4.5 0 0 1-1 8z" fill="none" stroke="currentColor" stroke-width="2.2"/>',
+  help:'<circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12.5 12.5a3.5 3.5 0 1 1 5 3.2V19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="16" cy="22.5" r="1.4" fill="currentColor"/>',
+  play:'<path d="M9 5l16 11L9 27z" fill="currentColor"/>',
+  fast:'<path d="M6 6l10 10L6 26zM18 6l10 10-10 10z" fill="currentColor"/>',
+  dragon:'<path d="M6 20c4-10 12-12 16-8s2 10-2 10c-4 0-6-3-6-6" fill="none" stroke="#2e7d52" stroke-width="2.4" stroke-linecap="round"/><circle cx="22" cy="10" r="2" fill="#c41a1a"/>',
+  shark:'<path d="M4 18c6-10 18-10 24 0-6 6-18 6-24 0z" fill="#4a7a9c"/><path d="M12 18l3-3 3 3-3 3z" fill="#f5f0e8"/><path d="M8 22l-2 5 5-3M24 22l2 5-5-3" fill="#4a7a9c"/>',
+  hat:'<path d="M6 20h20v3H6z" fill="#2c1810"/><path d="M10 20V10a6 6 0 0 1 12 0v10z" fill="#2c1810"/><path d="M10 16h12" stroke="#c41a1a" stroke-width="2.4"/>',
+  grad:'<path d="M16 6l13 6-13 6-13-6z" fill="#2c1810"/><path d="M10 16v6c0 2 3 3.5 6 3.5s6-1.5 6-3.5v-6" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M29 13v6" stroke="currentColor" stroke-width="2"/>',
+  fist:'<rect x="7" y="13" width="16" height="12" rx="4" fill="currentColor"/><path d="M11 13v-3a3 3 0 0 1 6 0v3M17 13v-3a3 3 0 0 1 6 0v3" fill="none" stroke="currentColor" stroke-width="2"/>',
+  pumpkin:'<ellipse cx="16" cy="18" rx="11" ry="9" fill="#e0662a"/><path d="M16 9V5" stroke="#2e7d52" stroke-width="2.4"/><path d="M12 12c-2 3-2 9 0 12M20 12c2 3 2 9 0 12" fill="none" stroke="#b34d16" stroke-width="1.8"/>',
+  mic:'<rect x="12" y="4" width="8" height="14" rx="4" fill="currentColor"/><path d="M8 16a8 8 0 0 0 16 0M16 24v4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+  case:'<rect x="4" y="9" width="24" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 9V6h8v3M4 16h24" fill="none" stroke="currentColor" stroke-width="2"/>',
+  person:'<circle cx="16" cy="11" r="5.5" fill="currentColor"/><path d="M5 27a11 11 0 0 1 22 0" fill="none" stroke="currentColor" stroke-width="2.4"/>',
+  villain:'<path d="M6 26a10 10 0 0 1 20 0" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="12" r="6" fill="currentColor"/><path d="M9 9l5 2M23 9l-5 2" stroke="#c41a1a" stroke-width="2"/>',
+  potion:'<circle cx="16" cy="16" r="10" fill="#c41a1a"/><path d="M10 16h12M16 10v12" stroke="#f5f0e8" stroke-width="2.6"/>',
+  exchange:'<path d="M7 12h15l-4-4M25 20H10l4 4" fill="none" stroke="#d4a847" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+};
+var EMOJI_MAP = {
+  '\u{1FA99}':'coin','\u{1F451}':'crown','\u{1F3C5}':'medal','\u{1F396}':'medal','\u{1F3C6}':'trophy','\u{1F381}':'gift',
+  '\u{1F4C5}':'cal','\u{1F5D3}':'cal','\u23F0':'clock','\u23E9':'fast','\u{1F4CB}':'list','\u{1F4DC}':'scroll',
+  '\u{1F512}':'lock','\u{1F511}':'key','\u{1F50A}':'sound','\u{1F507}':'mute','\u{1F3B5}':'music','\u26A0':'warn',
+  '\u{1F525}':'fire','\u{1F3AF}':'target','\u{1F48E}':'gem','\u{1F6AA}':'door','\u{1F4B0}':'purse','\u{1F4B8}':'money',
+  '\u{1F3B4}':'card','\u{1F0CF}':'joker','\u{1F004}':'mahjong','\u{1F0A1}':'card','\u{1F3B2}':'dice','\u26A1':'bolt',
+  '\u{1F4F1}':'phone','\u{1F4BE}':'save','\u{1F9E7}':'redpacket','\u{1F947}':'gold','\u{1F948}':'silver','\u{1F949}':'bronze',
+  '\u{1F389}':'flag','\u{1F331}':'sprout','\u2705':'check','\u2713':'check','\u274C':'cross','\u2B50':'star',
+  '\u2726':'star','\u2728':'star','\u{1F3EE}':'lantern','\u{1F33C}':'flower','\u{1F33E}':'wheat','\u{1F375}':'tea',
+  '\u{1F3E0}':'home','\u{1F3EF}':'castle','\u{1F6CB}':'seat','\u{1F52E}':'crystal','\u{1F30A}':'wave','\u{1F308}':'rainbow',
+  '\u{1F4A5}':'boom','\u{1F4AB}':'dazzle','\u{1F4A0}':'diamond','\u{1F7E1}':'doty','\u{1F7E2}':'dotg','\u{1F534}':'dotr',
+  '\u{1F5BC}':'frame','\u{1F4CA}':'chart','\u{1F4C9}':'chartdown','\u{1F6D2}':'bag','\u{1F6E1}':'shield','\u{1F441}':'eye',
+  '\u{1F5D1}':'trash','\u2699':'gear','\u{1F504}':'refresh','\u{1F517}':'link','\u{1FAAA}':'idcard','\u{1F9E0}':'brain',
+  '\u2601':'cloud','\u2753':'help','\u25B6':'play','\u{1F409}':'dragon','\u{1F988}':'shark','\u{1F3A9}':'hat',
+  '\u{1F393}':'grad','\u{1F44A}':'fist','\u{1F383}':'pumpkin','\u{1F3A4}':'mic','\u{1F4BC}':'case',
+  '\u{1F9D1}':'person','\u{1F468}':'person','\u{1F469}':'person','\u{1F9B0}':'person','\u{1F9B1}':'person','\u{1F9B9}':'villain',
+  '\u{1F48A}':'potion','\u{1F4B1}':'exchange',
+};
+/* 匹配 BMP 符号 + 代理对 emoji，含变体选择符 FE0F 与 ZWJ 组合（如 👩‍🦰 整体当一个图标） */
+var EMOJI_RE = /(?:[\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2190-\u2BFF\u2600-\u27BF])\uFE0F?(?:\u200D[\uD800-\uDBFF][\uDC00-\uDFFF]\uFE0F?)*/g;
+function icSVG(n){
+  var g = ICONS[n];
+  if (!g) return '';
+  return '<svg class="icn icn-' + n + '" viewBox="0 0 32 32" width="1em" height="1em" aria-hidden="true" focusable="false">' + g + '</svg>';
+}
+/* 把一段纯文本里的 emoji 换成内联 SVG（不在映射表内的原样返回，例如牌面花色） */
+function icifyText(s){
+  if (!s) return s;
+  s = String(s);
+  if (!/[\uD800-\uDBFF\u2190-\u2BFF\u2600-\u27BF]/.test(s)) return s;
+  return s.replace(EMOJI_RE, function(m){
+    var k = m.replace(/\uFE0F/g, '').split('\u200D')[0];
+    var n = EMOJI_MAP[k];
+    return n ? icSVG(n) : m;
+  });
+}
+/* 把一段 HTML 里的 emoji 换成内联 SVG：只处理标签之外的文本，且整段 <svg>…</svg> 原样跳过 */
+function icifyHTML(s){
+  if (!s) return s;
+  s = String(s);
+  if (!/[\uD800-\uDBFF\u2190-\u2BFF\u2600-\u27BF]/.test(s)) return s;
+  return s.replace(/<svg[\s\S]*?<\/svg>|<[^>]*>|[^<]+/gi, function(seg){
+    if (seg.charAt(0) === '<') return seg;
+    return icifyText(seg);
+  });
+}
+/* 首屏静态 DOM（HTML 里写死的 emoji）走文本节点替换，事件监听不受影响 */
+function icifyStatic(root){
+  try {
+    var w = document.createTreeWalker(root || document.body, NodeFilter.SHOW_TEXT, null);
+    var list = [], n;
+    while ((n = w.nextNode())) {
+      if (n.nodeValue && EMOJI_RE.test(n.nodeValue)) list.push(n);
+      EMOJI_RE.lastIndex = 0;
+    }
+    for (var i = 0; i < list.length; i++) {
+      var node = list[i], span = document.createElement('span');
+      span.innerHTML = icifyHTML(node.nodeValue);
+      if (node.parentNode) node.parentNode.replaceChild(span, node);
+    }
+  } catch (e) {}
+}
+/* innerHTML setter 拦截：业务代码无需改字符串，动态拼接的 emoji 自动成图标 */
+(function installIcify(){
+  try {
+    var proto = window.Element && Element.prototype;
+    if (!proto) return;
+    var d = Object.getOwnPropertyDescriptor(proto, 'innerHTML');
+    if (!d || !d.set || d.set.__icify) return;
+    var patched = function(v){
+      try { return d.set.call(this, typeof v === 'string' ? icifyHTML(v) : v); }
+      catch (e) { return d.set.call(this, v); }
+    };
+    patched.__icify = true;
+    Object.defineProperty(proto, 'innerHTML', { configurable: true, get: function(){ return d.get.call(this); }, set: patched });
+  } catch (e) {}
+})();
+
 (function(root){
 'use strict';
 var ranks=Array.from({length:13},(_,i)=>i+2), seq=[14,2,3,4,5,6,7,8,9,10,11,12,13,14];
@@ -8295,6 +8584,7 @@ function init(){
  document.addEventListener('visibilitychange',function(){if(active)schedule();});
  document.addEventListener('keydown',function(e){if(!active)return;var panel=!el('gdExit').hidden?el('gdExit'):!el('gdRules').hidden?el('gdRules'):null;if(e.key==='Escape'&&panel){e.preventDefault();if(panel===el('gdExit'))el('gdExitNo').click();else toggleRules(false);}else if(e.key==='Tab'&&panel){var buttons=panel.querySelectorAll('button'),first=buttons[0],last=buttons[buttons.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
 }
+
 /* ============================================================
    好友联机 + 段位排行（前端）
    纯净单机能力不受影响：未配置服务器或连不上时，入口给出提示并优雅降级。
@@ -8764,7 +9054,7 @@ function onlineShowSettle(m){
   };
   var qt = $('odQuit'); if (qt) qt.onclick = function(){ onlineLeaveRoom(); };
 }
-function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
 
 /* ---- 排行榜 ---- */
 function boardGames(){
@@ -9110,6 +9400,8 @@ function onlineInitUIOnReady(){
   else onlineInitUI();
 }
 onlineInitUIOnReady();
+/* 首屏静态 HTML 里写死的 emoji → 内联 SVG（此时 DOM 已就绪，且不触碰事件监听） */
+try { icifyStatic(document.body); } catch (e) {}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })(globalThis);
 

@@ -193,8 +193,9 @@ class Store {
 
   /* ---------- 资料 / 云存档 ---------- */
   /* ---------- 玩家 ---------- */
+  /* 头像：预设 id（a01…）或自定义 dataURL。dataURL 可能很长，统一截断防止撑爆字段与榜单响应 */
   setAvatar(deviceId, avatarId) {
-    this.q.updateAvatar.run(String(avatarId), Date.now(), deviceId);
+    this.q.updateAvatar.run(String(avatarId || '').slice(0, 20000), Date.now(), deviceId);
   }
 
   /* 个性签名（路由层已清洗控制字符并截断） */
@@ -249,7 +250,7 @@ class Store {
   /* 用户资料（头像 / 个性签名）：由路由层校验后写入 */
   setProfile(deviceId, profile) {
     const p = profile || {};
-    this.q.updateProfile.run(String(p.avatar || ''), String(p.bio || ''), Date.now(), deviceId);
+    this.q.updateProfile.run(String(p.avatar || '').slice(0, 20000), String(p.bio || ''), Date.now(), deviceId);
   }
 
   getProfile(deviceId) {

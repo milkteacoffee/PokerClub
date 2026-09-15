@@ -123,7 +123,19 @@ function click(el) {
   click($('lbAvatar'));
   await tick(30);
   ok($('ovProfile').classList.contains('show'), '点击大厅头像打开用户资料');
-  ok($('pfGrid') && $('pfGrid').querySelectorAll('.pf-opt').length === 12, '渲染 12 个预设头像（实际 ' + ($('pfGrid') ? $('pfGrid').querySelectorAll('.pf-opt').length : 0) + '）');
+  ok($('pfGrid') && $('pfGrid').querySelectorAll('.pf-opt').length === 13, '渲染 12 个预设头像 + 1 个自定义入口（实际 ' + ($('pfGrid') ? $('pfGrid').querySelectorAll('.pf-opt').length : 0) + '）');
+  ok($('pfGrid').querySelector('[data-pav="custom"]'), '自定义头像入口存在');
+  ok(!!$('pfAvatarFile') && !!$('pfAvatarUpload'), '自定义头像上传控件存在');
+
+  /* ---- 零 emoji 视觉：UI 里的 emoji 必须渲染成内联 SVG（牌面花色/骰面/箭头除外）---- */
+  /* 只卡非 BMP 的彩色 emoji（🪙👑…）；BMP 排版符号（→ ✕ ♠ ⚄ ≥ ✓）属文本符号，保留 */
+  const EM = /[\uD800-\uDBFF][\uDC00-\uDFFF]\uFE0F?/g;
+  const clone = doc.body.cloneNode(true);
+  clone.querySelectorAll('script,style').forEach(n => n.remove());
+  const left = (clone.innerHTML.match(EM) || []);
+  ok(left.length === 0, '界面无残留 emoji（残留: ' + JSON.stringify(left.slice(0, 8)) + '）');
+  ok(doc.querySelectorAll('svg.icn').length > 30, 'emoji 已换成内联 SVG 图标（' + doc.querySelectorAll('svg.icn').length + ' 个）');
+
   click($('ovProfile').querySelector('[data-close="ovProfile"]'));
   await tick(20);
 
