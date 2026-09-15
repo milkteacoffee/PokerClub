@@ -1446,6 +1446,18 @@
   .pf-avup{display:flex;gap:8px;margin-top:8px}
   .pf-avup .pf-ghostbtn{margin-top:0;flex:1}
   .pf-opt-custom svg{display:block}
+  /* 账号体系（注册 / 登录） */
+  .acc-box{font-size:12px;color:#b9c6d2;line-height:1.75}
+  .acc-box .n{color:#e8eef5;font-weight:700;margin-bottom:3px}
+  .acc-box .d{color:#8fa0b4;font-size:11.5px}
+  .acc-cur{background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;margin-bottom:9px}
+  .acc-tabs{display:flex;gap:8px;margin-bottom:12px}
+  .acc-tab{flex:1;padding:9px;border:none;border-radius:9px;cursor:pointer;font-family:inherit;font-size:12.5px;
+    color:#b9c6d2;background:rgba(255,255,255,.05);transition:.15s}
+  .acc-tab.selected{color:#2a1d0c;font-weight:800;background:linear-gradient(160deg,#f0d79a,#cfa85b)}
+  .acc-form{display:flex;flex-direction:column;gap:9px}
+  .acc-tip{font-size:11.5px;color:#c88a80;min-height:17px;margin-top:9px;line-height:1.6}
+  .acc-tip.ok{color:#8fd6b0}
   /* 局内社交（快捷语气泡）/ 匹配过场 / 结算动效 */
   .ost-bubble{position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);white-space:nowrap;
     background:linear-gradient(160deg,#f0d79a,#cfa85b);color:#2a1d0c;font-size:11.5px;font-weight:800;
@@ -1997,6 +2009,25 @@
     </div>
   </div>
 
+  <!-- 账号：注册 / 登录（用户名 + 密码） -->
+  <div class="overlay" id="ovAccount">
+    <div class="panel" style="max-width:400px;">
+      <h2 id="accTitle">登录账号 <button class="closebtn" data-close="ovAccount">✕ 返回</button></h2>
+      <div class="acc-tabs" id="accTabs">
+        <button class="acc-tab selected" type="button" data-acctab="login">登录</button>
+        <button class="acc-tab" type="button" data-acctab="register">注册账号</button>
+      </div>
+      <div class="acc-form">
+        <input id="accUser" class="friend-input" maxlength="16" placeholder="用户名（3~16 位字母/数字/下划线）" autocomplete="username" spellcheck="false">
+        <input id="accPwd" class="friend-input" type="password" maxlength="64" placeholder="密码（至少 6 位）" autocomplete="current-password">
+        <input id="accPwd2" class="friend-input" type="password" maxlength="64" placeholder="再输一次密码" autocomplete="new-password" hidden>
+        <button id="accSubmit" class="friend-addbtn" type="button">登录</button>
+      </div>
+      <div class="acc-tip" id="accTip"></div>
+      <div class="pm-note">账号只用于保存进度与稳定好友身份：不收集手机号/邮箱，不做实名，也不会用于任何营销。密码以 scrypt 加盐哈希保存在自建服务器上。</div>
+    </div>
+  </div>
+
   <!-- 快捷语面板（局内社交；只发预设短语，服务端按白名单校验） -->
   <div class="overlay" id="ovSay">
     <div class="panel" style="max-width:420px;">
@@ -2098,6 +2129,8 @@
       </div>
       <div class="pf-sec">联机战绩（好友房，不含单机）</div>
       <div class="pf-online" id="pfOnlineStats">—</div>
+      <div class="pf-sec">账号（换设备不丢进度）</div>
+      <div class="acc-box" id="accBox">—</div>
       <div class="pf-sec">云存档</div>
       <div class="pf-cloud" id="pfCloud">—</div>
       <div class="pf-sec">恢复码（跨设备接管凭据，请妥善保管）</div>
@@ -2689,7 +2722,11 @@ function cloudBootstrap() {
     }).then(function (r) { return r.json(); }).then(function (d) {
       if (!d || d.ok === false) return;
       var m = cloudMeta();
-      if (d.updatedAt && d.updatedAt > (m.serverAt || 0) && d.state && d.state.slots) {
+      /* 刚登录/注册过：本地是别人的存档，必须以云端为准（否则会把游客档上传到账号） */
+      var pendingLogin = false;
+      try { pendingLogin = localStorage.getItem(ACC_SYNC_KEY) === '1'; } catch (e) {}
+      if (pendingLogin) { try { localStorage.removeItem(ACC_SYNC_KEY); } catch (e) {} }
+      if (d.state && d.state.slots && (pendingLogin || (d.updatedAt && d.updatedAt > (m.serverAt || 0)))) {
         try {
           localStorage.setItem(SAVE_KEY_ALL, JSON.stringify(d.state));
           var met = cloudMeta(); met.serverAt = d.updatedAt || 0; met.at = Date.now(); cloudMetaSet(met);
@@ -2749,8 +2786,126 @@ function openProfile() {
   initAudio(); sfx('click');
   renderProfile();
   openOverlay('ovProfile');
+  renderAccountBox();
+  refreshAccountState();                               /* 校准「是否已登录账号」 */
   var api = onlineApi();
   if (api && api.fetchIdentity) api.fetchIdentity();   /* 拉最新玩家号 / 恢复码（不依赖 WS 连接） */
+}
+/* ================= 账号体系（用户名 + 密码）=================
+   设计：游客态完全可用；注册账号 = 把当前存档身份绑定到用户名，
+   登录 = 切到该账号的存档身份并（强制）以云端存档为准，换设备即无缝续玩。 */
+var ACC = { mode: 'login' };
+var ACC_NAME_KEY = 'poker_account_name_v1';
+var ACC_SYNC_KEY = 'poker_login_sync_v1';
+function accountNameCached() { try { return localStorage.getItem(ACC_NAME_KEY) || ''; } catch (e) { return ''; } }
+function accountNameSet(n) { try { n ? localStorage.setItem(ACC_NAME_KEY, n) : localStorage.removeItem(ACC_NAME_KEY); } catch (e) {} }
+function accountApi(pathname, body, cb) {
+  var srv = (typeof Online !== 'undefined' && Online.server) ? String(Online.server).replace(/\/$/, '') : '';
+  if (!srv || typeof fetch !== 'function') return cb && cb(null, '当前无法连接服务器');
+  var opt = { method: body ? 'POST' : 'GET', headers: { 'X-Device-Id': onlineDeviceId() } };
+  if (body) { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
+  fetch(srv + pathname, opt).then(function (r) {
+    return r.json().catch(function () { return {}; }).then(function (j) { return { status: r.status, body: j }; });
+  }).then(function (res) { cb && cb(res); }).catch(function () { cb && cb(null, '网络错误，请稍后再试'); });
+}
+function renderAccountBox() {
+  var box = $('accBox'); if (!box) return;
+  var nm = (typeof Online !== 'undefined' && Online.accountName) || accountNameCached();
+  if (nm) {
+    box.innerHTML = '<div class="acc-cur"><div class="n">已登录：' + esc(nm) + '</div>' +
+      '<div class="d">进度已绑定账号，换设备用「用户名 + 密码」登录即可续玩；好友与榜单身份也随之稳定。</div></div>' +
+      '<button class="pf-ghostbtn" id="accLogout" type="button">退出登录</button>';
+    var lo = $('accLogout'); if (lo) lo.onclick = accountLogout;
+  } else {
+    box.innerHTML = '<div class="acc-cur"><div class="n">当前是游客身份</div>' +
+      '<div class="d">游客也能完整游玩。注册账号后，换设备时用「用户名 + 密码」就能找回进度、好友与榜单。</div></div>' +
+      '<div style="display:flex;gap:8px">' +
+      '<button class="pf-ghostbtn" id="accLoginBtn" type="button">登录</button>' +
+      '<button class="pf-ghostbtn" id="accRegBtn" type="button">注册账号</button></div>';
+    var b1 = $('accLoginBtn'); if (b1) b1.onclick = function () { openAccount('login'); };
+    var b2 = $('accRegBtn'); if (b2) b2.onclick = function () { openAccount('register'); };
+  }
+}
+function renderAccountForm() {
+  var isReg = ACC.mode === 'register';
+  var t = $('accTitle'); if (t) t.innerHTML = icifyHTML(isReg ? '注册账号' : '登录账号') + ' <button class="closebtn" data-close="ovAccount">✕ 返回</button>';
+  var tabs = $('accTabs');
+  if (tabs) {
+    tabs.querySelectorAll('[data-acctab]').forEach(function (b) {
+      b.classList.toggle('selected', b.getAttribute('data-acctab') === ACC.mode);
+      b.onclick = function () { ACC.mode = b.getAttribute('data-acctab'); renderAccountForm(); };
+    });
+  }
+  var p2 = $('accPwd2'); if (p2) p2.hidden = !isReg;
+  var sub = $('accSubmit'); if (sub) sub.textContent = isReg ? '注册并绑定当前进度' : '登录';
+  var tip = $('accTip'); if (tip) { tip.className = 'acc-tip'; tip.textContent = isReg ? '' : ''; }
+  var nm2 = $('accUser'); if (nm2) nm2.value = '';
+  var pwd = $('accPwd'); if (pwd) pwd.value = '';
+  if (p2) p2.value = '';
+  closeBtnBind();
+}
+function closeBtnBind() {
+  document.querySelectorAll('#ovAccount [data-close]').forEach(function (b) {
+    if (b.__bound) return; b.__bound = true;
+    b.onclick = function () { closeTopOverlay(); };
+  });
+}
+function openAccount(mode) {
+  initAudio(); sfx('click');
+  ACC.mode = mode || 'login';
+  renderAccountForm();
+  openOverlay('ovAccount');
+  var u = $('accUser'); if (u) setTimeout(function () { try { u.focus(); } catch (e) {} }, 60);
+}
+function accTipSet(msg, okStyle) {
+  var tip = $('accTip'); if (!tip) return;
+  tip.className = 'acc-tip' + (okStyle ? ' ok' : '');
+  tip.textContent = msg || '';
+}
+function submitAccount() {
+  var isReg = ACC.mode === 'register';
+  var u = ($('accUser').value || '').trim();
+  var p = $('accPwd').value || '';
+  var p2 = isReg ? ($('accPwd2').value || '') : '';
+  if (!/^[A-Za-z0-9_]{3,16}$/.test(u)) return accTipSet('用户名需 3~16 位字母 / 数字 / 下划线');
+  if (p.length < 6) return accTipSet('密码至少 6 位');
+  if (isReg && p !== p2) return accTipSet('两次输入的密码不一致');
+  var btn = $('accSubmit'); if (btn) { btn.disabled = true; }
+  accTipSet(isReg ? '正在注册…' : '正在登录…', true);
+  accountApi(isReg ? '/api/account/register' : '/api/account/login', { username: u, password: p }, function (res, err) {
+    if (btn) btn.disabled = false;
+    if (err) return accTipSet(err);
+    if (!res || res.status === 0) return accTipSet('网络错误，请稍后再试');
+    if (!res.body || res.body.ok !== true) return accTipSet((res.body && res.body.msg) || '操作失败，请稍后再试');
+    accountNameSet(u);
+    if (typeof Online !== 'undefined') Online.accountName = u;
+    accTipSet(isReg ? '注册成功，正在绑定你的进度…' : '登录成功，正在载入你的进度…', true);
+    var target = res.body.deviceId || onlineDeviceId();
+    try {
+      localStorage.setItem(ONLINE_DEVICE_KEY, target);
+      localStorage.setItem(ACC_SYNC_KEY, '1');      /* 下一次云引导：以云端为准覆盖本地 */
+    } catch (e) {}
+    setTimeout(function () { location.reload(); }, 700);
+  });
+}
+function accountLogout() {
+  if (!player) return;
+  if (!confirm('退出登录？\n\n本机将回到全新游客状态；账号里的进度保存在云端，重新登录即可恢复。')) return;
+  accountNameSet('');
+  try { localStorage.removeItem(ACC_SYNC_KEY); localStorage.removeItem(ONLINE_DEVICE_KEY); } catch (e) {}
+  var nid = 'd' + String(Date.now().toString(16)) + Math.random().toString(16).slice(2, 10);
+  try { localStorage.setItem(ONLINE_DEVICE_KEY, nid); } catch (e) {}
+  showToast('已退出登录，正在回到游客状态…', 1800);
+  setTimeout(function () { location.reload(); }, 700);
+}
+function refreshAccountState() {
+  accountApi('/api/account/me', null, function (res) {
+    if (!res || !res.body || res.body.ok !== true) return;
+    var acc = res.body.account;
+    if (acc && acc.username) { accountNameSet(acc.username); if (typeof Online !== 'undefined') Online.accountName = acc.username; }
+    else { if (typeof Online !== 'undefined') Online.accountName = ''; }
+    renderAccountBox();
+  });
 }
 function renderProfile() {
   if (!player) return;
@@ -2817,6 +2972,7 @@ function renderProfile() {
   var pn = $('pfName'); if (pn) pn.textContent = player.name || '玩家';
   var uc = $('pfUserCode'); if (uc) uc.textContent = Online.userCode || '--------';
   var rc = $('pfRecovery'); if (rc) rc.textContent = Online.recoveryCode || '----------------';
+  renderAccountBox();
   var cl = $('pfCloud');
   if (cl) {
     if (!cloudAvailable()) cl.textContent = '未连接服务器 · 当前为纯单机模式，数据保存在本机';
@@ -4496,7 +4652,7 @@ function goModeScreen() {
 }
 /* 弹窗：同一时刻只保留一个，避免两个 ✕ 叠在一起；
    信息类弹窗支持「点击面板外」与 Esc 关闭，其余确认类弹窗仍走各自按钮。 */
-var OV_CLOSE_ON_BACKDROP = ['ovAchieve', 'ovTasks', 'ovHelp', 'ovShop', 'ovStats', 'ovCheckin', 'ovSettings', 'ovStorage', 'ovOnline', 'ovBoard', 'ovProfile', 'ovLegal', 'ovSay'];
+var OV_CLOSE_ON_BACKDROP = ['ovAchieve', 'ovTasks', 'ovHelp', 'ovShop', 'ovStats', 'ovCheckin', 'ovSettings', 'ovStorage', 'ovOnline', 'ovBoard', 'ovProfile', 'ovLegal', 'ovSay', 'ovAccount'];
 function closeOverlay(id) { var el = $(id); if (el) el.classList.remove('show'); }
 function openOverlay(id, keep) {
   document.querySelectorAll('.overlay').forEach(function (o) {
@@ -8126,6 +8282,9 @@ function bindEvents() {
 
   $('setSfxToggle').addEventListener('click', function(){ initAudio(); toggleSound(); openSettings(); });
   /* 合规入口：隐私政策与用户协议 / 意见反馈 */
+  var asub = $('accSubmit'); if (asub) asub.addEventListener('click', submitAccount);
+  var apwd = $('accPwd2'); if (apwd) apwd.addEventListener('keydown', function (e) { if (e.key === 'Enter') submitAccount(); });
+  var apwd1 = $('accPwd'); if (apwd1) apwd1.addEventListener('keydown', function (e) { if (e.key === 'Enter') submitAccount(); });
   var lg = $('btnLegal'); if (lg) lg.addEventListener('click', openLegal);
   var fb = $('btnFeedback'); if (fb) fb.addEventListener('click', openFeedback);
   var hp = $('setHapticToggle'); if (hp) hp.addEventListener('click', function(){

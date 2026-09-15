@@ -77,6 +77,16 @@ class Store {
         created_at  INTEGER NOT NULL
       );
       CREATE INDEX IF NOT EXISTS idx_reports_target ON reports(target_id, created_at DESC);
+      /* 账号体系：用户名 + 密码（scrypt 加盐哈希），一个账号绑定一个存档身份(device_id)。
+         不引入手机号/短信（需付费与备案），保持零成本、无门槛。 */
+      CREATE TABLE IF NOT EXISTS accounts (
+        username    TEXT PRIMARY KEY,
+        device_id   TEXT NOT NULL UNIQUE,
+        pass_salt   TEXT NOT NULL,
+        pass_hash   TEXT NOT NULL,
+        created_at  INTEGER NOT NULL,
+        last_login  INTEGER NOT NULL DEFAULT 0
+      );
     `);
     /* 短玩家号：每位玩家一个唯一、易分享的 8 位码（好友互加用，区别于内部设备ID） */
     try { this.db.exec('ALTER TABLE players ADD COLUMN user_code TEXT'); } catch (e) { /* 列已存在则忽略 */ }
@@ -229,6 +239,26 @@ class Store {
   }
   titleOf(deviceId) {
     try { const p = this.getPlayer(deviceId); return (p && p.title) || ''; } catch (e) { return ''; }
+  }
+
+  /* ---------- 账号（用户名 + 密码） ---------- */
+  createAccount(username, deviceId, salt, hash) {
+    try {
+      this.db.prepare('INSERT INTO accounts (username, device_id, pass_salt, pass_hash, created_at, last_login) VALUES (?, ?, ?, ?, ?, 0)')
+        .run(String(username), String(deviceId), String(salt), String(hash), Date.now());
+      return true;
+    } catch (e) { return false; }        /* 用户名或设备已被占用 */
+  }
+  getAccountByName(username) {
+    try { return this.db.prepare('SELECT * FROM accounts WHERE username = ?').get(String(username)) || null; }
+    catch (e) { return null; }
+  }
+  getAccountByDevice(deviceId) {
+    try { return this.db.prepare('SELECT * FROM accounts WHERE device_id = ?').get(String(deviceId)) || null; }
+    catch (e) { return null; }
+  }
+  touchLogin(username) {
+    try { this.db.prepare('UPDATE accounts SET last_login = ? WHERE username = ?').run(Date.now(), String(username)); } catch (e) {}
   }
 
   /* ---------- 拉黑 / 举报 ---------- */

@@ -13,6 +13,7 @@ const { WebSocketServer } = require('ws');
 const config = require('./config');
 const { Store, GAMES } = require('./store');
 const { RoomManager, ADAPTERS } = require('./rooms');
+const crypto = require('crypto');
 
 const store = new Store(config.dataDir);
 const rooms = new RoomManager(store);
@@ -276,6 +277,48 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, q, list });
     }
 
+    /* ---- 账号：注册（把当前存档身份升级为账号）---- */
+    if (path === '/api/account/register' && method === 'POST') {
+      if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
+      const body = await readBody(req);
+      const username = String((body && body.username) || '').trim();
+      const password = String((body && body.password) || '');
+      if (!USERNAME_RE.test(username)) return json(res, 400, { ok: false, msg: '用户名需 3~16 位字母/数字/下划线' });
+      if (password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) return json(res, 400, { ok: false, msg: '密码需 ' + PASSWORD_MIN + '~' + PASSWORD_MAX + ' 位' });
+      if (store.getAccountByName(username)) return json(res, 409, { ok: false, msg: '该用户名已被占用' });
+      if (store.getAccountByDevice(deviceId)) return json(res, 409, { ok: false, msg: '当前设备已绑定账号，请先退出登录' });
+      const salt = newSalt();
+      const okc = store.createAccount(username, deviceId, salt, hashPassword(password, salt));
+      if (!okc) return json(res, 409, { ok: false, msg: '注册失败：用户名或身份已被占用' });
+      store.ensurePlayer(deviceId, '牌友');
+      return json(res, 200, { ok: true, username: username, deviceId: deviceId });
+    }
+
+    /* ---- 账号：登录（返回该账号绑定的存档身份，客户端切换身份后拉云存档）---- */
+    if (path === '/api/account/login' && method === 'POST') {
+      const body = await readBody(req);
+      const username = String((body && body.username) || '').trim();
+      const password = String((body && body.password) || '');
+      if (!USERNAME_RE.test(username)) return json(res, 400, { ok: false, msg: '用户名或密码不正确' });
+      if (loginBlocked(username)) return json(res, 429, { ok: false, msg: '尝试次数过多，请 10 分钟后再试' });
+      const acc = store.getAccountByName(username);
+      if (!acc) { noteLoginFail(username); return json(res, 401, { ok: false, msg: '用户名或密码不正确' }); }
+      const hash = hashPassword(password, acc.pass_salt);
+      let same = false;
+      try { same = crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(acc.pass_hash, 'hex')); } catch (e) { same = false; }
+      if (!same) { noteLoginFail(username); return json(res, 401, { ok: false, msg: '用户名或密码不正确' }); }
+      clearLoginFail(username);
+      store.touchLogin(username);
+      return json(res, 200, { ok: true, username: username, deviceId: acc.device_id });
+    }
+
+    /* ---- 账号：查询当前身份绑定的账号（未登录返回 account:null）---- */
+    if (path === '/api/account/me' && method === 'GET') {
+      if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
+      const acc = store.getAccountByDevice(deviceId);
+      return json(res, 200, { ok: true, account: accountView(acc) });
+    }
+
     /* ---- 拉黑名单（UGC 处置）：GET 列表 / POST 拉黑 / DELETE 解除 ---- */
     if (path === '/api/blocks') {
       if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
@@ -340,6 +383,32 @@ const server = http.createServer(async (req, res) => {
 
 /* ---------------- WebSocket 联机 ---------------- */
 const wss = new WebSocketServer({ server, path: '/ws' });
+/* ============ 账号（用户名 + 密码）============
+   设计取舍：不引入手机号/短信（需付费与备案）与第三方登录（需开放平台资质），
+   用自建账号即可满足"换设备不丢档、好友与榜单有稳定身份"，且保持零成本。 */
+const USERNAME_RE = /^[A-Za-z0-9_]{3,16}$/;
+const PASSWORD_MIN = 6, PASSWORD_MAX = 64;
+const loginFails = new Map();          // username -> { n, at }（内存限流，防爆破）
+const LOGIN_WINDOW_MS = 10 * 60 * 1000;
+const LOGIN_MAX_FAILS = 5;
+function hashPassword(password, salt) {
+  return crypto.scryptSync(String(password), String(salt), 64).toString('hex');
+}
+function newSalt() { return crypto.randomBytes(16).toString('hex'); }
+function loginBlocked(username) {
+  const r = loginFails.get(username);
+  if (!r) return false;
+  if (Date.now() - r.at > LOGIN_WINDOW_MS) { loginFails.delete(username); return false; }
+  return r.n >= LOGIN_MAX_FAILS;
+}
+function noteLoginFail(username) {
+  const r = loginFails.get(username);
+  if (!r || Date.now() - r.at > LOGIN_WINDOW_MS) loginFails.set(username, { n: 1, at: Date.now() });
+  else { r.n++; r.at = Date.now(); }
+}
+function clearLoginFail(username) { loginFails.delete(username); }
+const accountView = (a) => a ? { username: a.username, createdAt: a.created_at, lastLogin: a.last_login || 0 } : null;
+
 const conns = new Map();   // deviceId -> { ws, roomCode, lastMsgs: [] }
 
 /* 局内快捷语白名单：与前端 SAY_TEXTS 一字不差。
