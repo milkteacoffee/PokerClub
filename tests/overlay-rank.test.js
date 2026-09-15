@@ -195,7 +195,7 @@ test('段位面板展示大段位+小段位、1000 分门槛与六冠进度', ()
   assert.ok(text.includes('2600'), '应显示段位分');
   assert.ok(text.includes('每 1000 段位分升一个大段位'), '应说明 1000 分一档');
   assert.ok(text.includes('III → II → I'), '应说明小段位划分');
-  assert.ok(text.includes('六冠赌神进度'), '应显示六冠进度');
+  assert.ok(text.includes('六冠牌神进度'), '应显示六冠进度');
   assert.ok(text.includes('传奇'), '段位表应列出传奇');
   assert.ok(w.rankFullName('holdem', 2600) === '黄金 II');
 });

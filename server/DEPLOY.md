@@ -1,4 +1,4 @@
-# 赌途 · 后端部署手册（阿里云 8.217.167.249）
+# 牌友小馆 · 后端部署手册（阿里云 8.217.167.249）
 
 ## 一、现状总览
 
@@ -11,7 +11,7 @@
    edge-nginx (容器，独占 80/443，唯一入口)
         │  modelghost-platform_mgnet 网络
         ▼
-   pokerclub-server:8123  ← 赌途联机 + 排行后端（容器，仅内网暴露）
+   pokerclub-server:8123  ← 牌友小馆联机 + 排行后端（容器，仅内网暴露）
         │
         ▼
    /opt/pokerclub/data/pokerclub.db  ← SQLite 持久化（挂载卷）

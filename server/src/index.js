@@ -1,6 +1,6 @@
 'use strict';
 /**
- * 赌途后端主入口：
+ * 牌友小馆后端主入口：
  *   HTTP  : 排行榜 / 好友 / 健康检查（JSON API，供纯单机模式拉榜单）
  *   WebSocket: 好友开房联机（/ws）
  *
@@ -75,7 +75,7 @@ const server = http.createServer(async (req, res) => {
     /* 服务信息 */
     if (path === '/api/info') {
       return json(res, 200, {
-        ok: true, name: '赌途联机服务', version: '1.0.0',
+        ok: true, name: '牌友小馆联机服务', version: '1.0.0',
         games: Object.keys(ADAPTERS).map(id => ({ id, name: GAME_NAMES[id] || id, min: ADAPTERS[id].minPlayers, max: ADAPTERS[id].maxPlayers })),
         leaderboardGames: GAMES,
       });
@@ -532,7 +532,7 @@ setInterval(() => {
 /* ---------------- 启动 ---------------- */
 function start() {
   server.listen(config.port, config.host, () => {
-    console.log('[赌途后端] 已启动 http://' + config.host + ':' + config.port);
+    console.log('[牌友小馆后端] 已启动 http://' + config.host + ':' + config.port);
     console.log('  HTTP  : /health  /api/info  /api/leaderboard  /api/friends  /api/rank');
     console.log('  WS    : /ws?deviceId=xxx&nickname=xxx');
     console.log('  数据  : ' + store.file);

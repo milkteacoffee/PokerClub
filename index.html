@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a0e14">
-<title>赌途 · 单机六合一</title>
+<title>牌友小馆 · 单机六合一</title>
 
 <style>
   * { margin:0; padding:0; box-sizing:border-box;
@@ -1513,7 +1513,7 @@
       <span id="saveText">存档已就绪 · 自动保存</span>
     </div>
     <div class="lobby-logo-area">
-      <div class="lobby-logo">赌途</div>
+      <div class="lobby-logo">牌友小馆</div>
       <div class="lobby-subtitle">一张牌桌，六种乐趣 · 单机联机两相宜</div>
       <div class="lobby-crowns" id="lbCrowns" hidden></div>
       <div class="game-shelf">
@@ -1963,7 +1963,7 @@
         <div class="pf-avmeta">
           <div class="pf-name" id="pfName">玩家</div>
           <div class="pf-code-row"><code id="pfUserCode">--------</code><button class="fmine-copy" id="pfUserCodeCopy" type="button">复制</button></div>
-          <div class="pf-hint">玩家号是你在「赌途」的唯一身份，好友可用它搜索并加你为好友。</div>
+          <div class="pf-hint">玩家号是你在「牌友小馆」的唯一身份，好友可用它搜索并加你为好友。</div>
         </div>
       </div>
       <div class="pf-sec">选择头像</div>
@@ -2956,7 +2956,7 @@ var ACHIEVEMENTS = [
   { id:'max_win_1000', name:'大杀四方', desc:'单局赢取1000筹码', icon:'💰', reward:800 },
   { id:'level_5', name:'五级牌手', desc:'达到5级', icon:'⭐', reward:500 },
   { id:'beat_pro', name:'战胜专业', desc:'战胜专业型AI', icon:'🎩', reward:600 },
-  { id:'beat_boss', name:'击溃赌神', desc:'战胜赌神', icon:'👊', reward:2000 },
+  { id:'beat_boss', name:'击溃牌王', desc:'战胜牌王', icon:'👊', reward:2000 },
   { id:'enter_champion', name:'踏入殿堂', desc:'首次进入冠军场', icon:'👑', reward:2000 },
   { id:'newbie_master', name:'新手毕业', desc:'完成所有新手任务', icon:'🎓', reward:3000 }
 ];
@@ -2993,14 +2993,14 @@ var TITLES = [
   { id:'tt_hands_500', name:'馆中元老', icon:'🏮', desc:'四馆累计完成 500 局',   check:function(p){ return titleMetricAny(p,'hands') >= 500; } },
   { id:'tt_allround',  name:'四艺兼修', icon:'🎴', desc:'四馆各自完成 50 局',    check:function(p){ return GAME_IDS.every(function(g){ return titleMetric(p, g, 'hands') >= 50; }); } },
   { id:'tt_wins_100',  name:'百胜牌手', icon:'🏆', desc:'四馆累计净赢 100 局',   check:function(p){ return titleMetricAny(p,'wins') >= 100; } },
-  /* 各游戏最高段位封号 + 六冠赌神（达成后为永久称号，可在档案·称号中佩戴） */
+  /* 各游戏最高段位封号 + 六冠牌神（达成后为永久称号，可在档案·称号中佩戴） */
   { id:'tt_top_holdem',    name:'德州王牌',   icon:'♠', desc:'德州扑克排位达到最高段位「德州王牌」',     check:function(p){ return gameIsTopTier(p,'holdem'); } },
   { id:'tt_top_blackjack', name:'二十一之神', icon:'🃏', desc:'21点排位达到最高段位「二十一之神」',       check:function(p){ return gameIsTopTier(p,'blackjack'); } },
   { id:'tt_top_gold',      name:'金花炸王',   icon:'♦', desc:'炸金花排位达到最高段位「金花炸王」',       check:function(p){ return gameIsTopTier(p,'gold'); } },
   { id:'tt_top_dice',      name:'心眼财神',   icon:'🎯', desc:'猜骰子排位达到最高段位「心眼财神」',       check:function(p){ return gameIsTopTier(p,'dice'); } },
   { id:'tt_top_diceduel',  name:'神手骰王',   icon:'⚄', desc:'骰子比大小排位达到最高段位「神手骰王」',   check:function(p){ return gameIsTopTier(p,'diceduel'); } },
   { id:'tt_top_guandan',   name:'掼蛋的神',   icon:'🀄', desc:'掼蛋累计获胜 200 局，封顶「掼蛋的神」',    check:function(p){ return gameIsTopTier(p,'guandan'); } },
-  { id:'tt_six_crowns',    name:'六冠赌神',   icon:'👑', desc:'六大游戏全部达到最高段位（德州王牌 · 二十一之神 · 金花炸王 · 心眼财神 · 神手骰王 · 掼蛋的神）', check:function(p){ return crownCount(p) >= 6; } },
+  { id:'tt_six_crowns',    name:'六冠牌神',   icon:'👑', desc:'六大游戏全部达到最高段位（德州王牌 · 二十一之神 · 金花炸王 · 心眼财神 · 神手骰王 · 掼蛋的神）', check:function(p){ return crownCount(p) >= 6; } },
   /* 好友联机（开房对战：掼蛋/德州/炸金花/骰子比大小） */
   { id:'tt_online_1',      name:'初入牌局',   icon:'🚪', desc:'首次完成一局好友房对战',      check:function(p){ return onlineStat(p,'games') >= 1; } },
   { id:'tt_online_10',     name:'常来常往',   icon:'🛋️', desc:'累计完成 10 局好友房对战',    check:function(p){ return onlineStat(p,'games') >= 10; } },
@@ -3013,7 +3013,7 @@ var TITLES = [
   { id:'tt_online_gold_10',    name:'金花常客', icon:'🌼', desc:'炸金花好友房完成 10 局',         check:function(p){ return onlineGame(p,'gold','games') >= 10; } },
   { id:'tt_online_gold_win20', name:'金花圣手', icon:'🀄', desc:'炸金花好友房累计获胜 20 局',     check:function(p){ return onlineGame(p,'gold','wins') >= 20; } },
   { id:'tt_online_dd_10',      name:'骰桌常客', icon:'🎲', desc:'骰子比大小好友房完成 10 局',     check:function(p){ return onlineGame(p,'diceduel','games') >= 10; } },
-  { id:'tt_online_dd_win20',   name:'赌桌骰王', icon:'👑', desc:'骰子比大小好友房累计获胜 20 局', check:function(p){ return onlineGame(p,'diceduel','wins') >= 20; } },
+  { id:'tt_online_dd_win20',   name:'骰桌骰王', icon:'👑', desc:'骰子比大小好友房累计获胜 20 局', check:function(p){ return onlineGame(p,'diceduel','wins') >= 20; } },
   { id:'tt_online_all4',       name:'四桌通吃', icon:'🏮', desc:'四种玩法的好友房各完成 3 局',    check:function(p){ return ['guandan','holdem','gold','diceduel'].every(function(g){ return onlineGame(p,g,'games') >= 3; }); } }
 ];
 function titleMetric(p, game, ev) {
@@ -3338,7 +3338,7 @@ var OPPONENTS = [
     styleName:'疯狂型', unlockLv:3, desc:'狂野激进，频繁诈唬' },
   { id:'xiaohuang',name:'小黄', avatar:'👨‍💼', style:'pro',
     styleName:'专业型', unlockLv:5, desc:'读牌精准，会慢玩埋伏' },
-  { id:'boss',     name:'赌神', avatar:'🦹',   style:'boss',
+  { id:'boss',     name:'牌王', avatar:'🦹',   style:'boss',
     styleName:'BOSS',  unlockLv:8, desc:'全能高手，会针对你' }
 ];
 
@@ -7529,7 +7529,7 @@ function openLegal() {
 /* 反馈：复制诊断信息（玩家号/设备标识/版本/UA），便于开发者定位问题 */
 function copyFeedback() {
   var info = [
-    '【赌途 · 问题反馈】',
+    '【牌友小馆 · 问题反馈】',
     '玩家号：' + (Online.userCode || '(未获取)'),
     '设备标识：' + (onlineDeviceId() || '-'),
     '存档槽：' + (activeSlot + 1) + ' · 段位分：' + ((player && player.rankPoints) || 0) + ' · 金币：' + ((player && player.coins) || 0),
@@ -8152,7 +8152,7 @@ exitGame=function(){if(G.settling&&!G.handSettled)return;if(G.rankRetry||G.quick
   G.handSettled=true;
  }var ranked=App.mode==='ranked';oldExit15();if(ranked&&$('sessionSummary'))$('sessionSummary').textContent='德州排位已结束 · 金币未参与牌局结算 · 可兑换积分 '+profile15('holdem').redeemPoints+' · 段位分 '+profile15('holdem').rankPoints;};
 var oldRenderLobby15=renderLobby;
-/* 大厅：六冠赌神进度 + 各馆封顶皇冠角标 */
+/* 大厅：六冠牌神进度 + 各馆封顶皇冠角标 */
 function syncCrowns(){
   var elc=$('lbCrowns');
   if(elc){
@@ -8161,7 +8161,7 @@ function syncCrowns(){
       var n=crownCount(player);
       var done=CROWN_ORDER.filter(function(g){return gameIsTopTier(player,g);}).map(crownNameOf);
       elc.hidden=false;
-      elc.innerHTML = icifyHTML('👑 六冠赌神进度 '+n+' / 6'+(n?' · 已封顶：'+done.join('、'):' · 六大游戏排位全部达到最高段位，可获得永久称号「六冠赌神」'));
+      elc.innerHTML = icifyHTML('👑 六冠牌神进度 '+n+' / 6'+(n?' · 已封顶：'+done.join('、'):' · 六大游戏排位全部达到最高段位，可获得永久称号「六冠牌神」'));
     }
   }
   document.querySelectorAll('.game-tile').forEach(function(b){
@@ -8555,7 +8555,7 @@ renderRank=function(){if(!player)return;ensureRankGift(hubGame);var s=profile15(
   +' · '+(rankGiftAvailable(hubGame)?('可领取今日赠送 '+RANK_DAILY_GIFT+' 分'):(rankGiftDate(hubGame)===todayStr()?'今日赠送已领取':'积分不为 0，今日无赠送'))+'</p>';
  html+='<p><button class="mini-btn15" id="rankExchangeBtn15"'+(rankExchangeBlockedReason(hubGame)?' disabled':'')+'>兑换排位积分（最多 '+Math.min(RANK_EXCHANGE.perTime,rankExchangeQuota())+' 分 / '+fmt(rankExchangeCost(Math.min(RANK_EXCHANGE.perTime,rankExchangeQuota())))+' 金币）</button> <span class="mini-tip15">'+(rankExchangeBlockedReason(hubGame)||('今天还可兑换 '+rankExchangeLeft()+' 次，剩余额度 '+rankExchangeQuota()+' 分'))+'</span></p>';
  html+='<p>'+(info.nextMin>s.rankPoints?'距下一小段位「'+nextLabel+'」还需 <b>'+(info.nextMin-s.rankPoints)+'</b> 段位分':'已达最高段位')+(tier>=RANKS.length-1?' · 专属封号「'+base+'」':'')+'</p>';
- html+='<p>👑 六冠赌神进度 <b>'+crownCount(player)+' / 6</b> · 六大游戏全部达到最高段位可获得永久称号「六冠赌神」</p>';
+ html+='<p>👑 六冠牌神进度 <b>'+crownCount(player)+' / 6</b> · 六大游戏全部达到最高段位可获得永久称号「六冠牌神」</p>';
  RANKS.forEach(function(r){html+='<div class="task-item"><div class="info"><div class="t">'+r.name+(r.id===RANKS.length-1&&TOP_TIER_NAMES[hubGame]?' · '+TOP_TIER_NAMES[hubGame]:'')+'</div><div class="pg">'+r.min+' 分起 · '+['III','II','I'].map(function(l){return r.name+' '+l;}).join(' → ')+(r.id===tier?' · 当前 '+full:'')+'</div></div></div>';});$('rankPanel').innerHTML=html;var eb=$('rankExchangeBtn15');if(eb)eb.onclick=function(){sfx('click');exchangeRankedPoints(hubGame);};};
 
 

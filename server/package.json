@@ -1,7 +1,7 @@
 {
   "name": "pokerclub-server",
   "version": "1.0.0",
-  "description": "赌途 · 好友开房联机 + 段位排行后端（Node.js + WebSocket）",
+  "description": "牌友小馆 · 好友开房联机 + 段位排行后端（Node.js + WebSocket）",
   "main": "src/index.js",
   "type": "commonjs",
   "engines": {

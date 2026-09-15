@@ -1,4 +1,4 @@
-# 赌途 · 联机与排行后端部署
+# 牌友小馆 · 联机与排行后端部署
 # 与 modelghost-platform 的 edge-nginx 共存：加入 mgnet 外部网络，
 # 由 edge-nginx 以 http://pokerclub-server:8123 反代（含 WebSocket 升级）。
 # 用法：在 /opt/pokerclub 下 `docker compose up -d --build`

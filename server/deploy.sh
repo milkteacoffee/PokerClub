@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 赌途 · 联机后端一键部署（在阿里云服务器上执行）
+# 牌友小馆 · 联机后端一键部署（在阿里云服务器上执行）
 #
 # 前置：已安装 docker 与 docker compose plugin
 # 用法：bash deploy.sh

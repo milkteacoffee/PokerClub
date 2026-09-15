@@ -5,7 +5,10 @@ set -e
 
 CONF=/opt/modelghost-platform/nginx/edge.conf
 SNIP=/opt/pokerclub/deploy/edge-poker-snippet.conf
-MARK='# ===== 赌途（PokerClub）棋牌后端'
+MARK='# ===== 牌友小馆（PokerClub）棋牌后端'
+# 兼容旧标记：品牌改名（赌途 → 牌友小馆）之前已在服务器注入过旧 MARK，
+# 这里同时识别旧标记，避免误判为「未注入」而重复插入 location 块。
+MARK_OLD='# ===== 赌途（PokerClub）棋牌后端'
 
 echo "=== 1. 备份 ==="
 if [ ! -f "${CONF}.bak-poker" ]; then
@@ -17,7 +20,7 @@ fi
 
 echo ""
 echo "=== 2. 幂等检查 ==="
-if grep -qF "$MARK" "$CONF"; then
+if grep -qF "$MARK" "$CONF" || grep -qF "$MARK_OLD" "$CONF"; then
   echo "已注入过，跳过"
   exit 0
 fi

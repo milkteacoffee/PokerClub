@@ -93,6 +93,19 @@ const tick = ms => new Promise(r => setTimeout(r, ms));
     await tick(40);
     ok($('lbName').textContent.trim() === '正常昵称哦', '纯数字昵称被拒绝');
 
+    /* ---- 品牌去赌博化（2026-09-15 改名：赌途 → 牌友小馆）---- */
+    ok(d.title.indexOf('牌友小馆') >= 0, '页面标题为「牌友小馆」: ' + d.title);
+    ok(d.querySelector('.lobby-logo').textContent.trim() === '牌友小馆', '大厅 logo 为「牌友小馆」');
+    {
+      const c2 = d.body.cloneNode(true);
+      c2.querySelectorAll('script,style').forEach(n => n.remove());
+      const t2 = c2.innerHTML;
+      const bad = ['赌途', '赌神', '赌桌'].filter(k => t2.indexOf(k) >= 0);
+      ok(bad.length === 0, '界面无赌博品牌语汇残留（命中: ' + bad.join('、') + '）');
+      ok(t2.indexOf('严禁赌博') > 0, '合规声明仍在（严禁赌博）');
+      ok(t2.indexOf('六冠牌神') >= 0, '称号已改名为「六冠牌神」');
+    }
+
     /* ---- 无致命错误 ---- */
     ok(errors.filter(e => !/Cannot set property|Not implemented/.test(e)).length === 0, '无致命脚本错误: ' + errors.slice(0, 2).join(' | '));
   } catch (e) {
