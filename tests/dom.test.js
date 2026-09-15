@@ -169,7 +169,7 @@ function click(el) {
   await tick(30);
   ok($('rankPanel').style.display === 'block', '切换到段位页');
   ok($('rankPanel').querySelectorAll('.rank-row').length === 1, '段位面板渲染段位卡');
-  ok($('rankPanel').textContent.indexOf('青铜') >= 0, '新档段位为青铜');
+  ok($('rankPanel').textContent.indexOf('牌桌新人') >= 0, '新档段位为「牌桌新人」');
   click($('ovStats').querySelector('[data-close="ovStats"]'));
   await tick(20);
 
@@ -208,7 +208,7 @@ function click(el) {
   click($('ovSettings').querySelector('[data-close="ovSettings"]'));
   await tick(20);
 
-  ok($('lbRank').textContent.indexOf('青铜') >= 0, '大厅显示段位徽章（' + $('lbRank').textContent + '）');
+  ok($('lbRank').textContent.indexOf('牌桌新人') >= 0, '大厅显示段位徽章（' + $('lbRank').textContent + '）');
 
   console.log('【横屏提示层】');
   ok(!!$('rotateHint').querySelector('#btnForceRotate'), '横屏提示层含「强制横屏」按钮');
@@ -343,7 +343,7 @@ function click(el) {
   ok(g2('lbName').textContent === '土豪', '迁移保留玩家名（' + g2('lbName').textContent + '）');
   ok(g2('lbCoins').textContent === '999,999', '迁移保留金币 999,999（实际 ' + g2('lbCoins').textContent + '）');
   ok(g2('lbLevel').textContent === 'Lv.5', '迁移保留等级 Lv.5');
-  ok(g2('lbRank').textContent.indexOf('铂金') >= 0, '3600 分对应铂金段位（' + g2('lbRank').textContent + '）');
+  ok(g2('lbRank').textContent.indexOf('心理读牌师') >= 0, '3600 分对应「心理读牌师」段位（' + g2('lbRank').textContent + '）');
 
   // 商城：购买 → 装备 → 卸下
   click2(g2('lbBtnShop'));
@@ -386,7 +386,7 @@ function click(el) {
   ok(g2('dexPanel').querySelectorAll('.dex-cell.got').length === 8, '图鉴已解锁 8 / 9 种');
   click2(g2('tabSRank'));
   await tick(40);
-  ok(g2('rankPanel').textContent.indexOf('铂金') >= 0, '段位页显示铂金');
+  ok(g2('rankPanel').textContent.indexOf('心理读牌师') >= 0, '段位页显示「心理读牌师」');
   ok(g2('rankPanel').textContent.indexOf('3600') >= 0, '段位页显示 3600 分');
   click2(g2('ovStats').querySelector('[data-close="ovStats"]'));
   await tick(30);

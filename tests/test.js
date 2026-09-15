@@ -445,12 +445,12 @@ const sleepTick = () => new Promise(r => setImmediate(r));
   ctx.profile15('holdem').redeemPoints = 1; // 模拟排位赢得的积分
   ok(ctx.exchangePoints('holdem','sell',1) === true && ctx.player.coins === rankCoins + 100 && ctx.profile15('holdem').redeemPoints === 0, '1个排位积分可兑换100金币');
   ctx.addRankPoints(1000);                      // 每 1000 分升一个大段位
-  ok(ctx.rankTierFor(ctx.player.rankPoints) === 1, '积分 1000 晋升白银');
-  ok(ctx.rankInfo().name === '白银 III', 'rankInfo 返回白银 III（大段位 + 小段位）');
+  ok(ctx.rankTierFor(ctx.player.rankPoints) === 1, '积分 1000 升第 2 档');
+  ok(ctx.rankInfo().name === '读牌学徒 III', 'rankInfo 返回「读牌学徒 III」（大段位 + 小段位）');
   var coinsBeforeRank = ctx.player.coins;
   ctx.addRankPoints(1000);                      // 2000 → 黄金
-  ok(ctx.rankTierFor(ctx.player.rankPoints) === 2, '积分 2000 晋升黄金');
-  ok(ctx.rankInfo().name === '黄金 III', 'rankInfo 跟随小段位');
+  ok(ctx.rankTierFor(ctx.player.rankPoints) === 2, '积分 2000 升第 3 档');
+  ok(ctx.rankInfo().name === '老练牌手 III', 'rankInfo 跟随小段位');
   ok(ctx.player.coins === coinsBeforeRank,
      '升段不直接发放金币（' + coinsBeforeRank + ' → ' + ctx.player.coins + '）');
   ctx.addRankPoints(-99999);

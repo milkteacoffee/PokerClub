@@ -98,7 +98,7 @@ test('确认类弹窗不注册遮罩关闭，避免误触丢档', () => {
 
 /* ---------------- 段位体系 ---------------- */
 
-test('大段位每 1000 分一档，青铜 0 起、传奇 6000 封顶', () => {
+test('大段位每 1000 分一档，第 1 档 0 分起、满段 6000 封顶', () => {
   assert.equal(w.RANKS.length, 7);
   const mins = w.RANKS.map(r => r.min);
   assert.deepEqual(mins, [0, 1000, 2000, 3000, 4000, 5000, 6000]);
@@ -126,8 +126,8 @@ test('每个大段位都有 III / II / I 三个小段位', () => {
 });
 
 test('小段位名称与封号拼接正确，进度取段内比例', () => {
-  assert.equal(w.rankFullName('holdem', 0), '青铜 III');
-  assert.equal(w.rankFullName('holdem', 3600), '铂金 II');
+  assert.equal(w.rankFullName('holdem', 0), '牌桌新人 III');
+  assert.equal(w.rankFullName('holdem', 3600), '心理读牌师 II');
   assert.equal(w.rankFullName('dice', 6000), '心眼财神 III');
   const s = w.subTierInfo(0);
   assert.equal(s.got, 0);
@@ -178,7 +178,7 @@ test('每 1000 分的晋级奖励仍然只发一次', () => {
   s.rankPoints = 2000;
   assert.deepEqual(w.grantTierReward15(s), { tier: 2, coins: 1200, points: 12 });
   assert.equal(w.player.coins, c0 + 1700);
-  /* 掉回青铜再升回白银，不重复发 */
+  /* 掉回第 1 档再升回第 2 档，不重复发 */
   s.rankPoints = 0; w.grantTierReward15(s);
   s.rankPoints = 1000; w.grantTierReward15(s);
   assert.equal(w.player.coins, c0 + 1700, '掉段回升不补发');
@@ -191,13 +191,13 @@ test('段位面板展示大段位+小段位、1000 分门槛与六冠进度', ()
   s.redeemPoints = 7; s.rankedWins = 12; s.rankedHands = 20;
   w.renderRank();
   const text = doc.getElementById('rankPanel').textContent;
-  assert.ok(text.includes('黄金 II'), '应显示小段位，实际：' + text.slice(0, 60));
+  assert.ok(text.includes('老练牌手 II'), '应显示小段位（含该游戏专属段位名），实际：' + text.slice(0, 60));
   assert.ok(text.includes('2600'), '应显示段位分');
   assert.ok(text.includes('每 1000 段位分升一个大段位'), '应说明 1000 分一档');
   assert.ok(text.includes('III → II → I'), '应说明小段位划分');
   assert.ok(text.includes('六冠牌神进度'), '应显示六冠进度');
-  assert.ok(text.includes('传奇'), '段位表应列出传奇');
-  assert.ok(w.rankFullName('holdem', 2600) === '黄金 II');
+  assert.ok(text.includes('德州王牌'), '段位表应列出最高段「德州王牌」');
+  assert.ok(w.rankFullName('holdem', 2600) === '老练牌手 II');
 });
 
 test('模式卡显示当前小段位与单局增减', () => {
@@ -207,7 +207,7 @@ test('模式卡显示当前小段位与单局增减', () => {
   w.player.coins = 5000;
   w.renderModeCards();
   const text = doc.getElementById('modeBody').textContent;
-  assert.ok(text.includes('黄金 II'), '模式卡应显示小段位，实际：' + text.slice(0, 120));
+  assert.ok(text.includes('老练牌手 II'), '模式卡应显示小段位（专属段位名），实际：' + text.slice(0, 120));
   assert.ok(text.includes('+5'), '应显示胜局加分区间');
   assert.ok(text.includes('-10'), '应显示负局扣分区间');
 });

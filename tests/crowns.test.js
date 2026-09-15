@@ -50,7 +50,7 @@ test('掼蛋按胜场计段，200 胜封顶', () => {
   assert.equal(w.guandanTierOf(200), 6);
   assert.equal(w.guandanTierOf(199), 5, '199 胜仍未封顶');
   assert.equal(w.guandanTierName(200), '掼蛋的神');
-  assert.equal(w.guandanTierName(0), '青铜');
+  assert.equal(w.guandanTierName(0), '掼蛋新手');
 });
 
 /* ---------------- 封顶判定 ---------------- */
@@ -170,7 +170,7 @@ test('段位面板登顶后显示专属封号与六冠进度', () => {
   const panel = doc.getElementById('rankPanel');
   assert.ok(panel.textContent.includes('德州王牌'), '应显示德州王牌，实际：' + panel.textContent.slice(0, 80));
   assert.ok(panel.textContent.includes('六冠牌神进度'), '应显示六冠进度');
-  assert.ok(panel.textContent.includes('传奇 · 德州王牌'), '段位列表应标注封号');
+  assert.ok(panel.textContent.includes('德州王牌 · 专属封号'), '段位列表末档应标注专属封号');
 });
 
 test('顶栏段位徽章登顶显示德州王牌', () => {

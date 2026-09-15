@@ -1486,7 +1486,7 @@
           <span class="lobby-lvl" id="lbLevel">Lv.1</span>
           <button type="button" class="lobby-name" id="lbName" title="点击名称即可修改" aria-label="修改用户名">玩家</button>
           <input class="name-input" id="lbNameInput" aria-label="用户名称，1至12个字符" maxlength="24" autocomplete="off" spellcheck="false" hidden>
-          <span class="rank-badge" id="lbRank">🥉 青铜</span>
+          <span class="rank-badge" id="lbRank">🥉 牌桌新人</span>
         </div>
         <div class="lobby-expbar"><div class="lobby-expfill" id="lbExp"></div></div>
       </div>
@@ -1688,7 +1688,7 @@
         <p>单机模式不登录、不联网，数据保存在本机浏览器；使用「好友开房」时会连接自建服务器（用于同步房间状态与好友资料），此时会保存昵称、签名、头像与对局记录，不收集与游戏无关的信息、不做用户画像。同 Wi-Fi 不同设备互不影响。清除网站数据会丢失本机存档，可用「玩家号 + 恢复码」在新设备接管云端存档。旧版存档保留只读导出。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🏅 段位排位</p>
         <p>本游戏为单机电脑对战，无真人匹配。快速模式不影响段位；排位入场前需资产至少 10,000 金币，每次入场消耗 1 排位积分（初始 100，可在模式页用 100 金币购买 1 分），继续下一手不重复收门票。</p>
-        <p>段位积分与入场积分独立：青铜 → 白银 → 黄金 → 铂金 → 钻石 → 大师 → 传奇。胜手 +12 至 +26，三连胜起额外 +2；弃牌失利 -5，摊牌失利 -10，最低 0 分，可降段。各段位金币奖励仅首次到达发放。</p>
+        <p>段位积分与入场积分独立：<b>每个游戏有自己的段位阶梯</b>（德州「牌桌新人 → 读牌学徒 → 老练牌手 → 心理读牌师 → 气场宗师 → 牌桌枭雄 → 德州王牌」，21点「点数学徒 → … → 二十一之神」，炸金花「闷牌新手 → … → 金花炸王」，猜骰子「骰盅学徒 → … → 心眼财神」，骰子比大小「掷骰新手 → … → 神手骰王」，掼蛋「掼蛋新手 → … → 掼蛋的神」）。胜手 +12 至 +26，三连胜起额外 +2；弃牌失利 -5，摊牌失利 -10，最低 0 分，可降段。各段位金币奖励仅首次到达发放。</p>
         <p>大厅直接点击用户名改名，回车或点击别处保存，Esc 取消。每手结算可在桌底回看；中途离桌保留剩余筹码、放弃本手已投入筹码，排位另扣最多 5 段位分。离桌汇总区分牌局盈亏、入场费和奖励收入。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">📅 每日签到</p>
         <p>7 天一轮，奖励逐日递增（120 → 1,200🪙），断签重新从第 1 天开始。</p>
@@ -1701,7 +1701,7 @@
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">📊 档案</p>
         <p>记录入池率 VPIP、胜率、全下胜率、诈唬成功率、最大底池、累计盈亏，以及 9 类牌型图鉴。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎖️ 称号收集</p>
-        <p>共 19 个称号，<b style="color:#f2c14e;">只能靠对局解锁，商城不售卖</b>：连胜 3/5/10 次、累计打出同花 10/50 次、四条 5 次、全下获胜 20 次、排位达到黄金/钻石/传奇段位、排位获胜 20 局、天然 21 点 10 次、炸金花比牌获胜 30 次、猜中点数或豹子 20/100 次、四馆累计 100/500 局与净赢 100 局、四馆各自完成 50 局。达成后自动解锁并提示，可在「档案 · 称号」页佩戴，佩戴后显示在牌桌座位与顶栏。</p>
+        <p>共 39 个称号，<b style="color:#f2c14e;">只能靠对局解锁，商城不售卖</b>：连胜 3/5/10 次、累计打出同花 10/50 次、四条 5 次、全下获胜 20 次、排位达到段位阶梯的中段 / 高段 / 满段、排位获胜 20 局、天然 21 点 10 次、炸金花比牌获胜 30 次、猜中点数或豹子 20/100 次、四馆累计 100/500 局与净赢 100 局、四馆各自完成 50 局。达成后自动解锁并提示，可在「档案 · 称号」页佩戴，佩戴后显示在牌桌座位与顶栏。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🎵 音乐与音效</p>
         <p>主界面与牌桌是<b style="color:#f2c14e;">两套不同的 BGM</b>，进游戏会自动切换；四个场次还各有一套。</p>
         <p>默认用 WebAudio 实时合成（鼓组 + 贝斯 + 电钢 + 铺底 + 混响），无音频文件、离线可播。<br>
@@ -2977,9 +2977,9 @@ var TITLES = [
   { id:'tt_quads_5',   name:'四条猎手', icon:'💎', desc:'累计打出 5 次四条及以上',  check:function(p){ return titleMetric(p,'holdem','quads') >= 5; } },
   { id:'tt_allin_20',  name:'孤胆英雄', icon:'🎲', desc:'全下获胜 20 次',        check:function(p){ return titleMetric(p,'holdem','allinwin') >= 20; } },
   /* 排位 */
-  { id:'tt_rank_2',    name:'黄金圣手', icon:'🥇', desc:'排位达到黄金段位',      check:function(p){ return (p.games.holdem.rankPeak || 0) >= 2; } },
-  { id:'tt_rank_4',    name:'钻石宗师', icon:'💎', desc:'排位达到钻石段位',      check:function(p){ return (p.games.holdem.rankPeak || 0) >= 4; } },
-  { id:'tt_rank_6',    name:'传奇牌神', icon:'👑', desc:'排位达到传奇段位',      check:function(p){ return (p.games.holdem.rankPeak || 0) >= 6; } },
+  { id:'tt_rank_2',    name:'牌桌好手', icon:'🥇', desc:'德州排位达到「老练牌手」',  check:function(p){ return (p.games.holdem.rankPeak || 0) >= 2; } },
+  { id:'tt_rank_4',    name:'读心宗师', icon:'💎', desc:'德州排位达到「心理读牌师」', check:function(p){ return (p.games.holdem.rankPeak || 0) >= 4; } },
+  { id:'tt_rank_6',    name:'牌局至尊', icon:'👑', desc:'德州排位打到满段 6000 分',  check:function(p){ return (p.games.holdem.rankPeak || 0) >= 6; } },
   { id:'tt_ranked_20', name:'排位常胜', icon:'🎖️', desc:'排位累计获胜 20 局',    check:function(p){ return (p.games.holdem.rankedWins || 0) >= 20; } },
   /* 21 点 */
   { id:'tt_bj_10',     name:'天生赢家', icon:'🃏', desc:'拿到 10 次天然 21 点',  check:function(p){ return titleMetric(p,'blackjack','natural') >= 10; } },
@@ -3202,7 +3202,34 @@ function subTierOrder(points) { var s = subTierInfo(points); return s.tier * 3 +
 /* 大段位展示名：最高段位显示专属封号 */
 function tierDisplayName(game, tier) {
   var top = TOP_TIER_NAMES[game || ''];
-  return (tier >= RANKS.length - 1 && top) ? top : RANKS[tier].name;
+  return (tier >= RANKS.length - 1 && top) ? top : rankNameOf(game, tier);
+}
+/* 各游戏专属段位名（7 档 = 与 RANKS 大段位一一对应，末档与封号衔接）。
+   命名原则：贴合该玩法的核心动作与心法（读牌 / 算牌 / 闷牌 / 听骰 / 通吃 / 配合），
+   由「初入门 → 掌心法 → 立威名 → 封神」递进，佩戴与展示时更有分量。 */
+var RANK_NAMES = {
+  holdem:    ['牌桌新人', '读牌学徒', '老练牌手', '心理读牌师', '气场宗师', '牌桌枭雄', '德州王牌'],
+  blackjack: ['点数学徒', '记牌客', '心算师', '算牌猎手', '概率大师', '停牌宗师', '二十一之神'],
+  gold:      ['闷牌新手', '看牌客', '胆识家', '闷牌将军', '比牌圣手', '千局老怪', '金花炸王'],
+  dice:      ['骰盅学徒', '听骰人', '心眼客', '骰盅术士', '豹子猎手', '押注宗师', '心眼财神'],
+  diceduel:  ['掷骰新手', '点数玩家', '骰坛好手', '通吃大师', '骰坛霸主', '天选之骰', '神手骰王'],
+  guandan:   ['掼蛋新手', '默契搭档', '升级能手', '配合大师', '牌局统帅', '掼蛋宗师', '掼蛋的神'],
+};
+/* 段位名取用：优先该游戏专属名，未知游戏回落通用阶梯名 */
+function rankNameOf(game, tier) {
+  var arr = RANK_NAMES[game || ''];
+  if (arr && arr[tier]) return arr[tier];
+  return (RANKS[tier] && RANKS[tier].name) || '?';
+}
+/* 当前游戏（大厅/段位面板跟随所选游戏）的段位阶梯，供面板与说明文案使用 */
+function rankLadder(game) {
+  var out = [];
+  for (var i = 0; i < RANKS.length; i++) out.push({ tier: i, name: rankNameOf(game, i), min: RANKS[i].min, reward: RANKS[i].reward, points: RANKS[i].points });
+  return out;
+}
+/* 该游戏段位阶梯的一句话（用于说明文案） */
+function rankLadderText(game) {
+  return rankLadder(game).map(function (r) { return r.name; }).join(' → ');
 }
 function rankFullName(game, points) {
   var s = subTierInfo(points);
@@ -3222,7 +3249,7 @@ function guandanWinsCount() {
     return (s && Number.isSafeInteger(s.wins) && s.wins > 0) ? s.wins : 0; } catch (e) { return 0; }
 }
 function guandanTierOf(wins) { var t = 0; for (var i = 0; i < GUANDAN_TIER_WINS.length; i++) if (wins >= GUANDAN_TIER_WINS[i]) t = i; return t; }
-function guandanTierName(wins) { var t = guandanTierOf(wins); return t >= RANKS.length - 1 ? TOP_TIER_NAMES.guandan : RANKS[t].name; }
+function guandanTierName(wins) { var t = guandanTierOf(wins); return rankNameOf('guandan', t); }
 function gameIsTopTier(p, g) {
   if (g === 'guandan') return guandanTierOf(guandanWinsCount()) >= RANKS.length - 1;
   var s = p && p.games ? p.games[g] : null;
@@ -5936,15 +5963,16 @@ function rankTierFor(points) {
 }
 function rankInfo() {
   var pts = player ? player.rankPoints : 0, t = rankTierFor(pts), r = RANKS[t] || RANKS[0];
-  return Object.assign({}, r, { name: tierDisplayName('holdem', t) + ' ' + subTierInfo(pts).label });
+  var base = tierDisplayName('holdem', t);
+  return Object.assign({}, r, { name: base + ' ' + subTierInfo(pts).label, base: base });
 }
 function rankProgress() {
   var pts = player ? player.rankPoints : 0;
   var info = subTierInfo(pts), next = RANKS[info.tier + 1];
   return { tier: info.tier, pct: info.pct, need: info.nextMin - pts, got: info.got, span: info.span,
            next: next, sub: info,
-           nextLabel: info.idx > 0 ? RANKS[info.tier].name + ' ' + SUB_TIER_LABELS[info.idx - 1]
-                                   : ((next ? next.name : RANKS[info.tier].name) + ' III') };
+           nextLabel: info.idx > 0 ? rankNameOf((typeof hubGame !== 'undefined' && hubGame) ? hubGame : 'holdem', info.tier) + ' ' + SUB_TIER_LABELS[info.idx - 1]
+                                   : (rankNameOf((typeof hubGame !== 'undefined' && hubGame) ? hubGame : 'holdem', next ? info.tier + 1 : info.tier) + ' III') };
 }
 function addRankPoints(delta) {
   if (!player) return;
@@ -8084,7 +8112,7 @@ function grantTierReward15(s){
   if(t1>(s.tierReward||0))s.tierReward=t1;
   if(coins15>0)addCoins(coins15);
   if(pts15>0)s.redeemPoints+=pts15;
-  if(coins15>0||pts15>0){sfx('rankup');showToast('🏅 晋升 '+RANKS[t1].name+'  +'+fmt(coins15)+'🪙  +'+fmt(pts15)+' 积分',2600,false,'success');}
+  if(coins15>0||pts15>0){sfx('rankup');showToast('🏅 晋升 '+rankNameOf(s.game||hubGame,t1)+'  +'+fmt(coins15)+'🪙  +'+fmt(pts15)+' 积分',2600,false,'success');}
   return {tier:t1,coins:coins15,points:pts15};
 }
 function recoverRanked15(){var p=player.rankedPending;if(!p||G.active)return true;return atomic15(function(){applyRankResult15(p.game,p.difficulty,-1);player.rankedPending=null;});}
@@ -8546,9 +8574,9 @@ renderAchList=function(){oldRenderAch15();var host=$('achList');if(!host)return;
 var achGame15='all';
 renderRank=function(){if(!player)return;ensureRankGift(hubGame);var s=profile15(hubGame),info=subTierInfo(s.rankPoints),tier=info.tier,cur=RANKS[tier],next=RANKS[tier+1];
  var base=tierDisplayName(hubGame,tier),full=base+' '+info.label,pct=info.pct;
- var nextLabel=info.idx>0?(cur.name+' '+SUB_TIER_LABELS[info.idx-1]):((next?next.name:cur.name)+' III');
+ var nextLabel=info.idx>0?(rankNameOf(hubGame,tier)+' '+SUB_TIER_LABELS[info.idx-1]):(rankNameOf(hubGame,next?tier+1:tier)+' III');
  var html='<div class="rank-row"><div class="mid"><div class="nm">'+GAME_NAMES[hubGame]+' · '+full+'</div><div class="pt">'+s.rankPoints+' 段位分 · 本小段 '+info.got+' / '+info.span+'</div><div class="rank-bar"><div class="rank-fill" style="width:'+pct+'%"></div></div></div></div><div class="stat-grid"><div class="stat-box"><div class="v">'+s.rankPoints+'</div><div class="l">段位分（不可兑换）</div></div><div class="stat-box"><div class="v">'+s.redeemPoints+'</div><div class="l">可兑换积分</div></div><div class="stat-box"><div class="v">'+s.rankedWins+' / '+s.rankedHands+'</div><div class="l">排位胜局 / 总局数</div></div></div>';
- html+='<p>段位只靠段位分晋级：每 1000 段位分升一个大段位，每个大段位再分 III → II → I 三个小段位（约 333 分一小段）。青铜 0 起步 → 白银 1000 → 黄金 2000 → 铂金 3000 → 钻石 4000 → 大师 5000 → 传奇 6000。金币场与排位都要门票，每局重置比赛筹码，不结算金币。</p>';
+ html+='<p>段位只靠段位分晋级：每 1000 段位分升一个大段位，每个大段位再分 III → II → I 三个小段位（约 333 分一小段）。'+GAME_NAMES[hubGame]+' 段位阶梯：'+rankLadderText(hubGame)+'（0 / 1000 / 2000 / 3000 / 4000 / 5000 / 6000 分）。金币场与排位都要门票，每局重置比赛筹码，不结算金币。</p>';
  html+='<p>排位积分从 0 开始，攒够 <b>'+RANKED_ENTRY_MIN+'</b> 分才能开始排位对局；单局 胜 +'+RANK_POINT_WIN[0]+'~+'+RANK_POINT_WIN[RANK_POINT_WIN.length-1]+'，负 -'+RANK_POINT_LOSS[0]+'~-'+RANK_POINT_LOSS[RANK_POINT_LOSS.length-1]+'（按对手档位），平局不变。低于 '+RANKED_ENTRY_MIN+' 分视为输光直接归零，只能等第二天的系统赠送或使用每日兑换。</p>';
  html+='<p>🏅 当前排位积分 <b>'+s.rankPoints+'</b> / '+RANKED_ENTRY_MIN+' · '+(s.rankPoints>=RANKED_ENTRY_MIN?'已达标，可以开始排位':'不足 '+RANKED_ENTRY_MIN+'，今天先等系统赠送或兑换')
   +' · 今日兑换 '+ensureRankExchange().used+' / '+RANK_EXCHANGE.timesPerDay+' 次 · 今日已兑换 '+ensureRankExchange().gained+' / '+RANK_EXCHANGE.dailyCap+' 分'
@@ -8556,7 +8584,7 @@ renderRank=function(){if(!player)return;ensureRankGift(hubGame);var s=profile15(
  html+='<p><button class="mini-btn15" id="rankExchangeBtn15"'+(rankExchangeBlockedReason(hubGame)?' disabled':'')+'>兑换排位积分（最多 '+Math.min(RANK_EXCHANGE.perTime,rankExchangeQuota())+' 分 / '+fmt(rankExchangeCost(Math.min(RANK_EXCHANGE.perTime,rankExchangeQuota())))+' 金币）</button> <span class="mini-tip15">'+(rankExchangeBlockedReason(hubGame)||('今天还可兑换 '+rankExchangeLeft()+' 次，剩余额度 '+rankExchangeQuota()+' 分'))+'</span></p>';
  html+='<p>'+(info.nextMin>s.rankPoints?'距下一小段位「'+nextLabel+'」还需 <b>'+(info.nextMin-s.rankPoints)+'</b> 段位分':'已达最高段位')+(tier>=RANKS.length-1?' · 专属封号「'+base+'」':'')+'</p>';
  html+='<p>👑 六冠牌神进度 <b>'+crownCount(player)+' / 6</b> · 六大游戏全部达到最高段位可获得永久称号「六冠牌神」</p>';
- RANKS.forEach(function(r){html+='<div class="task-item"><div class="info"><div class="t">'+r.name+(r.id===RANKS.length-1&&TOP_TIER_NAMES[hubGame]?' · '+TOP_TIER_NAMES[hubGame]:'')+'</div><div class="pg">'+r.min+' 分起 · '+['III','II','I'].map(function(l){return r.name+' '+l;}).join(' → ')+(r.id===tier?' · 当前 '+full:'')+'</div></div></div>';});$('rankPanel').innerHTML=html;var eb=$('rankExchangeBtn15');if(eb)eb.onclick=function(){sfx('click');exchangeRankedPoints(hubGame);};};
+ rankLadder(hubGame).forEach(function(r){html+='<div class="task-item"><div class="info"><div class="t">'+r.name+(r.tier===RANKS.length-1?' · 专属封号':'')+'</div><div class="pg">'+r.min+' 分起 · '+['III','II','I'].map(function(l){return r.name+' '+l;}).join(' → ')+(r.id===tier?' · 当前 '+full:'')+'</div></div></div>';});$('rankPanel').innerHTML=html;var eb=$('rankExchangeBtn15');if(eb)eb.onclick=function(){sfx('click');exchangeRankedPoints(hubGame);};};
 
 
 /* ============================================================
@@ -9639,7 +9667,7 @@ function loadBoard(){
       if (!d.list.length) { list.innerHTML = '<div class="board-empty">' + (Online.boardScope === 'friends' ? '还没有好友上榜<br>添加好友后即可对比段位' : '暂无上榜玩家') + '</div>'; return; }
       list.innerHTML = d.list.map(function(x){
         var cls = 'board-row' + (x.isMe ? ' me' : '') + (x.rank <= 3 ? ' top' + x.rank : '');
-        var tn = ['新手', '青铜', '白银', '黄金', '铂金', '钻石', '传奇'][x.tier] || '新手';
+        var tn = rankNameOf(Online.boardGame, x.tier);
         return '<div class="' + cls + '"><span class="rk">' + x.rank + '</span>' +
           '<span class="bavatar">' + avatarSVG(x.avatar, 22) + '</span>' +
           '<span class="nm">' + esc(x.nickname) + (x.isMe ? '（我）' : '') + '</span>' +
