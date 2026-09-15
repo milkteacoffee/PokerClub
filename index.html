@@ -1446,6 +1446,13 @@
   .pf-avup{display:flex;gap:8px;margin-top:8px}
   .pf-avup .pf-ghostbtn{margin-top:0;flex:1}
   .pf-opt-custom svg{display:block}
+  /* 隐私政策与用户协议正文（可滚动） */
+  .legal-body{max-height:56vh;overflow-y:auto;font-size:12.5px;line-height:1.85;color:#b9c6d2;padding-right:4px}
+  .legal-body h4{font-size:13px;color:#f0d79a;font-weight:800;margin:14px 0 5px;letter-spacing:.5px}
+  .legal-body p{margin:0 0 7px}
+  .legal-body b{color:#e8eef5}
+  .legal-lead{color:#d8e0e8;background:rgba(207,168,91,.08);padding:9px 11px;border-radius:8px;margin-bottom:4px}
+  .legal-foot{margin-top:14px;font-size:11px;color:#7d8b96;border-top:1px solid rgba(255,255,255,.07);padding-top:9px}
   .friend-addbtn.warn{background:linear-gradient(160deg,#f0b48a,#d97b4a);color:#2b1408}
   /* 榜单 / 好友 / 房间座位头像 */
   .bavatar{width:22px;height:22px;border-radius:6px;overflow:hidden;flex:none;line-height:0}
@@ -1678,7 +1685,7 @@
         <p>任务与成就列表里，<b style="color:#f2c14e;">已完成但还没领奖的条目会自动排到最上面</b>，其次是进行中的，已领取的沉到列表底部。任务、每日、周常、签到与成就面板顶部都有一键领取按钮，一次领完当前可领的全部奖励；成就的一键领取会连同还没翻到的分页一起结算。</p>
         <p>新手场每手开局至少500金币。电脑对手低于500时在下一手前离桌，由新昵称对手带入500补位；玩家不足500会保留余额返回大厅。对手昵称随机生成，仍全部为本地电脑AI，不是真人联机。</p>
         <p>每手使用全新52张牌，安全随机洗牌，不按输赢安排牌型；正常随机可能连续出现相同点数或弱牌。</p>
-        <p>纯单机，无登录、无后端、不收集IP。每个浏览器独立保存，新档直接获得500金币；同Wi-Fi不同设备互不影响。旧版存档保留只读导出。清除网站数据会丢失存档，换浏览器或新建存档可重新开始。</p>
+        <p>单机模式不登录、不联网，数据保存在本机浏览器；使用「好友开房」时会连接自建服务器（用于同步房间状态与好友资料），此时会保存昵称、签名、头像与对局记录，不收集与游戏无关的信息、不做用户画像。同 Wi-Fi 不同设备互不影响。清除网站数据会丢失本机存档，可用「玩家号 + 恢复码」在新设备接管云端存档。旧版存档保留只读导出。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🏅 段位排位</p>
         <p>本游戏为单机电脑对战，无真人匹配。快速模式不影响段位；排位入场前需资产至少 10,000 金币，每次入场消耗 1 排位积分（初始 100，可在模式页用 100 金币购买 1 分），继续下一手不重复收门票。</p>
         <p>段位积分与入场积分独立：青铜 → 白银 → 黄金 → 铂金 → 钻石 → 大师 → 传奇。胜手 +12 至 +26，三连胜起额外 +2；弃牌失利 -5，摊牌失利 -10，最低 0 分，可降段。各段位金币奖励仅首次到达发放。</p>
@@ -2019,6 +2026,9 @@
         <button class="shop-btn ghost" id="setSettleToggle" style="flex:1;padding:10px;font-size:13px;">📋 每手结算</button>
         <button class="shop-btn ghost" id="setResetLandscape" style="flex:1;padding:10px;font-size:13px;">📱 重置横屏</button>
       </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;">
+        <button class="shop-btn ghost" id="setHapticToggle" style="flex:1;padding:10px;font-size:13px;">震动反馈 开</button>
+      </div>
       <div class="vol-row">
         <span class="lb">主音量</span>
         <input type="range" id="volMaster" min="0" max="100" step="1">
@@ -2041,6 +2051,48 @@
         想换成真实音乐：把文件放到 <b style="color:#8fa0b4;">assets/</b> 目录下即可自动接管，
         支持 mp3 / ogg / m4a（命名见 assets/README.md）。文件缺失会自动回落到内置合成引擎。<br>
         浏览器策略要求先有一次点击才会解锁声音。
+      </div>
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button class="shop-btn ghost" id="btnLegal" style="flex:1;padding:10px;font-size:12.5px;">隐私政策与用户协议</button>
+        <button class="shop-btn ghost" id="btnFeedback" style="flex:1;padding:10px;font-size:12.5px;">意见反馈</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 隐私政策与用户协议 / 意见反馈（对外发布必备的合规入口） -->
+  <div class="overlay" id="ovLegal">
+    <div class="panel" style="max-width:540px;">
+      <h2>隐私政策与用户协议 <button class="closebtn" data-close="ovLegal">✕ 返回</button></h2>
+      <div class="legal-body" id="legalBody">
+        <p class="legal-lead">本游戏（以下称「本作」）是一款免费的休闲棋牌游戏，仅供娱乐。使用本作即表示你已阅读并同意以下条款。</p>
+
+        <h4>一、服务性质</h4>
+        <p>本作不含充值、内购、广告与任何形式的付费功能；不接受任何以金钱、财物为标的的投注，也不提供任何提现、兑换、交易通道。游戏内金币、积分、段位、称号等均为虚拟计数，仅用于游戏内玩法表现，<b>不具有货币价值，不可交易、不可转让、不可兑换任何现实财物</b>。</p>
+        <p>请勿利用本作组织或参与任何形式的赌博活动。凡以营利为目的组织他人对局、抽头渔利、代收代付赌资的行为，均与开发者无关，且可能触犯法律，本作将拒绝提供一切便利。</p>
+
+        <h4>二、未成年人保护</h4>
+        <p>本作面向 18 周岁及以上用户。未满 18 周岁请在监护人同意与陪同下使用；监护人可随时通过清除浏览器数据或联系我们删除相关数据。</p>
+
+        <h4>三、我们收集的信息</h4>
+        <p>单机模式<b>不登录、不联网</b>，全部数据保存在你本机浏览器。仅当你使用「好友开房」「排行榜」等联机功能时，才会向自建服务器提交：</p>
+        <p>· 昵称、个性签名、头像（均为你主动填写/上传，可留空）；<br>
+        · 随机生成的设备标识（用于区分存档与恢复身份，非硬件序列号）；<br>
+        · 对局记录与段位积分（用于排行榜与战绩展示）。</p>
+        <p>我们<b>不收集</b>手机号、身份证号、精确位置、通讯录、相册或任何与游戏无关的信息，也不做用户画像与广告投放，不会向第三方出售或共享上述信息。</p>
+
+        <h4>四、数据存储与删除</h4>
+        <p>本机数据存于浏览器本地存储，服务器数据存于中国大陆境内的自建服务器。清除浏览器数据即可删除本机数据；需要删除服务器端资料时，可通过「意见反馈」联系我们处理。账号资料可在「用户资料」中自行修改或重置。</p>
+
+        <h4>五、行为规范</h4>
+        <p>请勿使用违法违规、侮辱性、涉黄涉政或含赌博暗示的昵称、签名与头像；本作对昵称、签名、头像做了长度与控制字符过滤，并保留对违规内容进行删除、屏蔽的权利。</p>
+
+        <h4>六、免责声明</h4>
+        <p>本作仅供娱乐，不构成任何形式的赌博或投资。因网络中断、设备故障、浏览器清理数据、不可抗力等造成的数据丢失或对局中断，开发者不承担赔偿责任。联机功能受网络环境影响，可能出现掉线重连或自动代打。</p>
+
+        <h4>七、变更与联系</h4>
+        <p>条款如有更新将在本页公示，继续使用即视为接受更新后的条款。如对本政策有疑问，请通过「意见反馈」与我们联系。</p>
+
+        <p class="legal-foot">最后更新：2026-09-15 · 本作为个人开发者的免费娱乐作品，非经营性互联网服务。</p>
       </div>
     </div>
   </div>
@@ -2680,10 +2732,46 @@ function onlinePushProfile(cb) {
     bio: player.bio || '',
   });
 }
+/* 触感反馈：支持的设备上给关键时机一点震动（设置里可关） */
+function haptic(pattern){
+  try {
+    if (!navigator.vibrate) return;
+    if (player && player.haptics === false) return;
+    navigator.vibrate(pattern);
+  } catch (e) {}
+}
+/* ---- 昵称/签名内容过滤（UGC 合规：拦截广告导流、交易代充、赌博诱导类词）---- */
+var NAME_BAD_WORDS = ['微信', '威信', 'vx', 'wx号', '加群', 'qq群', '代练', '代充', '充值', '出售', '收币', '买卖',
+  '外挂', '作弊', '脚本代打', '菠菜', '博彩', '下注网', '赌博网', '赌博平台', '棋牌室', '代理', '返水', '洗码',
+  '赌资', '换钱', '提现', '套现', '现金', '红包群', '带你上岸', '包赢', '稳赚'];
+function nicknameIssue(name) {
+  var t = String(name == null ? '' : name).replace(/[\u0000-\u001f\u007f<>]/g, '').trim();
+  if (!t) return '昵称不能为空';
+  if (Array.from(t).length > 12) return '昵称最多 12 个字';
+  if (/^\d+$/.test(t)) return '昵称不能是纯数字';
+  var low = t.toLowerCase().replace(/[\s·．.＿_\-—]/g, '');
+  for (var i = 0; i < NAME_BAD_WORDS.length; i++) {
+    if (low.indexOf(NAME_BAD_WORDS[i].toLowerCase()) >= 0) return '昵称含广告/交易/赌博类违规词，请换一个';
+  }
+  return '';
+}
+function bioIssue(bio) {
+  var t = String(bio == null ? '' : bio).replace(/[\u0000-\u001f\u007f<>]/g, '').trim();
+  if (Array.from(t).length > 60) return '签名最多 60 个字';
+  var low = t.toLowerCase().replace(/[\s·．.＿_\-—]/g, '');
+  for (var i = 0; i < NAME_BAD_WORDS.length; i++) {
+    if (low.indexOf(NAME_BAD_WORDS[i].toLowerCase()) >= 0) return '签名含广告/交易/赌博类违规词，请修改';
+  }
+  return '';
+}
 function saveProfileForm() {
   if (!player) return;
   var nm = ($('pfNick').value || '').trim().slice(0, 12);
+  var bad = nicknameIssue(nm);
+  if (bad) { showToast(bad, 2200, true); return; }
   var bio = ($('pfBio').value || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 60);
+  var badBio = bioIssue(bio);
+  if (badBio) { showToast(badBio, 2200, true); return; }
   if (nm) player.name = nm;
   player.bio = bio;
   Online.nickname = player.name;           /* 联机昵称跟随 */
@@ -4252,7 +4340,7 @@ function goModeScreen() {
 }
 /* 弹窗：同一时刻只保留一个，避免两个 ✕ 叠在一起；
    信息类弹窗支持「点击面板外」与 Esc 关闭，其余确认类弹窗仍走各自按钮。 */
-var OV_CLOSE_ON_BACKDROP = ['ovAchieve', 'ovTasks', 'ovHelp', 'ovShop', 'ovStats', 'ovCheckin', 'ovSettings', 'ovStorage', 'ovOnline', 'ovBoard', 'ovProfile'];
+var OV_CLOSE_ON_BACKDROP = ['ovAchieve', 'ovTasks', 'ovHelp', 'ovShop', 'ovStats', 'ovCheckin', 'ovSettings', 'ovStorage', 'ovOnline', 'ovBoard', 'ovProfile', 'ovLegal'];
 function closeOverlay(id) { var el = $(id); if (el) el.classList.remove('show'); }
 function openOverlay(id, keep) {
   document.querySelectorAll('.overlay').forEach(function (o) {
@@ -7422,8 +7510,77 @@ function openSettings() {
   $('setSfxToggle').innerHTML = icifyHTML(player.soundOn ? '🔊 音效 开' : '🔇 音效 关');
   $('setMusicToggle').innerHTML = icifyHTML(player.musicOn ? '🎵 音乐 开' : '🎵 音乐 关');
   $('setSettleToggle').innerHTML = icifyHTML((player.settlePanel === false) ? '📋 每手结算 关' : '📋 每手结算 开');
+  var ht = $('setHapticToggle');
+  if (ht) ht.textContent = '震动反馈 ' + (player.haptics === false ? '关' : '开');
   $('bgmSrcLabel').textContent = bgmSourceLabel();
   openOverlay('ovSettings');
+}
+/* ---- 合规入口：隐私政策与用户协议 / 意见反馈 ---- */
+/* 条款正文在脚本加载时抓一次并缓存，这样「意见反馈」覆盖内容后还能切回条款 */
+var LEGAL_HTML = (function () {
+  try { var b = document.getElementById('legalBody'); return b ? b.innerHTML : ''; } catch (e) { return ''; }
+})();
+function openLegal() {
+  initAudio(); sfx('click');
+  var box = $('legalBody');
+  if (box && LEGAL_HTML) box.innerHTML = LEGAL_HTML;
+  openOverlay('ovLegal');
+}
+/* 反馈：复制诊断信息（玩家号/设备标识/版本/UA），便于开发者定位问题 */
+function copyFeedback() {
+  var info = [
+    '【赌途 · 问题反馈】',
+    '玩家号：' + (Online.userCode || '(未获取)'),
+    '设备标识：' + (onlineDeviceId() || '-'),
+    '存档槽：' + (activeSlot + 1) + ' · 段位分：' + ((player && player.rankPoints) || 0) + ' · 金币：' + ((player && player.coins) || 0),
+    '联机战绩：' + JSON.stringify((player && player.online) || {}),
+    'UA：' + (navigator.userAgent || '-'),
+    '时间：' + new Date().toLocaleString('zh-CN'),
+  ].join('\n');
+  copyText(info, '已复制反馈信息，请把它发给开发者');
+}
+/* 复制到剪贴板（优先 Clipboard API，回落到 textarea） */
+function copyText(text, okMsg) {
+  var done = function (ok) { showToast(ok ? (okMsg || '已复制') : '复制失败，请手动选择文本', 1900, !ok); };
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(fallbackCopy(text)); });
+      return;
+    }
+  } catch (e) {}
+  done(fallbackCopy(text));
+}
+function fallbackCopy(text) {
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) { return false; }
+}
+function openFeedback() {
+  initAudio(); sfx('click');
+  var box = $('legalBody');
+  if (box) box.innerHTML =
+    '<p class="legal-lead">遇到问题或有建议？先点下面的按钮复制一段诊断信息，再把它发给开发者即可。</p>' +
+    '<h4>请描述清楚</h4>' +
+    '<p>· 在哪个玩法/界面出的问题（例如「好友房 · 掼蛋 · 出牌时」）<br>' +
+    '· 你期望的结果与实际看到的结果<br>' +
+    '· 能否复现（每次都能 / 偶尔）</p>' +
+    '<h4>我们会处理的事</h4>' +
+    '<p>· 对局异常、掉线、结算不符、存档丢失<br>' +
+    '· 昵称/签名/头像被滥用、排行榜数据异常<br>' +
+    '· 希望删除服务器端的个人资料</p>' +
+    '<div style="display:flex;gap:10px;margin-top:14px;">' +
+    '<button class="online-btn primary" id="fbCopy" type="button">复制诊断信息</button></div>' +
+    '<p class="legal-foot">本作无客服系统，反馈由开发者本人查看处理；简单的问题通常会在下一个版本修复。</p>';
+  var btn = $('fbCopy'); if (btn) btn.onclick = copyFeedback;
+  openOverlay('ovLegal');
 }
 function toggleMusic() {
   var on = Music.toggle();
@@ -7582,6 +7739,8 @@ function bindEvents() {
     nameInput.hidden = true;
     $('lbName').hidden = false;
     if (!cancel && next && next !== player.name) {
+      var bad = nicknameIssue(next);
+      if (bad) { showToast(bad, 2400, true); return; }
       player.name = next;
       saveAllSaves(true);
       renderLobby();
@@ -7651,6 +7810,17 @@ function bindEvents() {
   $('btnSettings').addEventListener('click', function(){ initAudio(); sfx('click'); openSettings(); });
 
   $('setSfxToggle').addEventListener('click', function(){ initAudio(); toggleSound(); openSettings(); });
+  /* 合规入口：隐私政策与用户协议 / 意见反馈 */
+  var lg = $('btnLegal'); if (lg) lg.addEventListener('click', openLegal);
+  var fb = $('btnFeedback'); if (fb) fb.addEventListener('click', openFeedback);
+  var hp = $('setHapticToggle'); if (hp) hp.addEventListener('click', function(){
+    sfx('click');
+    player.haptics = (player.haptics === false);   /* 取反 */
+    saveAllSaves(true);
+    haptic(20);
+    showToast(player.haptics ? '震动反馈已开启' : '震动反馈已关闭', 1400);
+    openSettings();
+  });
   $('setMusicToggle').addEventListener('click', function(){ initAudio(); toggleMusic(); openSettings(); });
   $('setSettleToggle').addEventListener('click', function(){
     sfx('click');
@@ -8867,6 +9037,7 @@ function onlineArmTimer(st){
   if (key !== Online._turnKey) {
     Online._turnKey = key;
     Online._deadline = (!st.done && st.turn >= 0) ? (Date.now() + (typeof st.turnLeftMs === 'number' ? st.turnLeftMs : 30000)) : 0;
+    if (st.turn === Online.seat && !st.done) haptic(16);   /* 轮到自己：轻震提示 */
   }
 }
 /* 每秒刷新倒计时文本（只改文字节点，不重渲染牌桌）。
@@ -9236,6 +9407,7 @@ function onlineShowSettle(m){
   }
   /* 联机战绩落地（用于称号收集与个人面板展示） */
   onlineRecordResult(res.game, won);
+  haptic(won ? [14, 60, 14] : 30);   /* 结算：胜局双震、败局单震 */
   html = '<div style="font-size:11px;color:#8fa0b4;letter-spacing:1px">积分欢乐局 · 不与金币互通</div>' + html;
   html += '<div style="font-size:10px;color:#7d8b96;margin-top:4px">仅供娱乐 · 严禁赌博 · 虚拟金币不可充值兑现 · 违者后果自负</div>';
   html += '<div style="display:flex;gap:10px;margin-top:6px"><button class="online-btn primary" id="odAgain">再来一局</button><button class="online-btn" id="odQuit">返回大厅</button></div>';
