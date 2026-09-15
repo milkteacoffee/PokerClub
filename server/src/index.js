@@ -174,6 +174,52 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true });
     }
 
+    /* 好友搜索：按昵称模糊匹配玩家（需身份，排除自己）
+       —— 返回候选列表，供前端"昵称互加"。标记 isFriend / requested / pending 让 UI 直接显示状态。 */
+    if (path === '/api/friends/search' && method === 'GET') {
+      if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
+      const q = (url.searchParams.get('q') || '').trim();
+      if (!q) return json(res, 400, { ok: false, msg: '搜索词不能为空' });
+      if (q.length > config.auth.nicknameMaxLen) return json(res, 400, { ok: false, msg: '搜索词过长' });
+      const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit')) || 20));
+      const rows = store.searchPlayersByNick(q, deviceId, limit);
+      const friends = new Set(store.friendsOf(deviceId));
+      const requested = new Set(store.outgoingRequests(deviceId));
+      const pending = new Set(store.pendingRequests(deviceId).map(r => r.from_id));
+      const list = rows.map(r => ({
+        deviceId: r.deviceId,
+        nickname: r.nickname,
+        isFriend: friends.has(r.deviceId),
+        requested: requested.has(r.deviceId),
+        pending: pending.has(r.deviceId),
+      }));
+      return json(res, 200, { ok: true, q, list });
+    }
+
+    /* 房间号搜索成员：通过房号查房内现时成员（无需身份也能围观成员，用于"房间号互加"）
+       —— 返回成员 deviceId/nickname/seat/online/ready，并相对查询者标记 isMe / isFriend。 */
+    if (path === '/api/room/members' && method === 'GET') {
+      const code = (url.searchParams.get('code') || '').trim();
+      if (!/^\d+$/.test(code) || code.length !== config.room.codeLength) {
+        return json(res, 400, { ok: false, msg: '房间号格式不正确（' + config.room.codeLength + ' 位数字）' });
+      }
+      const room = rooms.get(code);
+      if (!room) return json(res, 404, { ok: false, msg: '房间不存在或已解散' });
+      const friends = new Set(validDeviceId(deviceId) ? store.friendsOf(deviceId) : []);
+      const pending = new Set(validDeviceId(deviceId) ? store.pendingRequests(deviceId).map(r => r.from_id) : []);
+      const members = room.seats.map(s => ({
+        deviceId: s.deviceId,
+        nickname: s.name || '牌友',
+        seat: s.seat,
+        online: !!s.online,
+        ready: !!s.ready,
+        isMe: validDeviceId(deviceId) && s.deviceId === deviceId,
+        isFriend: friends.has(s.deviceId),
+        pending: pending.has(s.deviceId),
+      }));
+      return json(res, 200, { ok: true, code, game: room.game, members });
+    }
+
     return json(res, 404, { ok: false, msg: 'not found' });
   } catch (e) {
     console.error('[http] 处理失败', path, e);

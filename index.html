@@ -1318,13 +1318,24 @@
   .friend-addbtn{padding:9px 14px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;
     font-size:12.5px;font-weight:800;color:#2a1d0c;background:linear-gradient(160deg,#f0d79a,#cfa85b);white-space:nowrap}
   .friend-addbtn:active{transform:translateY(1px)}
-  .friend-reqs{margin-top:9px;display:flex;flex-direction:column;gap:6px}
+  .friend-modes{display:flex;gap:6px;margin-bottom:9px}
+  .friend-modes .fmode{flex:1;padding:7px 0;border:1px solid rgba(255,255,255,.14);border-radius:7px;cursor:pointer;
+    font-family:inherit;font-size:12px;font-weight:700;color:#aeb9c4;background:rgba(255,255,255,.03);transition:.15s}
+  .friend-modes .fmode:hover{color:#e6edf3;border-color:rgba(240,215,154,.4)}
+  .friend-modes .fmode.selected{color:#2a1d0c;background:linear-gradient(160deg,#f0d79a,#cfa85b);border-color:transparent}
+  .friend-searchlist{margin-top:9px;display:flex;flex-direction:column;gap:6px;max-height:210px;overflow-y:auto}
+  .friend-searchlist:empty{display:none}
+  .friend-req-title{margin-top:11px;font-size:11.5px;color:#9fb0c0;letter-spacing:.5px}
+  .friend-reqs{margin-top:7px;display:flex;flex-direction:column;gap:6px}
   .friend-req{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04)}
   .friend-req .fn{font-size:12.5px;color:#d6dee6;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .friend-req .fn small{display:block;color:#7e929b;font-size:10.5px}
   .friend-req button{padding:6px 12px;border:none;border-radius:7px;cursor:pointer;font-family:inherit;font-size:11.5px;font-weight:800}
   .friend-req .acc{color:#1d3a27;background:linear-gradient(160deg,#9fe0b4,#5fb884)}
   .friend-req .dec{color:#e0e6ec;background:rgba(255,255,255,.1)}
+  .friend-req .add{color:#2a1d0c;background:linear-gradient(160deg,#f0d79a,#cfa85b)}
+  .friend-req .add:active{transform:translateY(1px)}
+  .friend-req .friend-tag{padding:5px 10px;border-radius:7px;font-size:11px;font-weight:800;color:#9fb0c0;background:rgba(255,255,255,.08)}
   .friend-hint{margin-top:7px;font-size:11px;color:#8fa0b4;line-height:1.6}
   .friend-hint b{color:#f2c14e;font-weight:800}
 </style>
@@ -1763,11 +1774,19 @@
       <div class="board-games" id="boardGames"></div>
       <!-- 好友管理：添加好友 + 待处理请求（仅好友榜可见） -->
       <div id="friendPanel" class="friend-panel" style="display:none">
+        <div class="friend-modes">
+          <button class="fmode selected" data-fmode="id">玩家ID</button>
+          <button class="fmode" data-fmode="nick">昵称</button>
+          <button class="fmode" data-fmode="room">房间号</button>
+        </div>
         <div class="friend-add">
           <input id="friendInput" class="friend-input" maxlength="64" placeholder="输入对方的玩家ID（设备ID）">
           <button id="friendAddBtn" class="friend-addbtn">发送好友请求</button>
         </div>
+        <div id="friendSearchList" class="friend-searchlist"></div>
+        <div class="friend-req-title">待处理请求</div>
         <div id="friendReqList" class="friend-reqs"><span class="board-empty" style="padding:6px 0">暂无待处理的好友请求</span></div>
+        <div class="friend-hint">提示：建房后把<b>房间号</b>发给朋友，或让朋友用<b>昵称</b>搜索你，即可互加好友。</div>
       </div>
       <div class="board-list" id="boardList"><div class="board-empty">加载中…</div></div>
       <div class="online-tip" id="boardTip"></div>
@@ -7885,6 +7904,7 @@ var Online = {
   deviceId: '', nickname: '', ws: null, connected: false,
   game: 'guandan', code: '', seat: -1, host: null,
   room: null, state: null, picked: new Set(), ready: false, boardGame: 'holdem', boardScope: 'global',
+  friendMode: 'id',
   server: ONLINE_SERVER,
 };
 /* 暴露到 window：便于宿主页面注入服务器地址（window.POKERCLUB_SERVER）及调试 */
@@ -8250,6 +8270,8 @@ function onlineLoadFriends(){
   var fp = $('friendPanel'); if (!fp) return;
   if (Online.boardScope !== 'friends') { fp.style.display = 'none'; return; }
   fp.style.display = 'block';
+  onlineFriendModeChange('id');
+  var sl = $('friendSearchList'); if (sl) sl.innerHTML = '';
   var list = $('friendReqList'); if (!list) return;
   onlineFriendApi('GET', '/api/friends', null, function(ok, d){
     if (!ok || !d) { list.innerHTML = '<span class="board-empty" style="padding:6px 0">加载好友请求失败</span>'; return; }
@@ -8267,6 +8289,82 @@ function onlineLoadFriends(){
     list.querySelectorAll('[data-dec]').forEach(function(b){
       b.onclick = function(){ onlineAcceptFriend(b.getAttribute('data-dec'), false); };
     });
+  });
+}
+/* 好友搜索模式切换：id（直接加）/ nick（昵称搜）/ room（房间号搜） */
+function onlineFriendModeChange(m){
+  Online.friendMode = m;
+  var tabs = document.querySelectorAll('.friend-modes .fmode');
+  tabs.forEach(function(t){ t.classList.toggle('selected', t.getAttribute('data-fmode') === m); });
+  var inp = $('friendInput'); var btn = $('friendAddBtn');
+  if (inp) {
+    inp.value = '';
+    inp.placeholder = m === 'nick' ? '输入昵称搜索玩家'
+      : m === 'room' ? '输入房间号（6位数字）'
+      : '输入对方的玩家ID（设备ID）';
+  }
+  if (btn) btn.textContent = m === 'id' ? '发送好友请求' : '搜索';
+  var sl = $('friendSearchList'); if (sl) sl.innerHTML = '';
+}
+/* 渲染搜索候选（昵称/房间号两种来源共用） */
+function onlineRenderFriendCands(list, mode){
+  var box = $('friendSearchList'); if (!box) return;
+  if (!list || !list.length) {
+    box.innerHTML = '<span class="board-empty" style="padding:6px 0">' +
+      (mode === 'room' ? '该房间暂无成员或已解散' : '未找到匹配玩家，换个词试试') + '</span>';
+    return;
+  }
+  box.innerHTML = list.map(function(c){
+    if (c.isMe) return '';
+    var btn;
+    if (c.isFriend) btn = '<span class="friend-tag">已是好友</span>';
+    else if (c.requested) btn = '<span class="friend-tag">已发送</span>';
+    else if (c.pending) btn = '<button class="acc" data-acc="' + esc(c.deviceId) + '">接受</button>';
+    else btn = '<button class="add" data-add="' + esc(c.deviceId) + '">加好友</button>';
+    return '<div class="friend-req"><span class="fn">' + esc(c.nickname || '牌友') +
+      '<small>' + esc(c.deviceId) + '</small></span>' + btn + '</div>';
+  }).join('');
+  box.querySelectorAll('[data-add]').forEach(function(b){
+    b.onclick = function(){ onlineAddFriendById(b.getAttribute('data-add')); };
+  });
+  box.querySelectorAll('[data-acc]').forEach(function(b){
+    b.onclick = function(){ onlineAcceptFriend(b.getAttribute('data-acc'), true); };
+  });
+}
+/* 按昵称搜索 */
+function onlineSearchNick(){
+  var inp = $('friendInput'); if (!inp) return;
+  var q = (inp.value || '').trim();
+  if (!q) { setOnlineTip('请输入昵称'); return; }
+  var btn = $('friendAddBtn'); if (btn) btn.disabled = true;
+  onlineFriendApi('GET', '/api/friends/search?q=' + encodeURIComponent(q), null, function(ok, d){
+    if (btn) btn.disabled = false;
+    if (!ok || !d) { onlineRenderFriendCands(null, 'nick'); setOnlineTip('搜索失败：' + ((d && d.msg) || '网络错误')); return; }
+    onlineRenderFriendCands(d.list || [], 'nick');
+  });
+}
+/* 按房间号查成员 */
+function onlineSearchRoom(){
+  var inp = $('friendInput'); if (!inp) return;
+  var code = (inp.value || '').trim();
+  if (!code) { setOnlineTip('请输入房间号'); return; }
+  var btn = $('friendAddBtn'); if (btn) btn.disabled = true;
+  onlineFriendApi('GET', '/api/room/members?code=' + encodeURIComponent(code), null, function(ok, d){
+    if (btn) btn.disabled = false;
+    if (!ok || !d) { onlineRenderFriendCands(null, 'room'); setOnlineTip('查询失败：' + ((d && d.msg) || '网络错误')); return; }
+    onlineRenderFriendCands(d.members || [], 'room');
+  });
+}
+/* 向指定 deviceId 发送好友请求（来自搜索候选） */
+function onlineAddFriendById(id){
+  if (!id) return;
+  onlineFriendApi('POST', '/api/friends', { friendId: id }, function(ok, d){
+    if (ok) {
+      setOnlineTip('已发送好友请求，等待对方接受');
+      /* 重新拉一次，让候选显示"已发送"状态 */
+      if (Online.friendMode === 'nick') onlineSearchNick();
+      else if (Online.friendMode === 'room') onlineSearchRoom();
+    } else { setOnlineTip('添加失败：' + ((d && d.msg) || '未知错误')); }
   });
 }
 function onlineAddFriend(){
@@ -8357,8 +8455,24 @@ function onlineInitUI(){
       loadBoard();
     };
   });
-  var fab = $('friendAddBtn'); if (fab) fab.onclick = onlineAddFriend;
-  var fin = $('friendInput'); if (fin) fin.onkeydown = function(e){ if (e.key === 'Enter') onlineAddFriend(); };
+  var fab = $('friendAddBtn');
+  if (fab) fab.onclick = function(){
+    if (Online.friendMode === 'nick') onlineSearchNick();
+    else if (Online.friendMode === 'room') onlineSearchRoom();
+    else onlineAddFriend();
+  };
+  var fin = $('friendInput');
+  if (fin) fin.onkeydown = function(e){
+    if (e.key === 'Enter') {
+      if (Online.friendMode === 'nick') onlineSearchNick();
+      else if (Online.friendMode === 'room') onlineSearchRoom();
+      else onlineAddFriend();
+    }
+  };
+  var fmodeBtns = document.querySelectorAll('.friend-modes .fmode');
+  fmodeBtns.forEach(function(b){
+    b.onclick = function(){ onlineFriendModeChange(b.getAttribute('data-fmode')); };
+  });
   // 打开排行榜时，好友面板按需加载
   var obb = $('lbBtnBoard'); if (obb) obb.addEventListener('click', function(){ setTimeout(onlineLoadFriends, 0); });
   /* 联机手牌点击（事件委托） */

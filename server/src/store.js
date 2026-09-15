@@ -87,6 +87,9 @@ class Store {
       listReqTo: d.prepare(`SELECT r.from_id, r.created_at, p.nickname FROM friend_requests r
                             LEFT JOIN players p ON p.device_id = r.from_id WHERE r.to_id = ?`),
       listReqFrom: d.prepare('SELECT to_id, created_at FROM friend_requests WHERE from_id = ?'),
+      searchByNick: d.prepare(`SELECT device_id, nickname FROM players
+                               WHERE nickname LIKE ? ESCAPE '\\' AND device_id <> ?
+                               ORDER BY last_seen DESC LIMIT ?`),
 
       addMatch: d.prepare('INSERT INTO matches (game,room_code,mode,ended_at,result_json) VALUES (?,?,?,?,?)'),
       countMatches: d.prepare('SELECT COUNT(*) AS n FROM matches WHERE game = ?'),
@@ -205,6 +208,22 @@ class Store {
   }
 
   pendingRequests(deviceId) { return this.q.listReqTo.all(deviceId); }
+
+  /* 我发出的、尚未被处理的好友请求（to_id 列表），用于搜索结果标记"已发送" */
+  outgoingRequests(deviceId) {
+    return this.q.listReqFrom.all(deviceId).map(r => r.to_id);
+  }
+
+  /* 按昵称模糊搜索玩家（排除自己）。
+     - 参数化查询防注入；
+     - 转义用户输入中的 LIKE 通配符 % 与 _，避免被当作模糊匹配；
+     - 用 ESCAPE '\\' 让转义符生效。 */
+  searchPlayersByNick(nick, excludeId, limit) {
+    const esc = String(nick || '').replace(/[\\%_]/g, m => '\\' + m);
+    const like = '%' + esc + '%';
+    const rows = this.q.searchByNick.all(like, excludeId || '', Math.max(1, Math.min(100, limit || 20)));
+    return rows.map(r => ({ deviceId: r.device_id, nickname: r.nickname }));
+  }
 
   /* ---------- 对局 ---------- */
   recordMatch(m) {
