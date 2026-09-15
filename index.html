@@ -60,6 +60,11 @@
     box-shadow:0 0 12px rgba(242,193,78,.4); flex-shrink:0; }
   .lobby-pinfo { display:flex; flex-direction:column; gap:3px; min-width:130px; }
   .lobby-name-row { display:flex; align-items:center; gap:6px; }
+  .lobby-avatar { width:34px; height:34px; padding:0; border-radius:10px; overflow:hidden;
+    border:1.5px solid rgba(207,168,91,.65); background:none; cursor:pointer; line-height:0;
+    box-shadow:0 2px 8px rgba(0,0,0,.4); transition:transform .15s, box-shadow .15s; flex-shrink:0; }
+  .lobby-avatar:hover { transform:translateY(-1px); box-shadow:0 0 10px rgba(242,193,78,.5); border-color:#f2c14e; }
+  .lobby-avatar:active { transform:scale(.95); }
   .lobby-lvl { background:linear-gradient(180deg,#f2c14e,#c8932a);
     color:#2a1a0a; font-weight:900; font-size:10px;
     padding:2px 7px; border-radius:7px;
@@ -1398,6 +1403,7 @@
     <div class="lobby-top">
       <div class="lobby-pinfo">
         <div class="lobby-name-row">
+          <button type="button" class="lobby-avatar" id="lbAvatar" title="点击修改头像与资料" aria-label="打开用户资料"></button>
           <span class="lobby-lvl" id="lbLevel">Lv.1</span>
           <button type="button" class="lobby-name" id="lbName" title="点击名称即可修改" aria-label="修改用户名">玩家</button>
           <input class="name-input" id="lbNameInput" aria-label="用户名称，1至12个字符" maxlength="24" autocomplete="off" spellcheck="false" hidden>
@@ -1418,7 +1424,6 @@
         <button class="lobby-iconbtn" id="lbBtnShop" title="道具与装扮">商城</button>
         <button class="lobby-iconbtn" id="lbQCheckin" title="每日签到与周常">签到<span class="badge green" id="lbQCheckinBadge" style="display:none">!</span></button>
         <button class="lobby-iconbtn" id="lbQStats" title="战绩、图鉴与段位">档案</button>
-        <button class="lobby-iconbtn" id="lbBtnStorage" title="管理本地存档">存档</button>
         <button class="lobby-iconbtn" id="lbQHelp" title="查看玩法规则">规则</button>
         <button class="lobby-iconbtn" id="lbBtnSound" title="切换游戏音效">音效开</button>
         <button class="lobby-iconbtn" id="lbBtnSettings" title="音乐、音量与偏好">设置</button>
@@ -1430,7 +1435,7 @@
     </div>
     <div class="lobby-logo-area">
       <div class="lobby-logo">赌途</div>
-      <div class="lobby-subtitle">一张牌桌，六种乐趣 · 纯单机</div>
+      <div class="lobby-subtitle">一张牌桌，六种乐趣 · 单机联机两相宜</div>
       <div class="lobby-crowns" id="lbCrowns" hidden></div>
       <div class="game-shelf">
         <button class="game-tile selected" data-game="holdem"><i class="tile-bg" aria-hidden="true">德州扑克</i><span class="tile-art">A<span>♠</span></span><small>读牌与博弈</small><span class="tile-crown" hidden>👑</span></button>
@@ -2253,6 +2258,33 @@ function avatarSVG(id, size) {
     AVATARS[a].svg + '</svg>';
 }
 
+/* ---- 设备身份（主作用域持有：云存档 / 资料面板 / 联机嵌套 IIFE 共用）----
+   联机模块在嵌套 IIFE 内，经作用域链可见本区符号；主作用域访问联机能力一律走 onlineApi()。 */
+var ONLINE_DEVICE_KEY = 'poker_online_device_v1';
+/* 生成/读取稳定设备ID：时间戳 + 随机，无需依赖 crypto.randomUUID */
+function onlineDeviceId(){
+  if (typeof Online !== 'undefined' && Online.deviceId) return Online.deviceId;
+  var id = '';
+  try { id = localStorage.getItem(ONLINE_DEVICE_KEY) || ''; } catch(e){}
+  if (!id) {
+    var rnd = '';
+    try {
+      var buf = new Uint8Array(16); crypto.getRandomValues(buf);
+      for (var i = 0; i < buf.length; i++) rnd += ('0' + buf[i].toString(16)).slice(-2);
+    } catch(e) {
+      rnd = String(Date.now().toString(16)) + Math.random().toString(16).slice(2, 12);
+    }
+    id = 'd' + rnd;
+    try { localStorage.setItem(ONLINE_DEVICE_KEY, id); } catch(e){}
+  }
+  if (typeof Online !== 'undefined') Online.deviceId = id;
+  return id;
+}
+/* 联机模块唯一合法入口：window.Online（嵌套 IIFE 暴露）；无联机环境时返回 null */
+function onlineApi() {
+  return (typeof window !== 'undefined' && window.Online) ? window.Online : null;
+}
+
 /* ---- 云存档：全量上推 / 拉取（X-Device-Id 认证，服务器零迁移接管换绑） ---- */
 var CLOUD_SYNC_KEY = 'poker_cloud_sync_v1';
 var cloudPushTimer = null;
@@ -2359,7 +2391,8 @@ function openProfile() {
   initAudio(); sfx('click');
   renderProfile();
   openOverlay('ovProfile');
-  onlineFetchIdentity();   /* 拉最新玩家号 / 恢复码（不依赖 WS 连接） */
+  var api = onlineApi();
+  if (api && api.fetchIdentity) api.fetchIdentity();   /* 拉最新玩家号 / 恢复码（不依赖 WS 连接） */
 }
 function renderProfile() {
   if (!player) return;
@@ -2398,7 +2431,9 @@ function renderProfile() {
 /* 昵称/签名/头像推送到服务器档案（榜单与好友列表显示用） */
 function onlinePushProfile(cb) {
   if (!player) return cb && cb(false);
-  onlineFetchIdentity(cb, {
+  var api = onlineApi();
+  if (!api || !api.fetchIdentity) return cb && cb(false, 'offline');
+  api.fetchIdentity(cb, {
     nickname: player.name || '',
     avatar: player.avatar || 'a01',
     bio: player.bio || '',
@@ -3970,7 +4005,7 @@ function goModeScreen() {
 }
 /* 弹窗：同一时刻只保留一个，避免两个 ✕ 叠在一起；
    信息类弹窗支持「点击面板外」与 Esc 关闭，其余确认类弹窗仍走各自按钮。 */
-var OV_CLOSE_ON_BACKDROP = ['ovAchieve', 'ovTasks', 'ovHelp', 'ovShop', 'ovStats', 'ovCheckin', 'ovSettings', 'ovStorage', 'ovOnline', 'ovBoard'];
+var OV_CLOSE_ON_BACKDROP = ['ovAchieve', 'ovTasks', 'ovHelp', 'ovShop', 'ovStats', 'ovCheckin', 'ovSettings', 'ovStorage', 'ovOnline', 'ovBoard', 'ovProfile'];
 function closeOverlay(id) { var el = $(id); if (el) el.classList.remove('show'); }
 function openOverlay(id, keep) {
   document.querySelectorAll('.overlay').forEach(function (o) {
@@ -4430,6 +4465,8 @@ function tryEnterGame(diffKey) {
 function renderLobby() {
   if(player) arcadeRecover();
   if (!player) return;
+  var avBtn = $('lbAvatar');
+  if (avBtn) avBtn.innerHTML = avatarSVG(player.avatar || 'a01', 32);
   $('lbLevel').textContent = 'Lv.' + player.level;
   $('lbName').textContent = player.name || '玩家';
   $('lbCoins').textContent = fmt(player.coins);
@@ -7353,7 +7390,8 @@ function bindEvents() {
     openTasks();
   });
   $('lbBtnAchieve').addEventListener('click', function(){ initAudio(); sfx('click'); openAchieve(); });
-  $('lbBtnStorage').addEventListener('click', function(){ initAudio(); sfx('click'); openStorage(); });
+  /* 大厅头像：打开用户资料（头像 / 玩家号 / 恢复码 / 接管） */
+  var avEntry = $('lbAvatar'); if (avEntry) avEntry.addEventListener('click', function(){ initAudio(); sfx('click'); openProfile(); });
   $('lbQHelp').addEventListener('click', function(){ initAudio(); sfx('click'); openHelp(); });
   $('lbBtnSound').addEventListener('click', function(){ initAudio(); toggleSound(); });
 
@@ -8212,28 +8250,11 @@ var Online = {
   friendMode: 'id', userCode: '',
   server: ONLINE_SERVER,
 };
-/* 暴露到 window：便于宿主页面注入服务器地址（window.POKERCLUB_SERVER）及调试 */
+/* 暴露到 window：便于宿主页面注入服务器地址（window.POKERCLUB_SERVER）及调试。
+   ONLINE_DEVICE_KEY / onlineDeviceId 在主作用域（设备身份归主档管），此处经作用域链引用。 */
 if (typeof window !== 'undefined') window.Online = Online;
-var ONLINE_DEVICE_KEY = 'poker_online_device_v1';
-function onlineDeviceId(){
-  if (Online.deviceId) return Online.deviceId;
-  var id = '';
-  try { id = localStorage.getItem(ONLINE_DEVICE_KEY) || ''; } catch(e){}
-  if (!id) {
-    /* 生成一个稳定设备ID：时间戳 + 随机，够用且无需依赖 crypto.randomUUID */
-    var rnd = '';
-    try {
-      var buf = new Uint8Array(16); crypto.getRandomValues(buf);
-      for (var i = 0; i < buf.length; i++) rnd += ('0' + buf[i].toString(16)).slice(-2);
-    } catch(e) {
-      rnd = String(Date.now().toString(16)) + Math.random().toString(16).slice(2, 12);
-    }
-    id = 'd' + rnd;
-    try { localStorage.setItem(ONLINE_DEVICE_KEY, id); } catch(e){}
-  }
-  Online.deviceId = id;
-  return id;
-}
+/* 资料面板（主作用域）经 window.Online.fetchIdentity 拉取玩家号/恢复码；函数本体在嵌套层 */
+Online.fetchIdentity = onlineFetchIdentity;
 function onlineAvailable(){ return !!Online.server; }
 function onlineStatusText(){
   if (!onlineAvailable()) return '未配置服务器';

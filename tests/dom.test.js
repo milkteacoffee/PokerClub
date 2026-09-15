@@ -118,14 +118,13 @@ function click(el) {
   click($('ovTasks').querySelector('[data-close="ovTasks"]'));
   await tick(20);
 
-  click($('lbBtnStorage'));
+  /* 云存档时代：本地存档入口已移除，大厅头像成为资料弹窗入口 */
+  ok(!$('lbBtnStorage'), '存档入口已从大厅移除（云存档自动同步）');
+  click($('lbAvatar'));
   await tick(30);
-  ok($('ovStorage').classList.contains('show'), '打开存档面板');
-  const slots = $('slotList').querySelectorAll('.slot-item');
-  ok(slots.length === 3, '渲染 3 个存档槽（实际 ' + slots.length + '）');
-  ok($('slotList').querySelectorAll('.slot-item.active').length === 1, '恰有 1 个当前存档标记');
-  ok($('slotList').querySelectorAll('.slot-item.empty').length === 2, '2 个空槽位');
-  click($('ovStorage').querySelector('[data-close="ovStorage"]'));
+  ok($('ovProfile').classList.contains('show'), '点击大厅头像打开用户资料');
+  ok($('pfGrid') && $('pfGrid').querySelectorAll('.pf-opt').length === 12, '渲染 12 个预设头像（实际 ' + ($('pfGrid') ? $('pfGrid').querySelectorAll('.pf-opt').length : 0) + '）');
+  click($('ovProfile').querySelector('[data-close="ovProfile"]'));
   await tick(20);
 
   click($('lbQHelp'));
