@@ -655,6 +655,14 @@ class Room {
     const v = this.adapter.publicView(this.state, seat);
     v.seatInfo = this.seats.map(s => ({ seat: s.seat, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), online: s.online, ready: s.ready }));
     v.host = this.hostDevice;
+    /* 思考倒计时：与「行动超时自动代打」严格对齐。下发剩余毫秒（而非绝对时间戳），
+       避免客户端时钟与服务器不一致导致倒计时错乱。 */
+    try {
+      const done = this.adapter.isDone(this.state);
+      const turn = this.game === 'guandan' ? (this.state.g ? this.state.g.turn : -1) : this.state.turn;
+      v.turnLeftMs = (!done && typeof turn === 'number' && turn >= 0)
+        ? Math.max(0, this.lastActivity + config.room.actionTimeoutMs - Date.now()) : 0;
+    } catch (e) { v.turnLeftMs = 0; }
     return v;
   }
 

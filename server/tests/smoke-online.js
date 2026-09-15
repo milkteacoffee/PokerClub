@@ -103,6 +103,9 @@ function last(c, type) {
     if (others.length) console.log('  [对手可见底牌] ' + JSON.stringify(others[0].hole));
     ok(st.pot >= 0 && typeof st.stage === 'number' || typeof st.stage === 'string',
       '牌局公开信息齐全（pot=' + st.pot + ' stage=' + st.stage + '）');
+    /* 思考倒计时：客户端据此显示剩余秒数，必须与自动代打超时同源且为正数 */
+    ok(typeof st.turnLeftMs === 'number' && st.turnLeftMs > 0 && st.turnLeftMs <= 30000,
+      '下发 turnLeftMs（剩余思考毫秒=' + st.turnLeftMs + '）');
   }
 
   /* 出牌：德州没有下发 legal 列表，客户端按规则自行构造；此处直接弃牌验证服务端校验 */
