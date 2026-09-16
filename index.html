@@ -1921,14 +1921,14 @@
   <div class="overlay" id="ovGameOver">
     <div class="panel" style="max-width:420px;">
       <div class="go-title">筹码用尽</div>
-      <div class="go-sub">你的筹码已用完：领取补充金会回到大厅重新开始，结束本轮对局则返回模式选择</div>
+      <div class="go-sub">筹码用完了：领救济金可立刻重开一桌继续打，也可以直接结束本轮</div>
       <div class="go-stats">
         <div class="go-stat"><div class="v" id="goHands">0</div><div class="l">手 数</div></div>
         <div class="go-stat"><div class="v" id="goWins">0</div><div class="l">胜 局</div></div>
       </div>
       <div class="go-btns">
-        <button class="again" id="goAgain">领取补充金并回大厅</button>
-        <button class="back" id="goBackLobby">结束本轮对局</button>
+        <button class="again" id="goAgain">领救济金并继续本桌</button>
+        <button class="back" id="goBackLobby">返回模式选择</button>
       </div>
     </div>
   </div>
@@ -8968,7 +8968,8 @@ function bindEvents() {
     sfx('click');
     if (!claimDailyRelief()) return;
     $('ovGameOver').classList.remove('show');
-    showScreen('lobby');
+    /* 一键续桌：领完救济金直接重开本桌，省掉回大厅重选 */
+    startGame(App.difficulty || 'normal');
   });
   $('goBackLobby').addEventListener('click', function(){ sfx('click'); exitGame(); });
 
@@ -9330,6 +9331,7 @@ arcadeBegin=function(bet){if(G.active||(Arcade.round&&!Arcade.round.done)||!Numb
  if(Arcade.mode==='ranked')Arcade.rankedBank=arcadeBank15();
  var bank=arcadeBalance(),r={id:Date.now()+'-'+randomInt(1000000000),game:Arcade.game,mode:Arcade.mode,difficulty:Arcade.difficulty,stake:bet,base:bet,done:false};
  if(bank<bet){Arcade.message='余额不足';renderArcade();return false;}
+ try{localStorage.setItem('poker_lastbet_v1',String(bet));}catch(e){}
  var ok=Arcade.mode==='practice'?arcadePay(bet):atomic15(function(){if(!arcadePay(bet))throw Error('余额不足');arcadeData().pending=Object.assign({},r);});
  if(!ok){if(Arcade.mode==='ranked')Arcade.rankedBank=bank;return false;}Arcade.round=r;return r;};
 arcadeExtra=function(n){var r=Arcade.round;if(!r||r.done||r.retry||!Number.isSafeInteger(n)||n<0||r.stake+n>arcadeRoundLimit15()||n>arcadeBalance())return false;
@@ -9375,7 +9377,7 @@ openArcade=function(game){if(!GAME_IDS.includes(game)||game==='holdem'||G.active
  if(Arcade.mode==='ranked'){ensureRankGift(game);if(profile15(game).rankPoints<RANKED_ENTRY_MIN){showToast('🏅 排位需要 '+RANKED_ENTRY_MIN+' 排位积分（当前 '+profile15(game).rankPoints+'）',2800,true);return false;}}
  /* 人机对局：免门票，直接用身上金币输赢 */
  Arcade.entryFeePaid=0;
- Arcade.basket=[];Arcade.rankedBank=arcadeBank15();var ok=oldOpenArcade15(game);if(ok){Arcade.message='';try{localStorage.setItem('poker_lastplay_v1',JSON.stringify({game:game,diff:Arcade.difficulty||'normal'}));}catch(e){}if(Arcade.mode!=='ranked')showToast('人机对局 · 免费入场 · 输赢真实金币',1800);renderArcade();}return ok;};
+ Arcade.basket=[];Arcade.rankedBank=arcadeBank15();var ok=oldOpenArcade15(game);if(ok){Arcade.message='';try{localStorage.setItem('poker_lastplay_v1',JSON.stringify({game:game,diff:Arcade.difficulty||'normal'}));}catch(e){}if(Arcade.mode!=='ranked')showToast('人机对局 · 免费入场 · 输赢真实金币',1800);arcApplyLastBet=true;renderArcade();}return ok;};
 
 /* 公平骰子：总点数分布通过枚举生成，赔率为含本金总返还倍数。 */
 var diceDistribution15={};
@@ -9542,10 +9544,14 @@ function renderDice15(){
  $('arcTable').querySelectorAll('[data-remove15]').forEach(function(b){b.onclick=function(){if(live)return;Arcade.basket.splice(Number(b.dataset.remove15),1);renderArcade();};});
 }
 var oldRenderArcade15=renderArcade;
+/* 进桌时用上次注额预填，玩家直接点开始即可（手动改过之后不再覆盖） */
+var arcApplyLastBet=false;
+function lastBet15(){var n=0;try{n=parseInt(localStorage.getItem('poker_lastbet_v1')||'0',10);}catch(e){}return (n>0&&n%10===0)?n:0;}
 renderArcade=function(){oldRenderArcade15();if(!player)return;var live=Arcade.round&&!Arcade.round.done;
  var selectedBet=Number($('arcBet').value),ladder=arcBetLadder();
  $('arcBet').innerHTML=ladder.map(function(n){return '<option value="'+n+'">'+n+'</option>';}).join('');
- $('arcBet').value=String(pickBet15(ladder,selectedBet));
+ if(arcApplyLastBet){var lb=lastBet15();if(lb>0)$('arcBet').value=String(pickBet15(ladder,lb));arcApplyLastBet=false;}
+ else $('arcBet').value=String(pickBet15(ladder,selectedBet));
  $('arcModeLabel').textContent=LEVEL_NAMES[level15(Arcade.difficulty)]+' · '+(Arcade.mode==='ranked'?'独立排位':Arcade.mode==='practice'?'免费练习':'人机对局 · 免费入场')+' · '+arcadeStakeLimitText();
  $('arcBalance').textContent=fmt(arcadeBalance())+(Arcade.mode==='ranked'?' 比赛筹码':Arcade.mode==='practice'?' 练习筹码':' 金币');
  $('arcMode').innerHTML='<option value="coins">自由匹配</option><option value="ranked">独立排位</option><option value="practice">免费练习</option>';$('arcMode').value=Arcade.mode;
