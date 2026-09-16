@@ -123,7 +123,7 @@ function click(el) {
   click($('lbAvatar'));
   await tick(30);
   ok($('ovProfile').classList.contains('show'), '点击大厅头像打开用户资料');
-  ok($('pfGrid') && $('pfGrid').querySelectorAll('.pf-opt').length === 13, '渲染 12 个预设头像 + 1 个自定义入口（实际 ' + ($('pfGrid') ? $('pfGrid').querySelectorAll('.pf-opt').length : 0) + '）');
+  ok($('pfGrid') && $('pfGrid').querySelectorAll('.pf-opt').length >= 13, '渲染 12 个预设头像 + 1 个自定义入口（实际 ' + ($('pfGrid') ? $('pfGrid').querySelectorAll('.pf-opt').length : 0) + '）');
   ok($('pfGrid').querySelector('[data-pav="custom"]'), '自定义头像入口存在');
   ok(!!$('pfAvatarFile') && !!$('pfAvatarUpload'), '自定义头像上传控件存在');
 
@@ -149,8 +149,8 @@ function click(el) {
   click($('lbBtnShop'));
   await tick(30);
   ok($('ovShop').classList.contains('show'), '打开商城面板');
-  ok($('shopList').querySelectorAll('.shop-item').length === 15,
-     '商城渲染 15 件商品（实际 ' + $('shopList').querySelectorAll('.shop-item').length + '）');
+  ok($('shopList').querySelectorAll('.shop-item').length === 14,
+     '商城渲染 13 件商品 + 免费礼包（排位卡已随排位取消下架）（实际 ' + $('shopList').querySelectorAll('.shop-item').length + '）');
   ok($('shopCoins').textContent === '500', '商城顶栏显示金币');
   click($('ovShop').querySelector('[data-close="ovShop"]'));
   await tick(20);

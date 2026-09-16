@@ -27,8 +27,8 @@ const FRESH = () => { w.createNewSaveAt(1); w.player.blocks = []; w.player.onboa
 test('大厅页脚含 18+ 适龄提示', () => {
   const clone = doc.body.cloneNode(true);
   clone.querySelectorAll('script,style').forEach(e => e.remove());
-  assert.ok(clone.innerHTML.indexOf('18+ 适龄提示') >= 0, '页脚应有 18+ 提示');
-  assert.ok(clone.innerHTML.indexOf('严禁赌博') >= 0, '娱乐声明仍在');
+  assert.ok(clone.innerHTML.indexOf('仅限 18 岁以上') >= 0, '页脚应有 18+ 提示');
+  assert.ok(clone.innerHTML.indexOf('不可充值兑现') >= 0, '不可充值兑现声明仍在');
 });
 
 /* ---------------- 举报 / 拉黑 ---------------- */

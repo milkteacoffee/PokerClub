@@ -103,7 +103,7 @@ const tick = ms => new Promise(r => setTimeout(r, ms));
       const bad = ['赌途', '赌神', '赌桌'].filter(k => t2.indexOf(k) >= 0);
       ok(bad.length === 0, '界面无赌博品牌语汇残留（命中: ' + bad.join('、') + '）');
       ok(t2.indexOf('严禁赌博') > 0, '合规声明仍在（严禁赌博）');
-      ok(t2.indexOf('称号收集进度') >= 0, '大厅横幅已改为称号收集进度');
+      ok(d.getElementById('lbCrowns').hidden === true, '主界面不显示称号进度横幅（隐藏奖励原则）');
     }
 
     /* ---- 无致命错误 ---- */

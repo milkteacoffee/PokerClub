@@ -57,7 +57,7 @@ ok(shopHTML.indexOf('100 ~ 500') >= 0, '礼包文案说明 100~500');
 ok(shopHTML.indexOf('data-freegift') >= 0, '领取按钮存在');
 ok(shopHTML.indexOf('shop-cat') >= 0, '分类标题已渲染');
 ok(shopHTML.indexOf('功能道具') >= 0 && shopHTML.indexOf('牌背') >= 0 && shopHTML.indexOf('座位边框') >= 0 && shopHTML.indexOf('称号') >= 0, '四个分类齐全');
-ok((shopHTML.match(/shop-item/g) || []).length >= 14, '道具全部渲染（分类不丢卡，实际 ' + (shopHTML.match(/shop-item/g) || []).length + '）');
+ok((shopHTML.match(/shop-item/g) || []).length >= 13, '可见道具 13 件（排位卡已下架，实际 ' + (shopHTML.match(/shop-item/g) || []).length + '）');
 // 点击领取
 /* 桩的 querySelector 不支持属性选择器 → 免费礼包领取逻辑用数据层验证 */
 ctx.player.freeGiftAt = ctx.todayStr();
