@@ -1722,6 +1722,7 @@
       </div>
     </div>
     <div class="lobby-bottom">
+      <button class="btn-primary lobby-start-btn" id="lbQuickBtn" hidden aria-hidden="true">快速开局</button>
       <button class="btn-primary lobby-start-btn" id="lbStartBtn" hidden aria-hidden="true">开始游戏</button>
       <div class="lobby-hint" id="hubHint">已选德州扑克 · 所有对手均为本地AI</div>
       <div style="font-size:11px;color:#7d8b96;letter-spacing:1px;text-align:center;line-height:1.6">仅限 18 岁以上 · 虚拟金币仅供娱乐，不可充值兑现</div>
@@ -2018,9 +2019,10 @@
       <div id="settleBoard"></div>
       <div id="settleList"></div>
       <div id="settleFoot"></div>
-      <div class="go-btns" style="margin-top:14px;">
+      <div class="go-btns" style="margin-top:14px;align-items:center;">
         <button class="again" id="settleNext">下一手 ▶</button>
         <button class="back" id="settleLeave">离开牌桌</button>
+        <label class="settle-auto" style="margin-left:auto;font-size:12px;color:#8fa0b4;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="settleAutoChk">自动下一手</label>
       </div>
     </div>
   </div>
@@ -5306,12 +5308,33 @@ function renderSettle(data) {
   $('settleFoot').innerHTML = foot;
 }
 
+var settleAutoTimer=null;
+function clearSettleAuto(){
+  if(settleAutoTimer){clearInterval(settleAutoTimer);clearTimeout(settleAutoTimer);settleAutoTimer=null;}
+  var sb=$('settleNext');if(sb)sb.textContent='下一手 ▶';
+}
+/* 结算后 4 秒自动下一手（可在面板里关闭）；点面板任意处立即继续 */
+function startSettleAuto(){
+  clearSettleAuto();
+  if(player.settleAuto===false)return;
+  var n=4,sb=$('settleNext');
+  function paint(){if(sb)sb.textContent='下一手 ('+n+') ▶';}
+  paint();
+  settleAutoTimer=setInterval(function(){
+    n--;
+    if(n>0){paint();return;}
+    clearSettleAuto();hideSettle();nextHand();
+  },1000);
+}
 function showSettle(data) {
   lastSettle = data;
   renderSettle(data);
   openOverlay('ovSettle');
+  var chk=$('settleAutoChk');if(chk)chk.checked=player.settleAuto!==false;
+  startSettleAuto();
 }
 function hideSettle() {
+  clearSettleAuto();
   $('ovSettle').classList.remove('show');
 }
 
@@ -7420,7 +7443,8 @@ function showLevelUp() {
 
 function requestExit() {
   if (G.settling && !G.handSettled) { showToast('本手正在结算，请稍候', 1400); return; }
-  openOverlay('ovExitConfirm');
+  /* 一键离桌：自动保存并返回模式选择（不再弹确认层） */
+  exitGame();
 }
 
 function exitGame() {
@@ -7451,16 +7475,17 @@ function exitGame() {
   render();
   renderLobby();
   goModeScreen();
-  showToast('💾 已保存并离开牌桌', 1600);
+  /* 离桌汇总改为轻量 toast，不再弹第二层面板 */
   if (session) {
     $('sessionSummary').textContent = '本次 ' + session.hands + ' 手 · 胜手 ' + session.wins
       + ' · 牌局净盈亏 ' + session.net + ' 金币 · 入场费 ' + session.fee
       + ' 金币 · 奖励及其他收支 ' + (player.coins - session.coins - session.net)
       + ' 金币 · 段位变化 ' + (player.rankPoints - session.rank) + ' 分';
-    openOverlay('ovSession');
-    var sb = $('sessionBack');
-    if (sb) sb.onclick = function () { sfx('click'); closeOverlay('ovSession'); };
+    showToast('💾 已保存并离开 · 本次 ' + session.hands + ' 手 · 牌局净盈亏 '
+      + (session.net >= 0 ? '+' : '') + session.net + ' 金币', 2800);
     G.session = null;
+  } else {
+    showToast('💾 已保存并离开牌桌', 1600);
   }
 }
 
@@ -8797,6 +8822,20 @@ function bindEvents() {
     renderModeCards();
     showScreen('mode');
   });
+  /* 快速开局：按上次玩法一键进桌（省去选游戏+选模式两步） */
+  $('lbQuickBtn').addEventListener('click', function(){
+    initAudio(); sfx('click');
+    var last=null;
+    try{last=JSON.parse(localStorage.getItem('poker_lastplay_v1')||'null');}catch(e){}
+    if(!last||!GAME_IDS.includes(last.game)||G.active)return;
+    guandanSelected=false;
+    if(last.game!=='holdem')hubGame=last.game;
+    App.mode='quick';App.difficulty=last.diff||'normal';
+    Arcade.difficulty=App.difficulty;Arcade.mode='coins';
+    if(last.game==='guandan'){window.Guandan.open();return;}
+    if(last.game==='holdem'){tryEnterGame(App.difficulty);return;}
+    openArcade(last.game);
+  });
   $('modeBack').addEventListener('click', function(){
     sfx('click');
     renderLobby();
@@ -8866,7 +8905,20 @@ function bindEvents() {
   // 结算面板
   $('settleNext').addEventListener('click', function(){ sfx('click'); hideSettle(); nextHand(); });
   $('settleLeave').addEventListener('click', function(){ sfx('click'); hideSettle(); requestExit(); });
-  $('ovSettle').addEventListener('click', function (e) { if (e.target === this) hideSettle(); });
+  /* 一键继续：点结算面板任意处（按钮与开关除外）即开始下一手 */
+  $('ovSettle').addEventListener('click', function (e) {
+    var t = e.target;
+    if (t.closest && (t.closest('.again') || t.closest('.back') || t.closest('.closebtn') || t.closest('.settle-auto'))) return;
+    hideSettle(); nextHand();
+  });
+  var sac = $('settleAutoChk');
+  if (sac) sac.addEventListener('change', function(){
+    player.settleAuto = this.checked;
+    saveAllSaves(true);
+    showToast(this.checked ? '⚡ 已开启自动下一手' : '✋ 已关闭自动下一手', 1400);
+    if (this.checked && $('ovSettle').classList.contains('show')) startSettleAuto();
+    else if (!this.checked) clearSettleAuto();
+  });
   ['volMaster', 'volSfx', 'volMusic'].forEach(function (k) {
     var el = $(k);
     if (!el) return;
@@ -9201,7 +9253,16 @@ function syncCrowns(){
     if(on)c.title='已封顶「'+crownNameOf(b.dataset.game)+'」';
   });
 }
-renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var ret=oldRenderLobby15();try{if(player)syncTitles({silent:false});syncCrowns();}catch(e){}return ret;};
+function refreshQuickStart(){
+  var b=$('lbQuickBtn');if(!b)return;
+  var last=null;try{last=JSON.parse(localStorage.getItem('poker_lastplay_v1')||'null');}catch(e){}
+  if(last&&GAME_IDS.includes(last.game)&&!G.active){
+    b.hidden=false;b.removeAttribute('aria-hidden');
+    var nm=last.game==='guandan'?'掼蛋':(GAME_NAMES[last.game]||'牌友');
+    b.textContent='⚡ 快速开局 · '+nm;
+  }else{b.hidden=true;b.setAttribute('aria-hidden','true');}
+}
+renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var ret=oldRenderLobby15();refreshQuickStart();try{if(player)syncTitles({silent:false});syncCrowns();}catch(e){}return ret;};
 renderModeCards=function(){
   if(!player)return;
   ensureRankGift(hubGame);
@@ -9246,6 +9307,7 @@ tryEnterGame=function(key){if(!GAME_LEVELS.includes(key)||G.active||(Arcade.roun
  /* 人机对局：免费入场、无最低金币门槛，输赢真实金币；空钱包提示先做任务 */
  if(App.mode!=='ranked'&&player.coins<=0){showToast('身上没有金币了 · 人机对局用身上金币输赢，先去任务里领点金币',2800,true);return false;}
  Arcade.entryFeePaid=0;
+ try{localStorage.setItem('poker_lastplay_v1',JSON.stringify({game:hubGame,diff:key}));}catch(e){}
  App.difficulty=key;startGame(key);return true;
 };
 
@@ -9313,7 +9375,7 @@ openArcade=function(game){if(!GAME_IDS.includes(game)||game==='holdem'||G.active
  if(Arcade.mode==='ranked'){ensureRankGift(game);if(profile15(game).rankPoints<RANKED_ENTRY_MIN){showToast('🏅 排位需要 '+RANKED_ENTRY_MIN+' 排位积分（当前 '+profile15(game).rankPoints+'）',2800,true);return false;}}
  /* 人机对局：免门票，直接用身上金币输赢 */
  Arcade.entryFeePaid=0;
- Arcade.basket=[];Arcade.rankedBank=arcadeBank15();var ok=oldOpenArcade15(game);if(ok){Arcade.message='';if(Arcade.mode!=='ranked')showToast('人机对局 · 免费入场 · 输赢真实金币',1800);renderArcade();}return ok;};
+ Arcade.basket=[];Arcade.rankedBank=arcadeBank15();var ok=oldOpenArcade15(game);if(ok){Arcade.message='';try{localStorage.setItem('poker_lastplay_v1',JSON.stringify({game:game,diff:Arcade.difficulty||'normal'}));}catch(e){}if(Arcade.mode!=='ranked')showToast('人机对局 · 免费入场 · 输赢真实金币',1800);renderArcade();}return ok;};
 
 /* 公平骰子：总点数分布通过枚举生成，赔率为含本金总返还倍数。 */
 var diceDistribution15={};
@@ -10959,7 +11021,7 @@ function onlineInitUI(){
   var rd = $('roomReady'); if (rd) rd.onclick = function(){ Online.ready = !Online.ready; onlineSend('ready', { ready: Online.ready }); };
   var st = $('roomStart'); if (st) st.onclick = function(){ onlineSend('start', {}); };
   var lv = $('roomLeave'); if (lv) lv.onclick = onlineLeaveRoom;
-  var ob2 = $('odBack'); if (ob2) ob2.onclick = function(){ if (confirm('确定离开房间？')) onlineLeaveRoom(); };
+  var ob2 = $('odBack'); if (ob2) ob2.onclick = function(){ onlineLeaveRoom(); };
   var orl = $('odRules'); if (orl) orl.onclick = function(){ openHelp(); };
   var rb = $('odReady'); if (rb) rb.onclick = function(){ Online.ready = !Online.ready; onlineSend('ready', { ready: Online.ready }); };
   var sb = $('odStart'); if (sb) sb.onclick = function(){ onlineSend('start', {}); };

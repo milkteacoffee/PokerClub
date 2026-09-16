@@ -82,10 +82,8 @@ function click(el) {
 
   console.log('【返回大厅 & 面板】');
   click($('btnExit'));
-  await tick(30);
-  click($('exitConfirmYes'));
   await tick(600);
-  ok($('modeScreen').classList.contains('active'), '离桌回到模式选择界面');
+  ok($('modeScreen').classList.contains('active'), '一键离桌回到模式选择界面');
   click($('modeBack'));
   await tick(30);
   ok($('lobbyScreen').style.display === 'flex', '返回大厅');
@@ -257,12 +255,10 @@ function click(el) {
        '弃牌后出现「跳过本手」或「下一手」按钮');
   }
 
-  /* 退出确认 */
+  /* 一键离桌：不再弹确认层 */
   click($('btnExit'));
-  await tick(30);
-  ok($('ovExitConfirm').classList.contains('show'), '弹出退出确认');
-  click($('exitConfirmYes'));
   await tick(120);
+  ok(!$('ovExitConfirm').classList.contains('show'), '退出不再弹确认层');
   ok($('modeScreen').classList.contains('active'), '退出对局后回到选择模式界面');
   ok($('lobbyScreen').style.display === 'none', '退出后不直接回大厅');
   click($('modeBack'));
@@ -286,10 +282,8 @@ function click(el) {
   await tick(150);                       // 正处于发牌阶段
   const dealing = !$('bottomBar').querySelector('.abtn.fold');
   click($('btnExit'));
-  await tick(30);
-  click($('exitConfirmYes'));
   await tick(600);
-  ok($('modeScreen').classList.contains('active'), '发牌途中离桌回到选择模式界面');
+  ok($('modeScreen').classList.contains('active'), '发牌途中一键离桌回到选择模式界面');
   ok(errors.length === 0, '发牌途中离桌无未捕获异常'
      + (errors.length ? '：' + errors.slice(0, 3).join(' | ') : '') + '（离桌时' + (dealing ? '正在发牌' : '已进入下注') + '）');
 

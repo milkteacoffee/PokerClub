@@ -163,10 +163,9 @@ test('德州退出回到选择模式，离桌汇总按钮也回选择模式', ()
   w.G.session = { hands: 2, wins: 1, net: 10, coins: w.player.coins, rank: 0, fee: w.ENTRY_FEE.easy };
   w.exitGame();
   assert.equal(w.App.screen, 'mode', '德州退出也应回到选择模式，实际 ' + w.App.screen);
-  assert.ok(doc.getElementById('ovSession').classList.contains('show'), '应显示离桌汇总');
-  doc.getElementById('sessionBack').click();
-  assert.equal(doc.getElementById('ovSession').classList.contains('show'), false, '汇总按钮应关闭面板');
-  assert.equal(w.App.screen, 'mode', '关闭后仍停留在选择模式');
+  assert.ok((doc.getElementById('sessionSummary').textContent || '').indexOf('本次 2 手') >= 0, '离桌汇总写入 sessionSummary');
+  assert.equal(doc.getElementById('ovSession').classList.contains('show'), false, '离桌汇总不再弹第二层面板（改轻量 toast）');
+  assert.equal(w.App.screen, 'mode', '仍停留在选择模式');
 });
 
 test('选择模式可以从模式卡重新进场，也可以退回大厅', () => {
