@@ -126,7 +126,7 @@ test('差一冠不解锁六冠牌神', () => {
 
 /* ---------------- 渲染 ---------------- */
 
-test('大厅：两行三列、游戏名水印、六冠进度与皇冠角标', () => {
+test('大厅：两行四列（7 卡一屏）、游戏名水印、六冠进度与皇冠角标', () => {
   fresh();
   w.ensureGames15(w.player);
   w.player.games.holdem.rankPeak = 6;
@@ -141,7 +141,7 @@ test('大厅：两行三列、游戏名水印、六冠进度与皇冠角标', ()
     assert.ok(!t.querySelector('strong'), '不应再有大号名称标题');
   });
   const shelfCss = html.match(/\.game-shelf\{[^}]*\}/)[0];
-  assert.ok(shelfCss.includes('repeat(3'), '牌桌应为 3 列（两行三列）');
+  assert.ok(shelfCss.includes('repeat(4'), '牌桌应为 4 列（7 卡两行一屏）');
   const crowns = doc.getElementById('lbCrowns');
   assert.ok(!crowns.hidden, '六冠进度应显示');
   assert.ok(crowns.textContent.includes('2 / 6'), '应显示进度 2/6，实际：' + crowns.textContent);

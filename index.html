@@ -91,7 +91,6 @@
   .icn path, .icn circle, .icn rect, .icn ellipse, .icn polygon { vector-effect:non-scaling-stroke; }
   .lobby-topbtns { margin-left:auto; display:flex; gap:7px; }
   .lobby-iconbtn { width:40px; height:40px; border-radius:11px;
-    border:1px solid rgba(255,255,255,.06);
     background:rgba(255,255,255,.025); font-size:18px;
     cursor:pointer; display:flex; align-items:center;
     justify-content:center; position:relative;
@@ -916,8 +915,8 @@
   #settleFoot b { color:#f2c14e; }
   .lobby-logo-area {padding-top:4px;justify-content:flex-start;gap:2px;}
   .lobby-logo {font-size:30px;letter-spacing:7px;}.lobby-subtitle{font-size:11px;letter-spacing:2px;}
-  .game-shelf{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:90%;max-width:760px;margin-top:14px;}
-  .game-tile{position:relative;height:132px;border:0;border-radius:16px;background:linear-gradient(150deg,rgba(59,89,94,.35),rgba(12,25,34,.2));color:#d9e3eb;cursor:pointer;transition:transform .18s,background .18s;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 8px;}
+  .game-shelf{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:94%;max-width:880px;margin-top:10px;}
+  .game-tile{position:relative;height:104px;border:0;border-radius:16px;background:linear-gradient(150deg,rgba(59,89,94,.35),rgba(12,25,34,.2));color:#d9e3eb;cursor:pointer;transition:transform .18s,background .18s;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 8px;}
   .game-tile:hover{transform:translateY(-4px);background:rgba(100,121,139,.2)}.game-tile:active{transform:scale(.97)}.game-tile.selected{background:linear-gradient(140deg,rgba(180,136,54,.32),rgba(51,72,76,.22));box-shadow:inset 0 -2px #d2b16d;}
   .tile-art{font:italic 30px Georgia,serif;color:#e4c784;height:44px;}.tile-art span{font-size:21px;margin-left:6px}.game-tile strong{font-size:17px;letter-spacing:2px}.game-tile small{font-size:11px;color:#98a9b6}
   /* 游戏名称作为大字水印铺在牌块背景层，图标与简介浮在上层 */
@@ -936,7 +935,13 @@
   #arcTable{flex:1;min-height:190px;display:flex;align-items:center;justify-content:space-around;gap:10px;flex-wrap:wrap;padding:12px;border-radius:40%;background:radial-gradient(ellipse,rgba(34,105,81,.25),transparent 70%)}.arc-seat{text-align:center;min-width:120px;max-width:210px}.arc-seat h3{font-size:13px;color:#c9d9dc;margin:6px}.arc-seat p{font-size:12px;color:#a1b6b9;margin:6px}.arc-seat.out{opacity:.55}.arc-cards{display:flex;justify-content:center;gap:5px;min-height:68px;align-items:center}.arc-card{display:inline-flex;flex-direction:column;justify-content:space-between;width:42px;height:62px;padding:5px;background:linear-gradient(145deg,#faf7ed,#d7d8cf);color:#1a2934;border-radius:6px;font:bold 20px Georgia;box-shadow:0 4px 8px #0003;}.arc-card.red{color:#af303b}.arc-card.back{background:repeating-linear-gradient(45deg,#253e58,#253e58 4px,#2c4c68 4px,#2c4c68 8px);color:#b7c5d5;justify-content:center}.arc-die{display:inline-flex;align-items:center;justify-content:center;width:68px;height:68px;margin:9px;background:#ece7d7;color:#9f3440;border-radius:14px;font-size:40px;box-shadow:0 5px 0 #a6a99b;}
   #arcMessage{text-align:center;min-height:22px;color:#ebce91;font-size:14px}#arcActions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}#arcActions button.primary{background:linear-gradient(120deg,#b39151,#e1c184);color:#1b2530}#arcHistory{text-align:center;font-size:11px;color:#91a6b1;min-height:16px}#arcExit{position:absolute;inset:35% 14%;padding:25px;background:#152b35;border:1px solid #a08758;border-radius:12px;z-index:10;text-align:center}#arcExit span{display:block;margin-bottom:18px}
   @media(max-height:460px){.game-tile{height:100px}.game-shelf{margin-top:10px}.lobby-logo{font-size:25px}.tile-bg{font-size:22px}.tile-art{font-size:25px;height:36px}}
-  @media(max-height:640px){.lobby-logo-area{padding-top:0}.game-shelf{margin-top:10px}.game-tile{height:112px}.lobby-crowns{margin-top:4px;font-size:11px}}
+  @media(max-height:640px){.lobby-logo-area{padding-top:0}.game-shelf{margin-top:8px}.game-tile{height:96px}.lobby-crowns{margin-top:4px;font-size:11px}}
+  @media(max-width:760px){.game-shelf{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:520px){.game-shelf{grid-template-columns:repeat(2,1fr)}}
+  /* 六冠横幅与大标题更紧凑，给 7 张卡让位 */
+  .lobby-crowns{font-size:11px;padding:2px 8px}
+  .lobby-logo{font-size:27px}
+  .lobby-subtitle{font-size:11.5px;margin-top:2px}
 
   /* 轻量牌馆：功能集中顶部，层次来自光色与留白，而非嵌套描边。 */
   .lobby-top { gap:18px; padding:18px 24px 8px; }
@@ -1005,7 +1010,7 @@
   .dice-result15{color:#d9c791;max-height:55px;overflow:auto;}.assist15{width:100%;text-align:center;color:#aabfb9;font-size:11px;}
 
 
-  .game-shelf{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .game-shelf{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
   #gdScreen{position:absolute;inset:0;z-index:80;background:radial-gradient(ellipse at 50% 35%,#254740,#101f24 74%);padding:18px 24px;color:#e6ecdf;overflow:hidden}
   #gdScreen[hidden]{display:none!important}
   .gd-head{display:flex;align-items:center;gap:16px;height:44px}.gd-head h2{font-size:23px;letter-spacing:5px;color:#e9cd8b}.gd-head button,.gd-controls button{border:1px solid #76938955;background:linear-gradient(145deg,#35544c,#1a302c);color:#e4e9da;border-radius:18px;padding:9px 18px;cursor:pointer;font:inherit}.gd-head button:active,.gd-controls button:active{transform:translateY(2px)}#gdLevel{font-size:12px;color:#bacfc3}.gd-head #gdRulesBtn{margin-left:auto}
@@ -1472,6 +1477,24 @@
   .niu-tag{font-size:15px;font-weight:800;color:#f2c14e;letter-spacing:1px;min-height:20px}
   .niu-vs{font-size:16px;font-weight:800;color:#cfa85b;letter-spacing:3px}
   .niu-result{margin-top:8px;font-size:14px;font-weight:800;color:#f0d79a}
+  /* 关于界面 */
+  .about-ver{font-size:13px;color:#e8eef5;margin-bottom:8px}
+  .about-ver b{color:#f2c14e;margin-left:4px}
+  .about-pledge{font-size:11.5px;color:#8fd6b0;background:rgba(46,158,107,.08);border-radius:10px;padding:9px 11px;line-height:1.8;margin-bottom:12px}
+  .about-log{display:flex;flex-direction:column;gap:7px;max-height:250px;overflow:auto}
+  .about-log .v{font-size:11.5px;color:#b9c6d2;line-height:1.7;padding:7px 10px;border-radius:9px;background:rgba(255,255,255,.035)}
+  .about-log .v b{color:#f0d79a;margin-right:5px}
+  /* ===== 全站去线框：按钮/卡片用光色与阴影分层，不再描边；内边距统一收紧 ===== */
+  .online-btn,.mode-card,.diff-card,.pm-btn,.pm-reason,.acc-tab,.say-item,.om-chip,
+  .board-gchip,.lobby-iconbtn,.iconbtn,.friend-addbtn,.pf-ghostbtn,.claim-all,
+  .arc-btn,#arcActions button,.gd-controls button,.closebtn,.btn-primary{
+    border:0!important;
+    box-shadow:0 2px 10px rgba(0,0,0,.22);
+  }
+  .online-btn,.arc-btn,#arcActions button{min-height:36px;padding:7px 13px;font-size:12px}
+  .pm-btn,.pm-reason,.say-item,.acc-tab{padding:8px 11px;font-size:12px}
+  .mode-card,.diff-card{padding:10px 12px}
+  .closebtn{padding:3px 9px}
   /* 骰盅摇晃与开盅动画（猜骰子 / 骰子比大小） */
   .dd-cup{width:58px;height:46px;margin:14px auto 6px;border-radius:10px 10px 26px 26px;position:relative;
     background:linear-gradient(160deg,#8a2f2a,#5c1d1a);box-shadow:0 12px 26px rgba(0,0,0,.5), inset 0 0 0 1px rgba(240,215,154,.18);
@@ -1642,7 +1665,7 @@
       </div>
     </div>
     <div class="lobby-bottom">
-      <button class="btn-primary lobby-start-btn" id="lbStartBtn">开始游戏</button>
+      <button class="btn-primary lobby-start-btn" id="lbStartBtn" hidden aria-hidden="true">开始游戏</button>
       <div class="lobby-hint" id="hubHint">已选德州扑克 · 所有对手均为本地AI</div>
       <div style="font-size:10px;color:#7d8b96;letter-spacing:1px;text-align:center;line-height:1.6">18+ 适龄提示 · 仅供娱乐 · 严禁赌博 · 虚拟金币不可充值兑现 · 违者后果自负</div>
     </div>
@@ -2034,6 +2057,25 @@
     </div>
   </div>
 
+  <!-- 关于：版本号与迭代历史 -->
+  <div class="overlay" id="ovAbout">
+    <div class="panel" style="max-width:460px;">
+      <h2>关于牌友小馆 <button class="closebtn" data-close="ovAbout">✕ 返回</button></h2>
+      <div class="about-ver">牌友小馆 PokerClub <b id="aboutVer"></b></div>
+      <div class="about-pledge">永久免费 · 不接广告 · 不与赌博挂钩：无充值、无内购、无广告 SDK，金币与积分只是游戏内计数，绝不开通提现或交易。</div>
+      <div class="about-log">
+        <div class="v"><b>v1.7</b> 斗牛新玩法 · 骰盅开牌动画 · 炸金花 AI v2 · 全站去线框 · 关于界面</div>
+        <div class="v"><b>v1.6</b> 账号体系（用户名+密码跨设备续玩）· 新手引导 · 举报拉黑 · 快捷语</div>
+        <div class="v"><b>v1.5</b> 真人快速匹配（凑满即开局）· 匹配成功过场 · 好友房自动开局</div>
+        <div class="v"><b>v1.4</b> 炸金花 / 骰子比大小联机 · 椭圆桌 · 思考倒计时 · 结算仪式感</div>
+        <div class="v"><b>v1.3</b> 玩家号 + 头像签名 + 云存档 + 跨设备接管</div>
+        <div class="v"><b>v1.2</b> 好友开房联机（服务端权威）· 好友榜 / 全服榜</div>
+        <div class="v"><b>v1.1</b> 段位排位 · 称号收集 · 成就任务 · 签到救济</div>
+        <div class="v"><b>v1.0</b> 六合一单机：德州扑克 / 21点 / 炸金花 / 猜骰子 / 骰子比大小 / 掼蛋</div>
+      </div>
+    </div>
+  </div>
+
   <!-- 账号：注册 / 登录（用户名 + 密码） -->
   <div class="overlay" id="ovAccount">
     <div class="panel" style="max-width:400px;">
@@ -2192,6 +2234,7 @@
   <div class="overlay" id="ovSettings">
     <div class="panel" style="max-width:420px;">
       <h2>⚙️ 设置 <button class="closebtn" data-close="ovSettings">✕ 返回</button></h2>
+      <div style="display:flex;justify-content:flex-end;margin:-4px 0 10px"><button class="online-btn" id="btnAbout" type="button">关于牌友小馆</button></div>
       <div style="display:flex;gap:10px;margin-bottom:8px;">
         <button class="shop-btn ghost" id="setSfxToggle" style="flex:1;padding:10px;font-size:13px;">🔊 音效</button>
         <button class="shop-btn ghost" id="setMusicToggle" style="flex:1;padding:10px;font-size:13px;">🎵 音乐</button>
@@ -4677,7 +4720,7 @@ function goModeScreen() {
 }
 /* 弹窗：同一时刻只保留一个，避免两个 ✕ 叠在一起；
    信息类弹窗支持「点击面板外」与 Esc 关闭，其余确认类弹窗仍走各自按钮。 */
-var OV_CLOSE_ON_BACKDROP = ['ovAchieve', 'ovTasks', 'ovHelp', 'ovShop', 'ovStats', 'ovCheckin', 'ovSettings', 'ovStorage', 'ovOnline', 'ovBoard', 'ovProfile', 'ovLegal', 'ovSay', 'ovAccount'];
+var OV_CLOSE_ON_BACKDROP = ['ovAchieve', 'ovTasks', 'ovHelp', 'ovShop', 'ovStats', 'ovCheckin', 'ovSettings', 'ovStorage', 'ovOnline', 'ovBoard', 'ovProfile', 'ovLegal', 'ovSay', 'ovAccount', 'ovAbout'];
 function closeOverlay(id) { var el = $(id); if (el) el.classList.remove('show'); }
 function openOverlay(id, keep) {
   document.querySelectorAll('.overlay').forEach(function (o) {
@@ -4752,6 +4795,7 @@ function showScreen(name) {
 /* 四游戏共享入口与独立规则；不调用德州任务或段位。 */
 var hubGame = 'holdem';
 var guandanSelected = false;
+var APP_VERSION = '1.7.0';   /* 迭代历史见「设置 → 关于牌友小馆」 */
 var ARCADE_NAMES = {blackjack:'21点', gold:'炸金花', dice:'猜骰子', diceduel:'骰子比大小', guandan:'掼蛋', niu:'斗牛'};
 /* 娱乐场玩法（不参与排位与段位；金币场与练习照常） */
 var ARCADE_NO_RANK = { dice:1, diceduel:1, niu:1 };
@@ -4924,7 +4968,13 @@ function arcadeDispatch(action){if(Arcade.busy||!$('arcExit').hidden||document.q
  }finally{Arcade.busy=false;}}
 function arcadeLeave(confirm){var r=Arcade.round;if(r&&!r.done&&!confirm){$('arcExit').hidden=false;return;}if(r&&!r.done){if(r.retry){Arcade.message='请先重试保存结算';renderArcade();return;}if(!arcadeSettle(0,'主动离桌'))return;}
   $('arcExit').hidden=true;Arcade.round=null;goModeScreen();}
-function initArcade(){document.querySelectorAll('[data-game]').forEach(function(b){b.addEventListener('click',function(){guandanSelected=b.dataset.game==='guandan';if(!guandanSelected)hubGame=b.dataset.game;document.querySelectorAll('.game-tile').forEach(function(x){x.classList.toggle('selected',x===b);x.setAttribute('aria-pressed',String(x===b));});var hints={holdem:'德州扑克 · 两张底牌与五张公共牌 · 可选自由匹配或排位',blackjack:'21点 · 要牌或停牌，尽量接近21 · 支持免费练习',gold:'炸金花 · 四人对局，第三轮起可比牌 · 支持免费练习',dice:'猜骰子 · 先选押法并加入清单，再统一开奖 · 支持免费练习',diceduel:'骰子比大小 · 你与 3 位AI各掷 3 骰，豹子翻倍 · 支持免费练习',guandan:'掼蛋 · 对座是队友，轮流出牌 · 不扣金币，支持托管'};$('hubHint').textContent=hints[b.dataset.game];$('lbStartBtn').textContent='开始'+(guandanSelected?'掼蛋':hubGame==='holdem'?'游戏':ARCADE_NAMES[hubGame]);});});
+function enterSelectedGame(){
+  initAudio(); sfx('click');
+  if(guandanSelected){window.Guandan.open();return;}
+  renderModeCards();showScreen('mode');
+}
+function initArcade(){document.querySelectorAll('[data-game]').forEach(function(b){b.addEventListener('click',function(){guandanSelected=b.dataset.game==='guandan';if(!guandanSelected)hubGame=b.dataset.game;document.querySelectorAll('.game-tile').forEach(function(x){x.classList.toggle('selected',x===b);x.setAttribute('aria-pressed',String(x===b));});var hints={holdem:'德州扑克 · 两张底牌与五张公共牌 · 可选自由匹配或排位',blackjack:'21点 · 要牌或停牌，尽量接近21 · 支持免费练习',gold:'炸金花 · 四人对局，第三轮起可比牌 · 支持免费练习',dice:'猜骰子 · 先选押法并加入清单，再统一开奖 · 支持免费练习',diceduel:'骰子比大小 · 你与 3 位AI各掷 3 骰，豹子翻倍 · 支持免费练习',guandan:'掼蛋 · 对座是队友，轮流出牌 · 不扣金币，支持托管'};$('hubHint').textContent=hints[b.dataset.game];$('lbStartBtn').textContent='开始'+(guandanSelected?'掼蛋':hubGame==='holdem'?'游戏':ARCADE_NAMES[hubGame]);
+  enterSelectedGame();                                   /* 欢乐斗地主式：点卡片直接进模式开始 */});});
   $('arcActions').addEventListener('click',function(e){var b=e.target.closest('[data-arc]');if(b&&!b.disabled)arcadeDispatch(b.dataset.arc);});$('arcBet').addEventListener('change',renderArcade);
   $('arcSettings').addEventListener('click',function(){initAudio();sfx('click');openSettings();});
   $('arcRules').addEventListener('click',function(){$('arcHelp').hidden=!$('arcHelp').hidden;$('arcRules').textContent=$('arcHelp').hidden?'规则':'收起规则';$('arcRules').setAttribute('aria-expanded',String(!$('arcHelp').hidden));});$('arcRefill').addEventListener('click',function(){if(Arcade.mode==='practice'&&(!Arcade.round||Arcade.round.done)){Arcade.practice=500;renderArcade();}});
@@ -8053,7 +8103,7 @@ function submitReport(deviceId, reason) {
 var ONBOARD_STEPS = [
   { sel: '[data-game="holdem"]', t: '第一步：先选一个玩法', d: '六个游戏随时切换：德州扑克、21 点、炸金花、猜骰子、骰子比大小、掼蛋。点卡片即可切换，选好后点下方的「开始游戏」。' },
   { sel: '#lbQHelp', t: '第二步：不懂规则点这里', d: '每个游戏的玩法、牌型大小、赔率与计时规则都写在「规则」里；牌桌上也有「规则」按钮，随时可以翻。' },
-  { sel: '#lbStartBtn', t: '第三步：开始你的第一局', d: '新手建议先用「练习」模式（免费筹码，可补满）熟悉操作，再进金币场或排位。祝你手气好！' },
+  { sel: '[data-game="niu"]', t: '第三步：点卡片直接开始', d: '选好玩法后点卡片就能进模式（练习免费，可随时补筹码；熟悉后再进金币场或排位）。新玩法「斗牛」也在等你，祝你手气好！' },
 ];
 function needsOnboarding() {
   if (!player || player.onboarded === true) return false;
@@ -8347,6 +8397,8 @@ function bindEvents() {
 
   $('setSfxToggle').addEventListener('click', function(){ initAudio(); toggleSound(); openSettings(); });
   /* 合规入口：隐私政策与用户协议 / 意见反馈 */
+  var av = $('aboutVer'); if (av) av.textContent = 'v' + APP_VERSION;
+  var ab = $('btnAbout'); if (ab) ab.addEventListener('click', function(){ initAudio(); sfx('click'); openOverlay('ovAbout'); });
   var asub = $('accSubmit'); if (asub) asub.addEventListener('click', submitAccount);
   var apwd = $('accPwd2'); if (apwd) apwd.addEventListener('keydown', function (e) { if (e.key === 'Enter') submitAccount(); });
   var apwd1 = $('accPwd'); if (apwd1) apwd1.addEventListener('keydown', function (e) { if (e.key === 'Enter') submitAccount(); });
