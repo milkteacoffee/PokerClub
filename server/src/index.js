@@ -33,7 +33,7 @@ function json(res, code, obj) {
     'Content-Type': 'application/json; charset=utf-8',
     'Access-Control-Allow-Origin': config.allowOrigin,
     'Access-Control-Allow-Headers': 'Content-Type, X-Device-Id',
-    'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     'Content-Length': Buffer.byteLength(body),
   });
   res.end(body);
