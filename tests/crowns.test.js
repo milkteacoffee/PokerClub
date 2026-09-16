@@ -141,7 +141,7 @@ test('大厅：两行四列（7 卡一屏）、游戏名水印、六冠进度与
     assert.ok(!t.querySelector('strong'), '不应再有大号名称标题');
   });
   const shelfCss = html.match(/\.game-shelf\{[^}]*\}/)[0];
-  assert.ok(shelfCss.includes('repeat(4'), '牌桌应为 4 列（7 卡两行一屏）');
+  assert.ok(shelfCss.includes('auto-fill'), '牌桌应为自适应网格（加游戏不用改布局）');
   const crowns = doc.getElementById('lbCrowns');
   assert.ok(!crowns.hidden, '六冠进度应显示');
   assert.ok(crowns.textContent.includes('2 / 6'), '应显示进度 2/6，实际：' + crowns.textContent);
