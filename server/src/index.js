@@ -74,7 +74,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     /* 服务信息 */
-    if (path === '/admin') {
+    if (path === '/api/admin-panel') {
     var page = '<!DOCTYPE html><html lang="zh"><meta charset="utf-8"><title>牌友小馆管理</title>'
       + '<body style="font-family:system-ui;background:#0d1520;color:#d8e0e8;max-width:760px;margin:30px auto;padding:0 16px">'
       + '<h2 style="color:#f2c14e">牌友小馆 · 管理端</h2>'
