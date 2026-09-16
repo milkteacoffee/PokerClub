@@ -1493,6 +1493,14 @@
   .niu-tag{font-size:15px;font-weight:800;color:#f2c14e;letter-spacing:1px;min-height:20px}
   .niu-vs{font-size:16px;font-weight:800;color:#cfa85b;letter-spacing:3px}
   .niu-result{margin-top:8px;font-size:14px;font-weight:800;color:#f0d79a}
+  /* 特殊时刻全屏特效 */
+  .special-fx{position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at center,rgba(240,215,154,.14),rgba(0,0,0,.55) 70%);
+    animation:fxFlash .15s ease-out;pointer-events:none}
+  .special-fx .fx-big{font-size:56px;font-weight:900;color:#f2c14e;letter-spacing:8px;
+    text-shadow:0 0 24px rgba(242,193,78,.85),0 4px 18px rgba(0,0,0,.6);
+    animation:bigPop .5s cubic-bezier(.22,1,.36,1) both}
+  @keyframes fxFlash{from{opacity:0}to{opacity:1}}
   /* 商城类目 Tab */
   .shop-tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
   .shop-tab{padding:7px 14px;border:0;border-radius:16px;cursor:pointer;font-family:inherit;
@@ -8460,6 +8468,16 @@ function openRedeem() {
   refresh();
 }
 
+/* ---- 特殊时刻全屏特效（豹子/顺金/天然21点/牛牛）---- */
+function playSpecialFx(text) {
+  var el = document.createElement('div');
+  el.className = 'special-fx';
+  el.innerHTML = '<div class="fx-big">' + text + '</div>';
+  document.body.appendChild(el);
+  try { sfx('levelup'); } catch (e) {}
+  setTimeout(function () { sfx('coin'); }, 350);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1500);
+}
 function openFeedback() {
   initAudio(); sfx('click');
   var box = $('legalBody');
@@ -9080,8 +9098,6 @@ function syncCrowns(){
   });
 }
 renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var ret=oldRenderLobby15();try{if(player)syncTitles({silent:false});syncCrowns();}catch(e){}return ret;};
-
-/* 所有游戏共用模式及难度入口。 */
 renderModeCards=function(){
   if(!player)return;
   ensureRankGift(hubGame);
@@ -9090,7 +9106,7 @@ renderModeCards=function(){
     var card=document.createElement('button');
     if(mode==='online'){card.className='mode-card online';card.innerHTML='<div class="mode-name">在线匹配</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>和在线真人快速凑桌 · 凑满自动开局<br>需要另一位真人也在线；超过 1 分钟没人会提示稍后再试</p></div>';card.onclick=function(){if(typeof guandanSelected!=='undefined'&&guandanSelected)return showToast('掼蛋暂不支持在线匹配，可用好友开房邀请牌友',2200,true);OM.game=hubGame;App.mode='quick';return omStart();};body.appendChild(card);return;}
     if(mode==='friend'){var sup=(' '+['guandan','holdem','gold','diceduel'].join(' ')).indexOf(' '+hubGame)>=0;card.className='mode-card friend';card.innerHTML='<div class="mode-name">好友开房</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>'+(sup?'创建好友房间 · 分享房号或链接邀请牌友<br>房间内可继续聊天与快捷语':'该玩法暂不支持联机开房<br>可选：德州 / 炸金花 / 骰子比大小 / 掼蛋')+'</p></div>';card.onclick=function(){if(!sup)return showToast('该玩法暂不支持联机开房',2200,true);initAudio();sfx('click');openOnline();var g=$('onlineGames')&&$('onlineGames').querySelector('[data-ogame="'+hubGame+'"]');if(g)g.click();};body.appendChild(card);return;}
-    card.className='mode-card quick';card.innerHTML='<div class="mode-name">人机练习</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>金币对局 · 本地AI或庄家<br>四档挑战，自主选择<br>门票 '+ENTRY_FEE_TEXT+'（按场次）</p></div>';card.onclick=function(){App.mode='quick';renderDifficultyCards();showScreen('difficulty');};body.appendChild(card);
+    card.className='mode-card quick';card.innerHTML='<div class="mode-name">人机练习</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>金币对局 · 本地AI或庄家<br>门票 '+ENTRY_FEE_TEXT+'（按场次）</p></div>';card.onclick=function(){App.mode='quick';renderDifficultyCards();showScreen('difficulty');};body.appendChild(card);
   });
  var bar=document.createElement('div');bar.className='exchange15';bar.innerHTML='<span>'+GAME_NAMES[hubGame]+'：1 积分 = 100 金币 · 积分只能靠排位赢取</span><input id="exchangeAmount15" type="number" min="1" step="1" value="1" aria-label="兑换积分数量"><button id="sellPoints15">积分换金币</button><small>积分是实力的体现，金币不能购买；四馆积分不互通。</small>';
  body.appendChild(bar);$('sellPoints15').onclick=function(){if(!exchangePoints(hubGame,'sell',Number($('exchangeAmount15').value)))showToast('兑换未完成：请检查积分、数量或未结束的对局',2500,true);};
@@ -9138,7 +9154,7 @@ tryEnterGame=function(key){if(!GAME_LEVELS.includes(key)||G.active||(Arcade.roun
 
 /* 小游戏资产与持久化 */
 Arcade.rankedBank=500;Arcade.difficulty='easy';Arcade.diceCount=3;Arcade.basket=[];
-function arcadeLimit15(){return [100,500,2000,10000][level15(Arcade.difficulty)]*(Arcade.mode==='ranked'?5:1);}   /* 排位：以小博大，注额上限 5 倍 */
+function arcadeLimit15(){return [100,500,2000,10000][level15(Arcade.difficulty)];}   /* 排位已取消；注额按难度档 */
 function arcadeRoundLimit15(){return arcadeLimit15()*(Arcade.game==='blackjack'?2:1);}
 /* 猜骰子可以同时押多个结果：单注上限仍是 arcadeLimit15，单轮总投入上限放宽到 5 倍。
    中奖档按含本金倍数返还，未中的档位本金不退。 */
@@ -9298,6 +9314,7 @@ function niuStart(bet){
   var c=niuCompare(r.me,r.bank),mult=c>0?r.me.mult:(c<0?r.bank.mult:1);
   r.cmp=c;r.mult=mult;
   var payout=c>0?bet*mult:c<0?0:bet;
+  if(r.me.niu===10)playSpecialFx('牛牛！'); else if(r.me.niu===9)playSpecialFx('牛九！');
   Arcade.message=niuLabel(r.me)+' 对 '+niuLabel(r.bank);
   return arcadeSettle(payout,(c>0?'你赢':c<0?'庄家赢':'平局')+' · '+niuLabel(r.me)+' 对 '+niuLabel(r.bank)+(mult>1?' · '+mult+' 倍':''));
 }

@@ -4,7 +4,7 @@
  *  - 不依赖任何第三方云 SDK（联机为自建 Node 后端）
  *  - 不使用旧的 lbBtnFriends 入口（现为 lbBtnOnline + ovOnline）
  *  - 六馆入口齐全、纯单机定位保留
- *  - 联机入口与弹窗结构存在
+ *  - 联机弹窗结构存在（顶部按钮已移除）
  */
 const fs = require('fs');
 const assert = require('assert');
@@ -16,7 +16,7 @@ assert(!html.includes('supabase'), '不引入 supabase');
 
 /* 2) 旧入口已废弃，新入口存在 */
 assert(!html.includes('id="lbBtnFriends"'), '旧好友入口已移除');
-assert(html.includes('id="lbBtnOnline"'), '联机入口存在');
+assert(html.indexOf('id="lbBtnOnline"') < 0, '顶部联机按钮已移除（入口并入游戏模式页）');
 assert(html.includes('id="ovOnline"'), '联机弹窗存在');
 assert(html.includes('id="lbBtnBoard"'), '排行榜入口存在');
 assert(html.includes('id="ovBoard"'), '排行榜弹窗存在');
