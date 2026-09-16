@@ -1887,13 +1887,12 @@
         <p>小游戏的操作按牌桌习惯收拢：下注金额在顶部用筹码点选，骰子直接点押注格下注，炸金花的“比牌”按钮落在对手座位上，骰子出目后自动开奖结算。每局结束会显示大字输赢与明细，主按钮直接变成“再来一局”，金额保持不变。</p>
         <p>每日5项，每项40金币，每天最多200；每周一刷新25项，按阶段奖励30至78金币，每周最多1242；每月1号刷新10项月度挑战，共4000金币。成就共1000项，按进阶目标解锁，单项10至2000金币，需在成就页领取。日周月刷新以北京时间为准。</p>
         <p>任务与成就列表里，<b style="color:#f2c14e;">已完成但还没领奖的条目会自动排到最上面</b>，其次是进行中的，已领取的沉到列表底部。任务、每日、周常、签到与成就面板顶部都有一键领取按钮，一次领完当前可领的全部奖励；成就的一键领取会连同还没翻到的分页一起结算。</p>
-        <p>新手场每手开局至少500金币。电脑对手低于500时在下一手前离桌，由新昵称对手带入500补位；玩家不足500会保留余额返回大厅。对手昵称随机生成，仍全部为本地电脑AI，不是真人联机。</p>
+        <p>人机对局免门票、无最低金币：直接用身上金币上桌，打光即止。电脑对手低于500时在下一手前离桌，由新昵称对手带入500补位。对手昵称随机生成，全部为本地电脑AI，不是真人联机。</p>
         <p>每手使用全新52张牌，安全随机洗牌，不按输赢安排牌型；正常随机可能连续出现相同点数或弱牌。</p>
         <p>单机模式不登录、不联网，数据保存在本机浏览器；使用「好友开房」时会连接自建服务器（用于同步房间状态与好友资料），此时会保存昵称、签名、头像与对局记录，不收集与游戏无关的信息、不做用户画像。同 Wi-Fi 不同设备互不影响。清除网站数据会丢失本机存档，可用「玩家号 + 恢复码」在新设备接管云端存档。旧版存档保留只读导出。</p>
-        <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🏅 段位排位</p>
-        <p>本游戏为单机电脑对战，无真人匹配。快速模式不影响段位；排位入场前需资产至少 10,000 金币，每次入场消耗 1 排位积分（初始 100，可在模式页用 100 金币购买 1 分），继续下一手不重复收门票。</p>
-        <p>段位积分与入场积分独立：<b>每个游戏有自己的段位阶梯</b>（德州「牌桌新人 → 读牌学徒 → 老练牌手 → 心理读牌师 → 气场宗师 → 牌桌枭雄 → 德州王牌」，21点「点数学徒 → … → 二十一之神」，炸金花「闷牌新手 → … → 金花炸王」，猜骰子「骰盅学徒 → … → 心眼财神」，骰子比大小「掷骰新手 → … → 神手骰王」，掼蛋「掼蛋新手 → … → 掼蛋的神」）。胜手 +12 至 +26，三连胜起额外 +2；弃牌失利 -5，摊牌失利 -10，最低 0 分，可降段。各段位金币奖励仅首次到达发放。</p>
-        <p>大厅直接点击用户名改名，回车或点击别处保存，Esc 取消。每手结算可在桌底回看；中途离桌保留剩余筹码、放弃本手已投入筹码，排位另扣最多 5 段位分。离桌汇总区分牌局盈亏、入场费和奖励收入。</p>
+        <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🏅 称号</p>
+        <p>排位积分体系已下线。称号是隐藏奖励，达成条件后自动解锁，可在档案面板查看收集进度。</p>
+        <p>大厅直接点击用户名改名，回车或点击别处保存，Esc 取消。每手结算可在桌底回看；中途离桌保留剩余筹码、放弃本手已投入筹码。离桌汇总会区分牌局盈亏与奖励收入。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">📅 每日签到</p>
         <p>7 天一轮，奖励逐日递增（120 → 1,200🪙），断签重新从第 1 天开始。</p>
         <p style="color:#f2c14e;font-weight:800;margin:12px 0 6px;">🧧 破产救济金</p>
@@ -2456,7 +2455,7 @@ var MODE_CONFIG = {
 };
 
 /* ========== 场次配置 ========== */
-/* 所有正式场次统一门票（金币场与排位同价，练习场免费），按难度递增 */
+/* 门票表已停用：人机对局一律免门票（数据保留供历史存档兼容） */
 var ENTRY_FEE = { easy: 50, normal: 200, hard: 800, champion: 3000 };
 var ENTRY_FEE_TEXT = [ENTRY_FEE.easy, ENTRY_FEE.normal, ENTRY_FEE.hard, ENTRY_FEE.champion].join(' / ');
 function entryFeeFor(key) { return ENTRY_FEE[key] || 0; }
@@ -9308,7 +9307,7 @@ arcadeSettle=function(payout,label){var r=Arcade.round;if(!r||r.done||!Number.is
 arcadeRecover=function(){var p=arcadeData().pending;if(!p||(Arcade.round&&!Arcade.round.done&&Arcade.round.id===p.id))return;
  atomic15(function(){if(p.mode==='ranked')applyRankResult15(p.game,p.difficulty,-1);arcadeRecord(p.game,p.stake,0,'未完局离开');arcadeData().history[0].mode=p.mode||'coins';arcadeData().history[0].unit=p.mode==='ranked'?'比赛筹码':'金币';arcadeData().pending=null;});};
 var oldOpenArcade15=openArcade;
-/* 进入小游戏牌桌 = 进场：金币场与排位都要付门票，练习场免费 */
+/* 进入小游戏牌桌 = 进场：人机对局免门票，直接用身上金币输赢 */
 openArcade=function(game){if(!GAME_IDS.includes(game)||game==='holdem'||G.active||(Arcade.round&&!Arcade.round.done)||player.rankedPending)return false;arcadeRecover();if(arcadeData().pending)return false;
  /* 排位门槛在入口处再兜一次：不论从哪里进来，积分不够都不开局 */
  if(Arcade.mode==='ranked'){ensureRankGift(game);if(profile15(game).rankPoints<RANKED_ENTRY_MIN){showToast('🏅 排位需要 '+RANKED_ENTRY_MIN+' 排位积分（当前 '+profile15(game).rankPoints+'）',2800,true);return false;}}
