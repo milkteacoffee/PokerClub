@@ -2961,7 +2961,7 @@ function openProfile() {
     var secs = panel.querySelectorAll('.pf-sec');
     for(var i=0;i<secs.length;i++){
       (function(sec,idx){
-        if(idx===0)return; /* 头像选择区不折叠 */
+
         sec.addEventListener('click',function(){
           sec.classList.toggle('open');
           var n=sec.nextElementSibling;
