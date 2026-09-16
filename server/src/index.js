@@ -74,7 +74,29 @@ const server = http.createServer(async (req, res) => {
     }
 
     /* 服务信息 */
-    if (path === '/api/info') {
+    if (path === '/admin') {
+    var page = '<!DOCTYPE html><html lang="zh"><meta charset="utf-8"><title>牌友小馆管理</title>'
+      + '<body style="font-family:system-ui;background:#0d1520;color:#d8e0e8;max-width:760px;margin:30px auto;padding:0 16px">'
+      + '<h2 style="color:#f2c14e">牌友小馆 · 管理端</h2>'
+      + '<div id="login"><input id="u" placeholder="账号" style="width:200px;padding:8px"><input id="p" type="password" placeholder="密码" style="width:200px;padding:8px"><button onclick="login()" style="padding:8px 16px">登录</button></div>'
+      + '<div id="panel" style="display:none">'
+      + '<h3>发放金币</h3><input id="gDev" placeholder="设备ID" style="width:340px;padding:8px"><input id="gCoins" placeholder="金币数" type="number" style="width:120px;padding:8px"><button onclick="grant()" style="padding:8px 16px">发放（进对方邮箱）</button>'
+      + '<h3>生成兑换码</h3><input id="cCoins" placeholder="面额金币" type="number" style="width:120px;padding:8px"><input id="cUses" placeholder="可用次数" type="number" value="1" style="width:100px;padding:8px"><button onclick="mkcode()" style="padding:8px 16px">生成</button>'
+      + '<h3>最近兑换码</h3><button onclick="codes()" style="padding:8px 16px">刷新</button>'
+      + '</div><pre id="out" style="background:#111c28;padding:12px;border-radius:8px;white-space:pre-wrap"></pre>'
+      + '<scr' + 'ipt>var TK=localStorage.getItem("admTK")||"";function api(m,p,b){return fetch("/_poker"+p,{method:m,headers:{"Content-Type":"application/json","X-Admin-Token":TK},body:b?JSON.stringify(b):undefined}).then(function(r){return r.json()})}'
+      + 'function out(x){document.getElementById("out").textContent=typeof x==="string"?x:JSON.stringify(x,null,2)}'
+      + 'function login(){api("POST","/api/admin/login",{user:document.getElementById("u").value,password:document.getElementById("p").value}).then(function(j){if(j.ok){TK=j.token;localStorage.setItem("admTK",TK);document.getElementById("login").style.display="none";document.getElementById("panel").style.display="block";out("登录成功")}else out("登录失败: "+(j.msg||""))})}'
+      + 'function grant(){api("POST","/api/admin/grant",{deviceId:document.getElementById("gDev").value,coins:Number(document.getElementById("gCoins").value)}).then(out)}'
+      + 'function mkcode(){api("POST","/api/admin/code",{coins:Number(document.getElementById("cCoins").value),maxUses:Number(document.getElementById("cUses").value)}).then(out)}'
+      + 'function codes(){api("GET","/api/admin/codes").then(out)}'
+      + 'if(TK){document.getElementById("login").style.display="none";document.getElementById("panel").style.display="block"}'
+      + '</scr' + 'ipt></body></html>';
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(page);
+    return;
+  }
+  if (path === '/api/info') {
       return json(res, 200, {
         ok: true, name: '牌友小馆联机服务', version: '1.0.0',
         games: Object.keys(ADAPTERS).map(id => ({ id, name: GAME_NAMES[id] || id, min: ADAPTERS[id].minPlayers, max: ADAPTERS[id].maxPlayers })),
@@ -319,6 +341,73 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, account: accountView(acc) });
     }
 
+    /* ---- 金币邮箱：查询 / 领取（兑换码、邀请、管理员补发的统一入口）---- */
+    if (path === '/api/mailbox' && method === 'GET') {
+      if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
+      return json(res, 200, { ok: true, coins: store.mailboxOf(deviceId) });
+    }
+    if (path === '/api/mailbox/claim' && method === 'POST') {
+      if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
+      return json(res, 200, { ok: true, coins: store.takeMailbox(deviceId) });
+    }
+
+    /* ---- 兑换码 ---- */
+    if (path === '/api/redeem' && method === 'POST') {
+      if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
+      const body = await readBody(req);
+      const code = String((body && body.code) || '').trim().toUpperCase();
+      if (!code) return json(res, 400, { ok: false, msg: '请输入兑换码' });
+      const coins = store.redeemCode(code, deviceId);
+      if (!coins) return json(res, 400, { ok: false, msg: '兑换码无效、已用完或已被该设备使用' });
+      return json(res, 200, { ok: true, coins: coins, msg: '兑换成功，' + coins + ' 金币已存入邮箱' });
+    }
+
+    /* ---- 邀请上报：好友带 ?ref= 首次进入，双方各得 1000 金币 ---- */
+    if (path === '/api/invite/report' && method === 'POST') {
+      if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
+      const body = await readBody(req);
+      const ref = String((body && body.ref) || '');
+      if (!validDeviceId(ref) || ref === deviceId) return json(res, 200, { ok: false, msg: '无效邀请' });
+      if (store.inviteExists(deviceId)) return json(res, 200, { ok: true, coins: 0, msg: '已领取过邀请奖励' });
+      store.recordInvite(ref, deviceId);
+      store.addMailbox(deviceId, 1000);
+      store.addMailbox(ref, 1000);
+      return json(res, 200, { ok: true, coins: 1000 });
+    }
+
+    /* ---- 管理端 API ---- */
+    if (path === '/api/admin/login' && method === 'POST') {
+      const body = await readBody(req);
+      const u = String((body && body.user) || ''), p = String((body && body.password) || '');
+      if (u === ADMIN_USER && p === ADMIN_PASS) {
+        const token = require('crypto').randomBytes(24).toString('hex');
+        adminTokens.set(token, Date.now() + 2 * 3600 * 1000);
+        return json(res, 200, { ok: true, token: token });
+      }
+      return json(res, 401, { ok: false, msg: '账号或密码不正确' });
+    }
+    if (path.startsWith('/api/admin/') && path !== '/api/admin/login') {
+      if (!adminOk(req)) return json(res, 401, { ok: false, msg: '请先登录管理端' });
+      if (path === '/api/admin/players' && method === 'GET') {
+        return json(res, 200, { ok: true, list: store.listPlayersBrief(100) });
+      }
+      if (path === '/api/admin/grant' && method === 'POST') {
+        const body = await readBody(req);
+        const n = store.addMailbox(String((body && body.deviceId) || ''), Number((body && body.coins) || 0));
+        return json(res, 200, { ok: n > 0, msg: n > 0 ? '已发放 ' + n + ' 金币到对方邮箱' : '发放失败（设备不存在或金额非法）' });
+      }
+      if (path === '/api/admin/code' && method === 'POST') {
+        const body = await readBody(req);
+        const code = 'PK-' + require('crypto').randomBytes(4).toString('hex').toUpperCase().match(/.{1,4}/g).join('-');
+        const created = store.createCode(code, Number((body && body.coins) || 0), Number((body && body.maxUses) || 1));
+        return json(res, created ? 200 : 400, { ok: created, code: code, coins: Number((body && body.coins) || 0), maxUses: Number((body && body.maxUses) || 1) });
+      }
+      if (path === '/api/admin/codes' && method === 'GET') {
+        return json(res, 200, { ok: true, list: store.listCodes(30) });
+      }
+      return json(res, 404, { ok: false, msg: '未知管理接口' });
+    }
+
     /* ---- 拉黑名单（UGC 处置）：GET 列表 / POST 拉黑 / DELETE 解除 ---- */
     if (path === '/api/blocks') {
       if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
@@ -409,7 +498,20 @@ function noteLoginFail(username) {
 function clearLoginFail(username) { loginFails.delete(username); }
 const accountView = (a) => a ? { username: a.username, createdAt: a.created_at, lastLogin: a.last_login || 0 } : null;
 
-const conns = new Map();   // deviceId -> { ws, roomCode, lastMsgs: [] }
+/* ============ 管理端（/admin）============
+     凭据：ADMIN_USER / ADMIN_PASS 环境变量可覆盖；登录换 2 小时 token。 */
+  const ADMIN_USER = process.env.ADMIN_USER || 'poker';
+  const ADMIN_PASS = process.env.ADMIN_PASS || 'poker@123';
+  const adminTokens = new Map();   // token -> expiry
+  function adminOk(req) {
+    var t = req.headers['x-admin-token'];
+    if (!t) return false;
+    var exp = adminTokens.get(String(t));
+    if (!exp || Date.now() > exp) { adminTokens.delete(String(t)); return false; }
+    return true;
+  }
+
+  const conns = new Map();   // deviceId -> { ws, roomCode, lastMsgs: [] }
 
 /* 局内快捷语白名单：与前端 SAY_TEXTS 一字不差。
    服务端只放行白名单 —— 这样局内社交不存在自由文本，天然规避内容审核风险。 */

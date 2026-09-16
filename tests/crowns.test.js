@@ -1,5 +1,5 @@
 /**
- * 最高段位封号 + 六冠牌神测试（jsdom）
+ * 最高段位封号 + 四冠牌神测试（jsdom）
  * 覆盖：各游戏最高段位专属封号 / 掼蛋胜场计段 / 单游戏封号解锁 /
  *       六冠牌神解锁 / 大厅皇冠角标与六冠进度 / 段位面板显示封号 / 大厅改版。
  * 运行: node tests/crowns.test.js
@@ -29,11 +29,11 @@ function fresh() {
   w.player.equipped = {};
   try { w.localStorage.removeItem('poker_guandan_stats_v1'); } catch (e) {}
 }
-const GAME_LIST = ['holdem', 'blackjack', 'gold', 'dice', 'diceduel', 'guandan'];
+const GAME_LIST = ['holdem', 'blackjack', 'gold', 'guandan'];   /* 四大排位游戏（骰类/斗牛为娱乐场） */
 
 /* ---------------- 封号表 ---------------- */
 
-test('六游戏都有最高段位专属封号', () => {
+test('四大排位游戏都有最高段位专属封号', () => {
   const expect = {
     holdem: '德州王牌', blackjack: '二十一之神', gold: '金花炸王',
     dice: '心眼财神', diceduel: '神手骰王', guandan: '掼蛋的神'
@@ -98,7 +98,7 @@ test('单游戏封顶解锁对应永久称号', () => {
   assert.equal(t.name, '神手骰王');
 });
 
-test('六冠全部达成解锁「六冠牌神」', () => {
+test('四冠全部达成解锁「四冠牌神」', () => {
   fresh();
   w.ensureGames15(w.player);
   GAME_LIST.forEach(g => {
@@ -106,21 +106,21 @@ test('六冠全部达成解锁「六冠牌神」', () => {
     w.player.games[g].rankPeak = 6;
   });
   w.localStorage.setItem('poker_guandan_stats_v1', JSON.stringify({ hands: 300, wins: 260 }));
-  assert.equal(w.crownCount(w.player), 6);
+  assert.equal(w.crownCount(w.player), 4);   /* 四大排位游戏全封顶 */
   w.syncTitles({ silent: true });
-  assert.ok(w.titleUnlocked('tt_six_crowns'), '应解锁六冠牌神');
+  assert.ok(w.titleUnlocked('tt_six_crowns'), '应解锁四冠牌神');
   assert.ok(w.titleUnlocked('tt_top_guandan'));
   const t = w.TITLES.find(t => t.id === 'tt_six_crowns');
-  assert.equal(t.name, '六冠牌神');
+  assert.equal(t.name, '四冠牌神');
   assert.ok(w.titleById('tt_six_crowns'));
 });
 
-test('差一冠不解锁六冠牌神', () => {
+test('差一冠不解锁四冠牌神', () => {
   fresh();
   w.ensureGames15(w.player);
   GAME_LIST.forEach(g => { if (g !== 'guandan') w.player.games[g].rankPeak = 6; });
   w.syncTitles({ silent: true });
-  assert.equal(w.crownCount(w.player), 5);
+  assert.equal(w.crownCount(w.player), 3);   /* 三个封顶，差掼蛋一冠 */
   assert.ok(!w.titleUnlocked('tt_six_crowns'));
 });
 
@@ -144,8 +144,8 @@ test('大厅：两行四列（7 卡一屏）、游戏名水印、六冠进度与
   assert.ok(shelfCss.includes('auto-fill'), '牌桌应为自适应网格（加游戏不用改布局）');
   const crowns = doc.getElementById('lbCrowns');
   assert.ok(!crowns.hidden, '六冠进度应显示');
-  assert.ok(crowns.textContent.includes('2 / 6'), '应显示进度 2/6，实际：' + crowns.textContent);
-  assert.ok(crowns.textContent.includes('六冠牌神'));
+  assert.ok(crowns.textContent.includes('2 / 4'), '应显示进度 2/4，实际：' + crowns.textContent);
+  assert.ok(crowns.textContent.includes('四冠牌神'));
   const holdemCrown = doc.querySelector('[data-game="holdem"] .tile-crown');
   assert.ok(holdemCrown && !holdemCrown.hidden, '德州封顶应显示皇冠');
   const bjCrown = doc.querySelector('[data-game="blackjack"] .tile-crown');
@@ -169,7 +169,7 @@ test('段位面板登顶后显示专属封号与六冠进度', () => {
   w.renderRank();
   const panel = doc.getElementById('rankPanel');
   assert.ok(panel.textContent.includes('德州王牌'), '应显示德州王牌，实际：' + panel.textContent.slice(0, 80));
-  assert.ok(panel.textContent.includes('六冠牌神进度'), '应显示六冠进度');
+  assert.ok(panel.textContent.includes('四冠牌神进度'), '应显示四冠进度');
   assert.ok(panel.textContent.includes('德州王牌 · 专属封号'), '段位列表末档应标注专属封号');
 });
 

@@ -79,6 +79,26 @@ class Store {
       CREATE INDEX IF NOT EXISTS idx_reports_target ON reports(target_id, created_at DESC);
       /* 账号体系：用户名 + 密码（scrypt 加盐哈希），一个账号绑定一个存档身份(device_id)。
          不引入手机号/短信（需付费与备案），保持零成本、无门槛。 */
+      CREATE TABLE IF NOT EXISTS redeem_codes (
+        code        TEXT PRIMARY KEY,
+        coins       INTEGER NOT NULL,
+        max_uses    INTEGER NOT NULL DEFAULT 1,
+        used_count  INTEGER NOT NULL DEFAULT 0,
+        created_at  INTEGER NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS code_redemptions (
+        code        TEXT NOT NULL,
+        device_id   TEXT NOT NULL,
+        redeemed_at INTEGER NOT NULL,
+        PRIMARY KEY (code, device_id)
+      );
+      /* 邀请：好友首次进入即记录，双方各得奖励 */
+      CREATE TABLE IF NOT EXISTS invites (
+        referrer    TEXT NOT NULL,
+        invitee     TEXT NOT NULL,
+        created_at  INTEGER NOT NULL,
+        PRIMARY KEY (referrer, invitee)
+      );
       CREATE TABLE IF NOT EXISTS accounts (
         username    TEXT PRIMARY KEY,
         device_id   TEXT NOT NULL UNIQUE,
@@ -94,6 +114,7 @@ class Store {
     try { this.db.exec("ALTER TABLE players ADD COLUMN avatar TEXT NOT NULL DEFAULT ''"); } catch (e) { /* 列已存在则忽略 */ }
     try { this.db.exec("ALTER TABLE players ADD COLUMN bio TEXT NOT NULL DEFAULT ''"); } catch (e) { /* 列已存在则忽略 */ }
     try { this.db.exec("ALTER TABLE players ADD COLUMN title TEXT NOT NULL DEFAULT ''"); } catch (e) { /* 列已存在则忽略 */ }
+    try { this.db.exec('ALTER TABLE players ADD COLUMN mailbox_coins INTEGER NOT NULL DEFAULT 0'); } catch (e) { /* 列已存在则忽略 */ }
     /* 回填历史玩家（老数据 user_code 为 NULL） */
     const needCode = this.db.prepare('SELECT device_id FROM players WHERE user_code IS NULL OR user_code = ?');
     for (const r of needCode.all('')) {
@@ -239,6 +260,66 @@ class Store {
   }
   titleOf(deviceId) {
     try { const p = this.getPlayer(deviceId); return (p && p.title) || ''; } catch (e) { return ''; }
+  }
+
+  /* ---------- 金币邮箱（兑换码/邀请/管理员补发的统一发放通道） ---------- */
+  addMailbox(deviceId, coins) {
+    var n = Math.max(0, Math.min(1000000, Math.floor(Number(coins) || 0)));
+    if (!n) return 0;
+    this.ensurePlayer(String(deviceId), '牌友');   /* 首次出现的设备先建档，否则 UPDATE 落空 */
+    this.db.prepare('UPDATE players SET mailbox_coins = mailbox_coins + ? WHERE device_id = ?').run(n, String(deviceId));
+    return n;
+  }
+  takeMailbox(deviceId) {
+    var p = this.getPlayer(deviceId);
+    if (!p) return 0;
+    var n = Math.max(0, Math.floor(Number(p.mailbox_coins) || 0));
+    this.db.prepare('UPDATE players SET mailbox_coins = 0 WHERE device_id = ?').run(String(deviceId));
+    return n;
+  }
+  listPlayersBrief(limit) {
+    return this.db.prepare('SELECT device_id, nickname, mailbox_coins, last_seen FROM players ORDER BY last_seen DESC LIMIT ?')
+      .all(Math.min(200, limit || 100));
+  }
+  mailboxOf(deviceId) {
+    var p = this.getPlayer(deviceId);
+    return p ? Math.max(0, Math.floor(Number(p.mailbox_coins) || 0)) : 0;
+  }
+  /* ---------- 兑换码 ---------- */
+  createCode(code, coins, maxUses) {
+    try {
+      this.db.prepare('INSERT INTO redeem_codes (code, coins, max_uses, used_count, created_at) VALUES (?, ?, ?, 0, ?)')
+        .run(String(code), Math.max(1, Math.floor(coins)), Math.max(1, Math.floor(maxUses)), Date.now());
+      return true;
+    } catch (e) { return false; }
+  }
+  codeInfo(code) {
+    return this.db.prepare('SELECT * FROM redeem_codes WHERE code = ?').get(String(code)) || null;
+  }
+  listCodes(limit) {
+    return this.db.prepare('SELECT * FROM redeem_codes ORDER BY created_at DESC LIMIT ?').all(Math.min(100, limit || 20));
+  }
+  /* 兑换：每设备每码一次；成功返回 coins，失败返回 0 */
+  redeemCode(code, deviceId) {
+    var c = this.codeInfo(code);
+    if (!c) return 0;
+    if (c.used_count >= c.max_uses) return 0;
+    var dup = this.db.prepare('SELECT 1 FROM code_redemptions WHERE code = ? AND device_id = ?').get(String(code), String(deviceId));
+    if (dup) return 0;
+    this.db.prepare('INSERT INTO code_redemptions (code, device_id, redeemed_at) VALUES (?, ?, ?)').run(String(code), String(deviceId), Date.now());
+    this.db.prepare('UPDATE redeem_codes SET used_count = used_count + 1 WHERE code = ?').run(String(code));
+    return this.addMailbox(deviceId, c.coins);
+  }
+  /* ---------- 邀请 ---------- */
+  recordInvite(referrer, invitee) {
+    try {
+      this.db.prepare('INSERT OR IGNORE INTO invites (referrer, invitee, created_at) VALUES (?, ?, ?)')
+        .run(String(referrer), String(invitee), Date.now());
+      return true;
+    } catch (e) { return false; }
+  }
+  inviteExists(invitee) {
+    return !!this.db.prepare('SELECT 1 FROM invites WHERE invitee = ?').get(String(invitee));
   }
 
   /* ---------- 账号（用户名 + 密码） ---------- */

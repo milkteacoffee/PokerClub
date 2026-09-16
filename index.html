@@ -2236,7 +2236,7 @@
   <div class="overlay" id="ovSettings">
     <div class="panel" style="max-width:420px;">
       <h2>⚙️ 设置 <button class="closebtn" data-close="ovSettings">✕ 返回</button></h2>
-      <div style="display:flex;justify-content:flex-end;margin:-4px 0 10px"><button class="online-btn" id="btnAbout" type="button">关于牌友小馆</button></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin:-4px 0 10px"><button class="online-btn" id="btnRedeem" type="button">兑换码</button><button class="online-btn" id="btnInvite" type="button">邀请好友</button><button class="online-btn" id="btnAbout" type="button">关于牌友小馆</button></div>
       <div style="display:flex;gap:10px;margin-bottom:8px;">
         <button class="shop-btn ghost" id="setSfxToggle" style="flex:1;padding:10px;font-size:13px;">🔊 音效</button>
         <button class="shop-btn ghost" id="setMusicToggle" style="flex:1;padding:10px;font-size:13px;">🎵 音乐</button>
@@ -3359,7 +3359,7 @@ var TITLES = [
   { id:'tt_top_dice',      name:'心眼财神',   icon:'🎯', desc:'猜骰子排位达到最高段位「心眼财神」',       check:function(p){ return gameIsTopTier(p,'dice'); } },
   { id:'tt_top_diceduel',  name:'神手骰王',   icon:'⚄', desc:'骰子比大小排位达到最高段位「神手骰王」',   check:function(p){ return gameIsTopTier(p,'diceduel'); } },
   { id:'tt_top_guandan',   name:'掼蛋的神',   icon:'🀄', desc:'掼蛋累计获胜 200 局，封顶「掼蛋的神」',    check:function(p){ return gameIsTopTier(p,'guandan'); } },
-  { id:'tt_six_crowns',    name:'六冠牌神',   icon:'👑', desc:'六大游戏全部达到最高段位（德州王牌 · 二十一之神 · 金花炸王 · 心眼财神 · 神手骰王 · 掼蛋的神）', check:function(p){ return crownCount(p) >= 6; } },
+  { id:'tt_six_crowns',    name:'四冠牌神',   icon:'👑', desc:'四大排位游戏（德州王牌 · 二十一之神 · 金花炸王 · 掼蛋的神）全部达到最高段位', check:function(p){ return crownCount(p) >= 4; } },
   /* 好友联机（开房对战：掼蛋/德州/炸金花/骰子比大小） */
   { id:'tt_online_1',      name:'初入牌局',   icon:'🚪', desc:'首次完成一局好友房对战',      check:function(p){ return onlineStat(p,'games') >= 1; } },
   { id:'tt_online_10',     name:'常来常往',   icon:'🛋️', desc:'累计完成 10 局好友房对战',    check:function(p){ return onlineStat(p,'games') >= 10; } },
@@ -3602,7 +3602,7 @@ var TOP_TIER_NAMES = {
   holdem: '德州王牌', blackjack: '二十一之神', gold: '金花炸王',
   dice: '心眼财神', diceduel: '神手骰王', guandan: '掼蛋的神'
 };
-var CROWN_ORDER = ['holdem', 'blackjack', 'gold', 'dice', 'diceduel', 'guandan'];
+var CROWN_ORDER = ['holdem', 'blackjack', 'gold', 'guandan']   /* 四大排位游戏（骰类/斗牛为娱乐场） */;
 var GUANDAN_TIER_WINS = [0, 10, 25, 50, 85, 130, 200];
 function guandanWinsCount() {
   try { var s = JSON.parse(localStorage.getItem('poker_guandan_stats_v1'));
@@ -5015,6 +5015,10 @@ function renderModeCards() {
       html += '<div>段位积分 <span class="hi">' + fmt(player.rankPoints) + '</span>'
            +  (rp.next ? '（距 ' + rp.next.name + ' 还差 ' + fmt(rp.need) + '）' : '（已达最高）') + '</div>';
       html += '<div>连胜 <span class="hi">' + (player.streak || 0) + '</span> 局</div>';
+    } else if (key === 'online') {
+      html += '<div>和在线真人快速匹配 · 凑满自动开局</div>';
+      html += '<div class="mode-note">需要另一位真人也在线；超过 1 分钟没人会提示稍后再试</div>';
+      if (ARCADE_NO_RANK[Arcade.game]) html += '<div class="mode-note" style="color:#f0d79a">本玩法为娱乐场 · 不参与排位与段位</div>';
     } else {
       m.desc.forEach(function (line) { html += '<div>' + line + '</div>'; });
       if (ARCADE_NO_RANK[Arcade.game]) html += '<div class="mode-note" style="color:#f0d79a">本玩法为娱乐场 · 不参与排位与段位</div>';
@@ -5023,6 +5027,12 @@ function renderModeCards() {
     card.innerHTML = html;
     card.addEventListener('click', function () {
       sfx('click');
+      if (key === 'online') {
+        if (guandanSelected) return showToast('掼蛋暂不支持在线匹配，可用好友开房邀请牌友', 2200, true);
+        OM.game = Arcade.game;
+        App.mode = 'quick';
+        return omStart();
+      }
       App.mode = key;
       renderDifficultyCards();
       showScreen('difficulty');
@@ -8164,6 +8174,46 @@ function showOnboarding() {
   render();
 }
 
+/* ---- 金币邮箱 / 兑换码 / 邀请 ---- */
+function apiMail(pathname, body, cb) {
+  var srv = (typeof Online !== 'undefined' && Online.server) ? String(Online.server).replace(/\/$/, '') : '';
+  if (!srv || typeof fetch !== 'function') { cb && cb(null); return; }
+  fetch(srv + pathname, {
+    method: body ? 'POST' : 'GET',
+    headers: { 'X-Device-Id': onlineDeviceId(), 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined
+  }).then(function (r) { return r.json().catch(function () { return {}; }); })
+    .then(function (j) { cb && cb(j); }).catch(function () { cb && cb(null); });
+}
+function claimMailbox() {
+  apiMail('/api/mailbox/claim', {}, function (j) {
+    if (j && j.ok && j.coins > 0 && player) {
+      addCoins(j.coins); saveAllSaves(); renderLobby();
+      showToast('📬 收到 ' + fmt(j.coins) + ' 金币（兑换 / 邀请 / 官方补发）', 3200, false, 'success');
+    }
+  });
+}
+function reportInvite() {
+  var ref = null;
+  try { ref = new URLSearchParams(location.search).get('ref'); } catch (e) {}
+  if (!ref) return;
+  apiMail('/api/invite/report', { ref: ref }, function (j) {
+    if (j && j.ok && j.coins > 0) claimMailbox();
+  });
+}
+function openRedeem() {
+  var code = prompt('输入官方兑换码（管理端生成）：');
+  if (!code) return;
+  apiMail('/api/redeem', { code: code }, function (j) {
+    if (j && j.ok) { showToast('🎁 ' + j.msg + '，打开游戏自动入账', 3200, false, 'success'); claimMailbox(); }
+    else showToast((j && j.msg) || '兑换失败', 2600, true);
+  });
+}
+function copyInvite() {
+  var link = 'https://milkteacoffee.github.io/PokerClub/?ref=' + onlineDeviceId();
+  copyText(link, '邀请链接已复制：发给好友，好友首次进入后双方各得 1000 金币');
+}
+
 function openFeedback() {
   initAudio(); sfx('click');
   var box = $('legalBody');
@@ -8414,6 +8464,8 @@ function bindEvents() {
   /* 合规入口：隐私政策与用户协议 / 意见反馈 */
   var av = $('aboutVer'); if (av) av.textContent = 'v' + APP_VERSION;
   var ab = $('btnAbout'); if (ab) ab.addEventListener('click', function(){ initAudio(); sfx('click'); openOverlay('ovAbout'); });
+  var br = $('btnRedeem'); if (br) br.addEventListener('click', function(){ initAudio(); sfx('click'); openRedeem(); });
+  var bi = $('btnInvite'); if (bi) bi.addEventListener('click', function(){ initAudio(); sfx('click'); copyInvite(); });
   var asub = $('accSubmit'); if (asub) asub.addEventListener('click', submitAccount);
   var apwd = $('accPwd2'); if (apwd) apwd.addEventListener('keydown', function (e) { if (e.key === 'Enter') submitAccount(); });
   var apwd1 = $('accPwd'); if (apwd1) apwd1.addEventListener('keydown', function (e) { if (e.key === 'Enter') submitAccount(); });
@@ -8769,7 +8821,7 @@ function syncCrowns(){
       var n=crownCount(player);
       var done=CROWN_ORDER.filter(function(g){return gameIsTopTier(player,g);}).map(crownNameOf);
       elc.hidden=false;
-      elc.innerHTML = icifyHTML('👑 六冠牌神进度 '+n+' / 6'+(n?' · 已封顶：'+done.join('、'):' · 六大游戏排位全部达到最高段位，可获得永久称号「六冠牌神」'));
+      elc.innerHTML = icifyHTML('👑 四冠牌神进度 '+n+' / 4'+(n?' · 已封顶：'+done.join('、'):' · 四大排位游戏全部达到最高段位，可获得永久称号「四冠牌神」'));
     }
   }
   document.querySelectorAll('.game-tile').forEach(function(b){
@@ -8784,8 +8836,8 @@ renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var r
 /* 所有游戏共用模式及难度入口。 */
 renderModeCards=function(){if(!player)return;ensureRankGift(hubGame);var s=profile15(hubGame),body=$('modeBody');body.innerHTML='';
  var canRanked=s.rankPoints>=RANKED_ENTRY_MIN;
- ['quick','ranked'].forEach(function(mode){var card=document.createElement('button');card.className='mode-card '+mode+(mode==='ranked'&&!canRanked?' dim':'');
-  card.innerHTML='<div class="mode-name">'+(mode==='quick'?'自由匹配':'独立排位')+'</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>'+(mode==='quick'?'金币对局 · 本地AI或庄家<br>四档挑战，自主选择<br>门票 '+ENTRY_FEE_TEXT+'（按场次）':'段位 '+rankInfo(hubGame).name+' · 对手 '+LEVEL_NAMES[level15(rankedDifficultyFor(hubGame))]+'级<br>排位积分 <b>'+s.rankPoints+'</b> / 门槛 '+RANKED_ENTRY_MIN+'<br>'+(canRanked?'已达标，可以开始排位':'积分不足 '+RANKED_ENTRY_MIN+'，暂时无法开始排位')+'<br>单局 胜 +'+RANK_POINT_WIN[0]+'~+'+RANK_POINT_WIN[RANK_POINT_WIN.length-1]+' / 负 -'+RANK_POINT_LOSS[0]+'~-'+RANK_POINT_LOSS[RANK_POINT_LOSS.length-1]+'<br>0 分时每天赠送 '+RANK_DAILY_GIFT+' 分 · 兑换每日 '+RANK_EXCHANGE.timesPerDay+' 次上限 '+RANK_EXCHANGE.dailyCap+' 分<br>对手强度随段位变化 · 门票 '+ENTRY_FEE_TEXT)+'</p></div>';
+ ['quick','online','ranked'].forEach(function(mode){var card=document.createElement('button');if(mode==='online'){card.className='mode-card '+mode;card.innerHTML='<div class="mode-name">在线匹配</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>和在线真人快速凑桌 · 凑满自动开局<br>需要另一位真人也在线；超过 1 分钟没人会提示稍后再试</p></div>';card.onclick=function(){if(typeof guandanSelected!=='undefined'&&guandanSelected)return showToast('掼蛋暂不支持在线匹配，可用好友开房邀请牌友',2200,true);OM.game=hubGame;App.mode='quick';return omStart();};body.appendChild(card);return;}card.className='mode-card '+mode+(mode==='ranked'&&!canRanked?' dim':'');
+  card.innerHTML='<div class="mode-name">'+(mode==='quick'?'人机对局':'独立排位')+'</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>'+(mode==='quick'?'金币对局 · 本地AI或庄家<br>四档挑战，自主选择<br>门票 '+ENTRY_FEE_TEXT+'（按场次）':'段位 '+rankInfo(hubGame).name+' · 对手 '+LEVEL_NAMES[level15(rankedDifficultyFor(hubGame))]+'级<br>排位积分 <b>'+s.rankPoints+'</b> / 门槛 '+RANKED_ENTRY_MIN+'<br>'+(canRanked?'已达标，可以开始排位':'积分不足 '+RANKED_ENTRY_MIN+'，暂时无法开始排位')+'<br>单局 胜 +'+RANK_POINT_WIN[0]+'~+'+RANK_POINT_WIN[RANK_POINT_WIN.length-1]+' / 负 -'+RANK_POINT_LOSS[0]+'~-'+RANK_POINT_LOSS[RANK_POINT_LOSS.length-1]+'<br>0 分时每天赠送 '+RANK_DAILY_GIFT+' 分 · 兑换每日 '+RANK_EXCHANGE.timesPerDay+' 次上限 '+RANK_EXCHANGE.dailyCap+' 分<br>对手强度随段位变化 · 门票 '+ENTRY_FEE_TEXT)+'</p></div>';
   card.onclick=function(){App.mode=mode;
     if(mode==='ranked'){var d=rankedDifficultyFor(hubGame);App.difficulty=d;tryEnterGame(d);return;}
     renderDifficultyCards();showScreen('difficulty');};body.appendChild(card);
@@ -9216,7 +9268,7 @@ renderRank=function(){if(!player)return;ensureRankGift(hubGame);
   +' · '+(rankGiftAvailable(hubGame)?('可领取今日赠送 '+RANK_DAILY_GIFT+' 分'):(rankGiftDate(hubGame)===todayStr()?'今日赠送已领取':'积分不为 0，今日无赠送'))+'</p>';
  html+='<p><button class="mini-btn15" id="rankExchangeBtn15"'+(rankExchangeBlockedReason(hubGame)?' disabled':'')+'>兑换排位积分（最多 '+Math.min(RANK_EXCHANGE.perTime,rankExchangeQuota())+' 分 / '+fmt(rankExchangeCost(Math.min(RANK_EXCHANGE.perTime,rankExchangeQuota())))+' 金币）</button> <span class="mini-tip15">'+(rankExchangeBlockedReason(hubGame)||('今天还可兑换 '+rankExchangeLeft()+' 次，剩余额度 '+rankExchangeQuota()+' 分'))+'</span></p>';
  html+='<p>'+(info.nextMin>s.rankPoints?'距下一小段位「'+nextLabel+'」还需 <b>'+(info.nextMin-s.rankPoints)+'</b> 段位分':'已达最高段位')+(tier>=RANKS.length-1?' · 专属封号「'+base+'」':'')+'</p>';
- html+='<p>👑 六冠牌神进度 <b>'+crownCount(player)+' / 6</b> · 六大游戏全部达到最高段位可获得永久称号「六冠牌神」</p>';
+ html+='<p>👑 四冠牌神进度 <b>'+crownCount(player)+' / 4</b> · 四大排位游戏全部达到最高段位可获得永久称号「四冠牌神」</p>';
  rankLadder(hubGame).forEach(function(r){html+='<div class="task-item"><div class="info"><div class="t">'+r.name+(r.tier===RANKS.length-1?' · 专属封号':'')+'</div><div class="pg">'+r.min+' 分起 · '+['III','II','I'].map(function(l){return r.name+' '+l;}).join(' → ')+(r.id===tier?' · 当前 '+full:'')+'</div></div></div>';});$('rankPanel').innerHTML=html;var eb=$('rankExchangeBtn15');if(eb)eb.onclick=function(){sfx('click');exchangeRankedPoints(hubGame);};};
 
 
@@ -9630,11 +9682,19 @@ function omStart(){
     if (!ok) return omSetStatus(err || '连接失败，请稍后再试');
     omSetStatus('正在为你寻找牌友…');
     onlineSend('match', { game: OM.game });
+    if (Online._mTimer) clearTimeout(Online._mTimer);
+    Online._mTimer = setTimeout(function () {          /* 1 分钟没人：提示并自动取消 */
+      if (OM.active) {
+        onlineSend('matchCancel', {});
+        omReset('⏳ 暂时没有其他玩家在线匹配，请晚点再试试；也可以先用「好友开房」邀请牌友');
+      }
+    }, 60000);
   });
 }
 function omCancel(){ if (!OM.active) return; onlineSend('matchCancel', {}); omReset('已取消匹配'); sfx('click'); }
 function omOnMatching(m){
   OM.active = true;
+  if (Online._mTimer) { clearTimeout(Online._mTimer); Online._mTimer = null; }
   var c = $('omCancel'); if (c) c.hidden = false;
   var st = $('omStart'); if (st) st.disabled = true;
   var names = (m.names || []).map(function(x){ return esc(x); }).join('、');
@@ -9644,6 +9704,7 @@ function omOnMatching(m){
 }
 function omReset(msg){
   OM.active = false;
+  if (Online._mTimer) { clearTimeout(Online._mTimer); Online._mTimer = null; }
   var c = $('omCancel'); if (c) c.hidden = true;
   var st = $('omStart'); if (st) st.disabled = false;
   if (msg) omSetStatus(msg);
@@ -10615,6 +10676,8 @@ onlineInitUIOnReady();
 /* 首屏静态 HTML 里写死的 emoji → 内联 SVG（此时 DOM 已就绪，且不触碰事件监听） */
 try { icifyStatic(document.body); } catch (e) {}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+/* 启动：领取金币邮箱 + 上报邀请（?ref=） */
+try { setTimeout(function(){ try { claimMailbox(); reportInvite(); } catch (e) {} }, 1400); } catch (e) {}
 /* 首次进入：等大厅渲染完再引导（老存档自动跳过） */
 try { setTimeout(function(){ try { if (needsOnboarding()) showOnboarding(); } catch (e) {} }, 900); } catch (e) {}
 })(globalThis);
