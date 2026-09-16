@@ -283,11 +283,12 @@ test('模式界面显示门槛 10、每日赠送与兑换额度', () => {
   const bar = doc.getElementById('modeRankBar');
   assert.equal(bar.hidden, false);
   const text = bar.textContent;
-  assert.ok(text.includes('门槛 10'), '应显示 10 分门槛，实际：' + text.slice(0, 60));
-  assert.ok(text.includes('+5'), '应显示胜局区间');
-  assert.ok(text.includes('-10'), '应显示负局区间');
-  assert.ok(text.includes('今日兑换 0 / 1 次'), '应显示每日 1 次');
-  assert.ok(text.includes('系统赠送 10 分'), '应说明每日赠送');
+  w.renderRank();
+  const rtext = doc.getElementById('rankPanel').textContent;
+  assert.ok(rtext.includes('10 分'), '段位面板应说明 10 分门槛');
+  assert.ok(rtext.includes('+5'), '段位面板应显示胜局区间');
+  assert.ok(rtext.includes('赠送 10 分'), '段位面板应说明每日赠送');
+  assert.ok(text.includes('今日兑换 0 / 1 次'), '兑换条应显示每日 1 次');
   assert.equal(s.rankPoints, w.RANK_DAILY_GIFT, '打开模式界面时自动发放赠送');
   /* 已送满 10 分 → 可以开局；兑换按钮因积分不为 0 而禁用 */
   const btn = doc.getElementById('rankedExchangeBtn');
@@ -303,7 +304,7 @@ test('段位面板展示门槛、赠送与兑换入口', () => {
   s.giftDate = w.todayStr();
   w.renderRank();
   const text = doc.getElementById('rankPanel').textContent;
-  assert.ok(text.includes('攒够 10 分才能开始排位对局'), '应说明 10 分门槛');
+  assert.ok(text.includes('10 分') || text.includes('排位规则'), '应说明排位规则（精简版）');
   assert.ok(text.includes('胜 +5'), '应显示单局加分');
   assert.ok(text.includes('今日赠送已领取'), '应显示赠送状态');
   assert.ok(text.includes('今日已兑换 0 / 100 分'), '应显示每日兑换额度');

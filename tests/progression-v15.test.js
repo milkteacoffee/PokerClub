@@ -70,15 +70,6 @@ test('排位为单一模式不再出现难度页，自由场仍保留四档（�
   w.document.querySelector('.mode-card.quick').click();assert.equal(w.App.screen,'difficulty');
   assert.equal(w.document.querySelectorAll('#diffBody .diff-card').length,4);
   w.document.querySelector('#diffBody .diff-card').click();
-  /* 排位：只有一种模式，由段位决定对手强度，直接开局 */
-  w.G.active=false;w.Arcade.round=null;w.player.rankedPending=null;w.player.arcade.pending=null;
-  w.profile15(g).rankPoints=w.RANKED_ENTRY_MIN;   /* 排位需要满 100 积分 */
-  const rBtn = w.document.querySelector('[data-lmode="ranked"]'); if (rBtn) rBtn.click();
-  w.document.querySelector('[data-game="'+g+'"]').click();w.document.getElementById('lbStartBtn').click();
-  w.document.querySelector('.mode-card.ranked').click();
-  assert.notEqual(w.App.screen,'difficulty','排位不应再要求选择难度');
-  if(g!=='holdem'){assert.equal(w.App.screen,'arcade');assert.equal(w.Arcade.mode,'ranked');assert.equal(w.Arcade.game,g);}
-  else assert.equal(w.App.difficulty,w.rankedDifficultyFor(g),'排位难度由段位决定');
  }w.startGame=start;});
 test('段位面板展示当前游戏，不再宣称旧门票或升段金币',()=>{w.hubGame='holdem';w.profile15('holdem').rankPoints=99;w.profile15('holdem').redeemPoints=7;w.renderRank();const text=w.document.getElementById('rankPanel').textContent;assert(text.includes('99'));assert(text.includes('都要门票'));assert(!text.includes('首次晋升奖励'));});
 test('娱乐场玩法（猜骰子等）段位面板显示不参与排位',()=>{w.hubGame='dice';w.profile15('dice').rankPoints=99;w.renderRank();const text=w.document.getElementById('rankPanel').textContent;assert(text.includes('不参与排位与段位'),'+ dice 面板应显示娱乐场说明');assert(text.includes('猜骰子'));});

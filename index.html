@@ -947,6 +947,13 @@
   .lms-btn.active{color:#2a1d0c;background:linear-gradient(150deg,#f0d79a,#cfa85b);box-shadow:0 6px 18px rgba(207,168,91,.35)}
   .lms-btn.active span{color:#5a4322}
   .lms-btn[data-lmode="ranked"].active{background:linear-gradient(150deg,#e8c05a,#b8860b);box-shadow:0 6px 18px rgba(184,134,11,.4)}
+  /* 标题背景化：大字水印沉入卡片区背后，卡片半透明透出名称 */
+  .lobby-watermark{position:absolute;left:0;right:0;top:96px;z-index:0;text-align:center;
+    font-size:88px;font-weight:900;letter-spacing:14px;color:rgba(240,215,154,.055);
+    pointer-events:none;user-select:none;line-height:1;white-space:nowrap}
+  .game-shelf,.lobby-mode-switch{position:relative;z-index:1}
+  .game-tile{background:linear-gradient(150deg,rgba(26,42,52,.55),rgba(10,22,30,.30));backdrop-filter:blur(1px)}
+  .game-tile .tile-bg{opacity:.34}
   /* 六冠横幅与大标题更紧凑，给 7 张卡让位 */
   .lobby-crowns{font-size:11px;padding:2px 8px}
   .lobby-logo{font-size:27px}
@@ -1647,7 +1654,6 @@
       </div>
       <button class="lobby-relief" id="lbBtnRelief" hidden title="金币不足时领取每日救济金">救济金 <b id="lbReliefN">3</b></button>
       <nav class="lobby-topbtns" aria-label="大厅功能">
-        <button class="lobby-iconbtn lobby-online" id="lbBtnOnline" title="好友开房联机（掼蛋 / 德州）">联机</button>
         <button class="lobby-iconbtn" id="lbBtnBoard" title="好友榜与全服榜">排行</button>
         <button class="lobby-iconbtn" id="lbBtnTasks" title="任务与奖励">任务<span class="badge" id="lbTaskBadge" style="display:none">!</span></button>
         <button class="lobby-iconbtn" id="lbBtnAchieve" title="查看成就">成就</button>
@@ -1666,11 +1672,8 @@
     <div class="lobby-logo-area">
       <div class="lobby-logo">牌友小馆</div>
       <div class="lobby-subtitle">一张牌桌，七种乐趣 · 单机联机两相宜</div>
+      <div class="lobby-watermark" aria-hidden="true">牌友小馆</div>
       <div class="lobby-crowns" id="lbCrowns" hidden></div>
-      <div class="lobby-mode-switch">
-        <button class="lms-btn active" data-lmode="match" type="button"><b>匹配模式</b><span>人机 / 在线真人 · 7 种玩法</span></button>
-        <button class="lms-btn" data-lmode="ranked" type="button"><b>排位模式</b><span>以小博大 · 上分冲段 · 4 大排位</span></button>
-      </div>
       <div class="game-shelf">
         <button class="game-tile selected" data-game="holdem"><i class="tile-bg" aria-hidden="true">德州扑克</i><span class="tile-art">A<span>♠</span></span><small>读牌与博弈</small><span class="tile-crown" hidden>👑</span></button>
         <button class="game-tile" data-game="blackjack"><i class="tile-bg" aria-hidden="true">21点</i><span class="tile-art">21</span><small>进退之间的判断</small><span class="tile-crown" hidden>👑</span></button>
@@ -3375,6 +3378,14 @@ var TITLES = [
   { id:'tt_top_diceduel',  name:'神手骰王',   icon:'⚄', desc:'骰子比大小排位达到最高段位「神手骰王」',   check:function(p){ return gameIsTopTier(p,'diceduel'); } },
   { id:'tt_top_guandan',   name:'掼蛋的神',   icon:'🀄', desc:'掼蛋累计获胜 200 局，封顶「掼蛋的神」',    check:function(p){ return gameIsTopTier(p,'guandan'); } },
   { id:'tt_six_crowns',    name:'四冠牌神',   icon:'👑', desc:'四大排位游戏（德州王牌 · 二十一之神 · 金花炸王 · 掼蛋的神）全部达到最高段位', check:function(p){ return crownCount(p) >= 4; } },
+  { id:'tt_niu_1',  name:'初生牛犊', icon:'🐮', desc:'斗牛对局累计 10 局', check:function(p){ var m=(p.games&&p.games.niu&&p.games.niu.metrics)||{}; return (m.hands||0)>=10; } },
+  { id:'tt_niu_2',  name:'牛气冲天', icon:'🐂', desc:'斗牛对局累计 100 局', check:function(p){ var m=(p.games&&p.games.niu&&p.games.niu.metrics)||{}; return (m.hands||0)>=100; } },
+  { id:'tt_net_1',  name:'初次联网', icon:'🌐', desc:'完成首局在线对局', check:function(p){ var o=p.online||{}; return (o.games||0)>=1; } },
+  { id:'tt_net_2',  name:'联网常客', icon:'🛰️', desc:'完成 50 局在线对局', check:function(p){ var o=p.online||{}; return (o.games||0)>=50; } },
+  { id:'tt_net_3',  name:'网络豪客', icon:'💎', desc:'在线对局赢下 20 场', check:function(p){ var o=p.online||{}; return (o.wins||0)>=20; } },
+  { id:'tt_ci_1',   name:'七日之约', icon:'📅', desc:'连续签到 7 天', check:function(p){ return (p.checkinStreak||0)>=7; } },
+  { id:'tt_ci_2',   name:'半月坚持', icon:'🗓️', desc:'连续签到 15 天', check:function(p){ return (p.checkinStreak||0)>=15; } },
+  { id:'tt_rich',   name:'富甲一方', icon:'💰', desc:'金币资产达到 100,000', check:function(p){ return (p.coins||0)>=100000; } },
   /* 好友联机（开房对战：掼蛋/德州/炸金花/骰子比大小） */
   { id:'tt_online_1',      name:'初入牌局',   icon:'🚪', desc:'首次完成一局好友房对战',      check:function(p){ return onlineStat(p,'games') >= 1; } },
   { id:'tt_online_10',     name:'常来常往',   icon:'🛋️', desc:'累计完成 10 局好友房对战',    check:function(p){ return onlineStat(p,'games') >= 10; } },
@@ -8862,7 +8873,8 @@ function syncCrowns(){
       var n=crownCount(player);
       var done=CROWN_ORDER.filter(function(g){return gameIsTopTier(player,g);}).map(crownNameOf);
       elc.hidden=false;
-      elc.innerHTML = icifyHTML('👑 四冠牌神进度 '+n+' / 4'+(n?' · 已封顶：'+done.join('、'):' · 四大排位游戏全部达到最高段位，可获得永久称号「四冠牌神」'));
+      var tCount = 0; try { TITLES.forEach(function(t){ if (t.check(player)) tCount++; }); } catch (e) {}
+      elc.innerHTML = icifyHTML('🏅 称号收集进度 ' + tCount + ' / ' + TITLES.length + ' · 成就与称号在「成就」和「档案 · 称号」中查看');
     }
   }
   document.querySelectorAll('.game-tile').forEach(function(b){
@@ -8875,16 +8887,16 @@ function syncCrowns(){
 renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var ret=oldRenderLobby15();try{if(player)syncTitles({silent:false});syncCrowns();}catch(e){}return ret;};
 
 /* 所有游戏共用模式及难度入口。 */
-renderModeCards=function(){if(!player)return;ensureRankGift(hubGame);var s=profile15(hubGame),body=$('modeBody');body.innerHTML='';
- var canRanked=s.rankPoints>=RANKED_ENTRY_MIN;
- ['quick','online','ranked'].forEach(function(mode){
-    if(lobbyLMode==='match' && mode==='ranked') return;      /* 匹配模式：只走人机/在线 */
-    if(lobbyLMode==='ranked' && mode!=='ranked') return;     /* 排位模式：只走排位 */var card=document.createElement('button');if(mode==='online'){card.className='mode-card '+mode;card.innerHTML='<div class="mode-name">在线匹配</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>和在线真人快速凑桌 · 凑满自动开局<br>需要另一位真人也在线；超过 1 分钟没人会提示稍后再试</p></div>';card.onclick=function(){if(typeof guandanSelected!=='undefined'&&guandanSelected)return showToast('掼蛋暂不支持在线匹配，可用好友开房邀请牌友',2200,true);OM.game=hubGame;App.mode='quick';return omStart();};body.appendChild(card);return;}card.className='mode-card '+mode+(mode==='ranked'&&!canRanked?' dim':'');
-  card.innerHTML='<div class="mode-name">'+(mode==='quick'?'人机对局':'独立排位')+'</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>'+(mode==='quick'?'金币对局 · 本地AI或庄家<br>四档挑战，自主选择<br>门票 '+ENTRY_FEE_TEXT+'（按场次）':'段位 '+rankInfo(hubGame).name+' · 对手 '+LEVEL_NAMES[level15(rankedDifficultyFor(hubGame))]+'级<br>排位积分 <b>'+s.rankPoints+'</b> / 门槛 '+RANKED_ENTRY_MIN+'<br>'+(canRanked?'已达标，可以开始排位':'积分不足 '+RANKED_ENTRY_MIN+'，暂时无法开始排位')+'<br>单局 胜 +'+RANK_POINT_WIN[0]+'~+'+RANK_POINT_WIN[RANK_POINT_WIN.length-1]+' / 负 -'+RANK_POINT_LOSS[0]+'~-'+RANK_POINT_LOSS[RANK_POINT_LOSS.length-1]+'<br>0 分时每天赠送 '+RANK_DAILY_GIFT+' 分 · 兑换每日 '+RANK_EXCHANGE.timesPerDay+' 次上限 '+RANK_EXCHANGE.dailyCap+' 分<br>对手强度随段位变化 · 门票 '+ENTRY_FEE_TEXT)+'</p></div>';
-  card.onclick=function(){App.mode=mode;
-    if(mode==='ranked'){var d=rankedDifficultyFor(hubGame);App.difficulty=d;tryEnterGame(d);return;}
-    renderDifficultyCards();showScreen('difficulty');};body.appendChild(card);
- });
+renderModeCards=function(){
+  if(!player)return;
+  ensureRankGift(hubGame);
+  var s=profile15(hubGame),body=$('modeBody');body.innerHTML='';
+  ['quick','online','friend'].forEach(function(mode){
+    var card=document.createElement('button');
+    if(mode==='online'){card.className='mode-card online';card.innerHTML='<div class="mode-name">在线匹配</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>和在线真人快速凑桌 · 凑满自动开局<br>需要另一位真人也在线；超过 1 分钟没人会提示稍后再试</p></div>';card.onclick=function(){if(typeof guandanSelected!=='undefined'&&guandanSelected)return showToast('掼蛋暂不支持在线匹配，可用好友开房邀请牌友',2200,true);OM.game=hubGame;App.mode='quick';return omStart();};body.appendChild(card);return;}
+    if(mode==='friend'){var sup=(' '+['guandan','holdem','gold','diceduel'].join(' ')).indexOf(' '+hubGame)>=0;card.className='mode-card friend';card.innerHTML='<div class="mode-name">好友开房</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>'+(sup?'创建好友房间 · 分享房号或链接邀请牌友<br>房间内可继续聊天与快捷语':'该玩法暂不支持联机开房<br>可选：德州 / 炸金花 / 骰子比大小 / 掼蛋')+'</p></div>';card.onclick=function(){if(!sup)return showToast('该玩法暂不支持联机开房',2200,true);initAudio();sfx('click');openOnline();var g=$('onlineGames')&&$('onlineGames').querySelector('[data-ogame="'+hubGame+'"]');if(g)g.click();};body.appendChild(card);return;}
+    card.className='mode-card quick';card.innerHTML='<div class="mode-name">人机练习</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>金币对局 · 本地AI或庄家<br>四档挑战，自主选择<br>门票 '+ENTRY_FEE_TEXT+'（按场次）</p></div>';card.onclick=function(){App.mode='quick';renderDifficultyCards();showScreen('difficulty');};body.appendChild(card);
+  });
  var bar=document.createElement('div');bar.className='exchange15';bar.innerHTML='<span>'+GAME_NAMES[hubGame]+'：1 积分 = 100 金币 · 积分只能靠排位赢取</span><input id="exchangeAmount15" type="number" min="1" step="1" value="1" aria-label="兑换积分数量"><button id="sellPoints15">积分换金币</button><small>积分是实力的体现，金币不能购买；四馆积分不互通。</small>';
  body.appendChild(bar);$('sellPoints15').onclick=function(){if(!exchangePoints(hubGame,'sell',Number($('exchangeAmount15').value)))showToast('兑换未完成：请检查积分、数量或未结束的对局',2500,true);};
  renderModeRankBar();
