@@ -64,6 +64,7 @@ test('枚举3骰216及5骰7776种分布和豹子，赔率不超概率上限',()=
 test('五骰多项叠加返还、重复下注合并、总投入限制',()=>{fresh('dice');w.Arcade.diceCount=5;assert(w.diceAddBet('any',10));assert(w.diceAddBet('sum10',10));assert(w.diceAddBet('triple2',10));assert(w.diceAddBet('small',10));assert(w.diceAddBet('small',10));assert.equal(w.Arcade.basket.length,4);assert.equal(w.Arcade.basket.reduce((a,b)=>a+b.amount,0),50,'5 注合并为 4 档共 50');assert.equal(w.diceAddBet('big',w.arcadeDiceRoundLimit()-49),false,'超出单轮总投入上限应拒绝');assert(w.arcadeDiceRoundLimit()>w.arcadeLimit15(),'骰子可同轮多押，单轮上限应高于单注上限');assert.equal(w.Arcade.basket.length,4,'被拒绝的加注不应写进清单');const random=w.randomInt;w.randomInt=n=>n===6?1:123;assert(w.diceRollBasket());w.randomInt=random;const payout=10*(w.diceMultiplier(5,'any')+w.diceMultiplier(5,'sum10')+w.diceMultiplier(5,'triple2'));assert.equal(w.player.coins,500-50+payout);assert.equal(w.Arcade.round.bets.find(b=>b.choice==='small').payout,0);assert.equal(w.profile15('dice').metrics.exactwin,1);assert.equal(w.arcadeSettle(payout,'duplicate'),false);});
 test('排位为单一模式不再出现难度页，自由场仍保留四档（娱乐场玩法跳过排位）',()=>{const start=w.startGame;w.startGame=()=>{w.G.active=true;};for(const g of w.GAME_IDS){if(w.ARCADE_NO_RANK[g])continue; /* 骰类/斗牛为娱乐场，无排位 */
   w.G.active=false;w.Arcade.round=null;w.player.rankedPending=null;w.player.arcade.pending=null;
+  const mBtn = w.document.querySelector('[data-lmode="match"]'); if (mBtn) mBtn.click();
   w.document.querySelector('[data-game="'+g+'"]').click();w.document.getElementById('lbStartBtn').click();assert.equal(w.App.screen,'mode');
   /* 自由场：仍然进入四档难度页 */
   w.document.querySelector('.mode-card.quick').click();assert.equal(w.App.screen,'difficulty');
@@ -72,6 +73,7 @@ test('排位为单一模式不再出现难度页，自由场仍保留四档（�
   /* 排位：只有一种模式，由段位决定对手强度，直接开局 */
   w.G.active=false;w.Arcade.round=null;w.player.rankedPending=null;w.player.arcade.pending=null;
   w.profile15(g).rankPoints=w.RANKED_ENTRY_MIN;   /* 排位需要满 100 积分 */
+  const rBtn = w.document.querySelector('[data-lmode="ranked"]'); if (rBtn) rBtn.click();
   w.document.querySelector('[data-game="'+g+'"]').click();w.document.getElementById('lbStartBtn').click();
   w.document.querySelector('.mode-card.ranked').click();
   assert.notEqual(w.App.screen,'difficulty','排位不应再要求选择难度');
