@@ -143,8 +143,8 @@ test('大厅：两行四列（7 卡一屏）、游戏名水印、六冠进度与
   const shelfCss = html.match(/\.game-shelf\{[^}]*\}/)[0];
   assert.ok(shelfCss.includes('auto-fill'), '牌桌应为自适应网格（加游戏不用改布局）');
   const crowns = doc.getElementById('lbCrowns');
-  assert.ok(!crowns.hidden, '六冠进度应显示');
-  assert.ok(crowns.textContent.indexOf('称号收集进度') >= 0, '横幅应为称号收集进度，实际：' + crowns.textContent);
+  assert.ok(crowns.hidden, '主界面不显示进度横幅（隐藏奖励原则）');
+  assert.ok(crowns.hidden === true, '称号进度属隐藏奖励，大厅横幅应隐藏');
   assert.ok(crowns.textContent.indexOf('四冠') < 0, '大厅横幅不再显示四冠进度（已改称号收集）');
   const holdemCrown = doc.querySelector('[data-game="holdem"] .tile-crown');
   assert.ok(holdemCrown && !holdemCrown.hidden, '德州封顶应显示皇冠');
