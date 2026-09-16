@@ -103,7 +103,7 @@ const tick = ms => new Promise(r => setTimeout(r, ms));
       const bad = ['赌途', '赌神', '赌桌'].filter(k => t2.indexOf(k) >= 0);
       ok(bad.length === 0, '界面无赌博品牌语汇残留（命中: ' + bad.join('、') + '）');
       ok(t2.indexOf('严禁赌博') > 0, '合规声明仍在（严禁赌博）');
-      ok(t2.indexOf('六冠牌神') >= 0, '称号已改名为「六冠牌神」');
+      ok(t2.indexOf('四冠牌神') >= 0, '称号已改名为「四冠牌神」');
     }
 
     /* ---- 无致命错误 ---- */
