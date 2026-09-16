@@ -77,18 +77,15 @@ function click(el) {
   await tick(30);
   ok($('modeScreen').classList.contains('active'), '点击「开始游戏」进入模式选择');
   click($('modeBody').querySelector('.mode-card.quick'));
-  await tick(30);
-  ok($('difficultyScreen').classList.contains('active'), '选择快速对局进入场次选择');
-  const cards = $('diffBody').querySelectorAll('.diff-card');
-  ok(cards.length === 4, '渲染 4 个难度卡片（实际 ' + cards.length + '）');
-  ok(!!$('diffBody').querySelector('.diff-card.easy'), '包含简单场卡片');
-  ok(!!$('diffBody').querySelector('.diff-card.champion'), '包含冠军场卡片');
-  const locked = $('diffBody').querySelectorAll('.diff-card.locked');
-  ok(locked.length === 3, '金币 1000 时高额场次被锁定（锁定 ' + locked.length + ' 个）');
+  await tick(400);
+  ok($('gameScreen').classList.contains('active'), '选择人机对局直接开局（免门票、无难度页）');
 
   console.log('【返回大厅 & 面板】');
-  click($('diffBack'));
+  click($('btnExit'));
   await tick(30);
+  click($('exitConfirmYes'));
+  await tick(600);
+  ok($('modeScreen').classList.contains('active'), '离桌回到模式选择界面');
   click($('modeBack'));
   await tick(30);
   ok($('lobbyScreen').style.display === 'flex', '返回大厅');
@@ -98,7 +95,7 @@ function click(el) {
   ok($('ovAchieve').classList.contains('show'), '打开成就面板');
   ok($('achList').querySelectorAll('.ach-item').length === 20,
      '成就列表每页渲染20项（实际 ' + $('achList').querySelectorAll('.ach-item').length + '）');
-  ok($('stHands').textContent === '0', '总手数初始为 0');
+  ok(/^\d+/.test($('stHands').textContent), '总手数正常显示（前面流程已打过 ' + $('stHands').textContent + ' 手）');
   click($('ovAchieve').querySelector('[data-close="ovAchieve"]'));
   await tick(20);
   ok(!$('ovAchieve').classList.contains('show'), '关闭成就面板');
@@ -168,8 +165,8 @@ function click(el) {
   click($('tabSRank'));
   await tick(30);
   ok($('rankPanel').style.display === 'block', '切换到段位页');
-  ok($('rankPanel').querySelectorAll('.rank-row').length === 1, '段位面板渲染段位卡');
-  ok($('rankPanel').textContent.indexOf('牌桌新人') >= 0, '新档段位为「牌桌新人」');
+  ok($('rankPanel').textContent.indexOf('称号收集') >= 0, '段位面板渲染称号收集进度');
+  ok($('rankPanel').textContent.indexOf('称号收集') >= 0 && $('rankPanel').textContent.indexOf('已下线') >= 0, '段位页精简为称号收集并标注排位已下线');
   click($('ovStats').querySelector('[data-close="ovStats"]'));
   await tick(20);
 
@@ -227,7 +224,8 @@ function click(el) {
   console.log('【进入牌桌】');
   click($('lbStartBtn'));
   await tick(30);
-  click($('diffBody').querySelector('.diff-card.easy'));
+  /* 新链路：大厅 → 模式屏 → 人机对局（免门票直接开局） */
+  click($('modeBody').querySelector('.mode-card.quick'));
   await tick(400);
   ok($('gameScreen').classList.contains('active'), '进入游戏界面');
   ok($('lobbyScreen').style.display === 'none', '大厅已隐藏');
@@ -284,7 +282,7 @@ function click(el) {
   /* 回归：发牌途中直接离桌，不应抛异常（曾因 playHand 发牌循环缺少 G.active 检查而崩溃） */
   click($('lbStartBtn'));
   await tick(30);
-  click($('diffBody').querySelector('.diff-card.easy'));
+  click($('modeBody').querySelector('.mode-card.quick'));
   await tick(150);                       // 正处于发牌阶段
   const dealing = !$('bottomBar').querySelector('.abtn.fold');
   click($('btnExit'));
@@ -385,8 +383,8 @@ function click(el) {
   ok(g2('dexPanel').querySelectorAll('.dex-cell.got').length === 8, '图鉴已解锁 8 / 9 种');
   click2(g2('tabSRank'));
   await tick(40);
-  ok(g2('rankPanel').textContent.indexOf('心理读牌师') >= 0, '段位页显示「心理读牌师」');
-  ok(g2('rankPanel').textContent.indexOf('3600') >= 0, '段位页显示 3600 分');
+  ok(g2('rankPanel').textContent.indexOf('称号收集') >= 0, '段位页显示称号收集进度');
+  ok(g2('rankPanel').textContent.indexOf('已下线') >= 0, '段位页不再显示积分（排位已下线）');
   click2(g2('ovStats').querySelector('[data-close="ovStats"]'));
   await tick(30);
 

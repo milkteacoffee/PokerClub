@@ -57,26 +57,26 @@ test('门票表四档递增，六馆与德州配置同源', () => {
   });
 });
 
-test('金币场进场按难度扣门票', () => {
+test('金币场（人机对局）进场免门票', () => {
   w.createNewSaveAt(1);
   w.player.coins = 5000;
   assert.equal(enter('blackjack', 'coins', 'easy'), true);
-  assert.equal(w.player.coins, 5000 - w.ENTRY_FEE.easy, '进小游戏金币场应扣门票');
-  assert.equal(w.Arcade.entryFeePaid, w.ENTRY_FEE.easy, '应记录已付门票');
+  assert.equal(w.player.coins, 5000, '人机对局不扣门票');
+  assert.equal(w.Arcade.entryFeePaid, 0, '不记录门票');
   w.createNewSaveAt(1);
   w.player.coins = 5000;
   assert.equal(enter('diceduel', 'coins', 'hard'), true);
-  assert.equal(w.player.coins, 5000 - w.ENTRY_FEE.hard);
+  assert.equal(w.player.coins, 5000);
 });
 
-test('排位同样收门票，且不影响比赛筹码结算（骰类娱乐场拒绝排位）', () => {
+test('排位不再收门票（骰类娱乐场拒绝排位）', () => {
   assert.equal(enter('dice', 'ranked', 'normal'), false, '骰类玩法不参与排位');
   assert.equal(enter('diceduel', 'ranked', 'normal'), false, '骰子比大小同样不参与排位');
   w.createNewSaveAt(1);
   w.player.coins = 5000;
   assert.equal(enter('blackjack', 'ranked', 'normal'), true);
-  assert.equal(w.player.coins, 5000 - w.ENTRY_FEE.normal, '排位也要门票');
-  assert.equal(w.Arcade.rankedBank, w.arcadeBank15(), '比赛筹码独立发放，不受门票影响');
+  assert.equal(w.player.coins, 5000, '排位同样免门票');
+  assert.equal(w.Arcade.rankedBank, w.arcadeBank15(), '比赛筹码独立发放');
 });
 
 test('练习场免门票', () => {
@@ -87,32 +87,30 @@ test('练习场免门票', () => {
   assert.equal(w.Arcade.entryFeePaid, 0);
 });
 
-test('余额不足门票时拒绝进场且不扣款', () => {
+test('人机对局免门票：低金币可进场且不扣款', () => {
   w.createNewSaveAt(1);
   w.player.coins = w.ENTRY_FEE.easy - 1;
-  const before = w.player.coins;
-  assert.equal(enter('blackjack', 'coins', 'easy'), false, '余额不足应拒绝');
-  assert.equal(w.player.coins, before, '被拒绝时不扣款');
-  assert.equal(w.App.screen !== 'arcade' || !w.Arcade.round, true);
-  w.player.coins = w.ENTRY_FEE.easy;
-  assert.equal(enter('blackjack', 'coins', 'easy'), true, '刚好够门票可进场');
-  assert.equal(w.player.coins, 0);
+  assert.equal(enter('blackjack', 'coins', 'easy'), true, '免门票，低金币可进');
+  assert.equal(w.player.coins, w.ENTRY_FEE.easy - 1, '进场不扣款');
 });
 
 test('德州进场同样收门票，余额不足被拒', () => {
   w.createNewSaveAt(1);
   w.player.coins = 20000;
   assert.equal(enter('holdem', 'coins', 'easy'), true);
-  assert.equal(w.player.coins, 20000 - w.ENTRY_FEE.easy);
+  assert.equal(w.player.coins, 20000, '德州人机免门票');
   w.G.active = false;
   w.player.coins = w.ENTRY_FEE.easy - 1;
-  assert.equal(enter('holdem', 'coins', 'easy'), false, '付不起门票不得入场');
+  assert.equal(enter('holdem', 'coins', 'easy'), true, '低金币也可进人机德州');
+  w.player.coins = 0;
+  w.G.active = false;
+  assert.equal(enter('holdem', 'coins', 'easy'), false, '空钱包仍拒绝（提示做任务）');
   w.player.coins = 40000;
-  assert.equal(enter('holdem', 'ranked', 'hard'), true, '排位德州也要门票');
-  assert.equal(w.player.coins, 40000 - w.ENTRY_FEE.hard);
+  assert.equal(enter('holdem', 'ranked', 'hard'), true, '排位德州同样免门票');
+  assert.equal(w.player.coins, 40000);
 });
 
-test('门票扣款失败（存储故障）时拒绝进场', () => {
+test('人机进场零扣款：存储故障不再影响进场', () => {
   w.createNewSaveAt(1);
   w.player.coins = 5000;
   const proto = Object.getPrototypeOf(w.localStorage);
@@ -120,8 +118,8 @@ test('门票扣款失败（存储故障）时拒绝进场', () => {
   proto.setItem = () => { throw new Error('QuotaExceededError'); };
   const ok = enter('blackjack', 'coins', 'easy');
   proto.setItem = old;
-  assert.equal(ok, false, '事务失败应拒绝进场');
-  assert.equal(w.player.coins, 5000, '门票应整体回滚');
+  assert.equal(ok, true, '免门票后进场不依赖存储事务');
+  assert.equal(w.player.coins, 5000, '进场零扣款');
 });
 
 /* ---------------- 退出路径 ---------------- */
