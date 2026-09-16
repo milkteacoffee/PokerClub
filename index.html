@@ -1493,6 +1493,10 @@
   .niu-tag{font-size:15px;font-weight:800;color:#f2c14e;letter-spacing:1px;min-height:20px}
   .niu-vs{font-size:16px;font-weight:800;color:#cfa85b;letter-spacing:3px}
   .niu-result{margin-top:8px;font-size:14px;font-weight:800;color:#f0d79a}
+  /* 商城分类 + 每日免费礼包 */
+  .shop-cat{font-size:13px;color:#f0d79a;font-weight:800;letter-spacing:1px;margin:14px 0 8px;padding-left:10px;border-left:3px solid #cfa85b}
+  .shop-cat span{font-size:10.5px;color:#8fa0b4;font-weight:400;margin-left:8px;letter-spacing:0}
+  .shop-item.shop-gift{background:linear-gradient(150deg,rgba(207,168,91,.22),rgba(207,168,91,.06));box-shadow:0 0 0 1px rgba(240,215,154,.3) inset}
   /* 牌谱复盘 + 兑换码面板 */
   .hh-item{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.04);margin-bottom:7px}
   .hh-cards{display:flex;gap:3px;flex-wrap:wrap}
@@ -7761,44 +7765,72 @@ function renderShop() {
   if (!player) return;
   $('shopCoins').textContent = fmt(player.coins);
   var html = '';
-  SHOP_ITEMS.forEach(function (it) {
-    var owned = hasItem(it.id);
-    var eq = isEquipped(it.id);
-    html += '<div class="shop-item' + (owned ? ' owned' : '') + (eq ? ' eq' : '') + '">';
-    html += '<div class="ic">' + it.icon + '</div>';
-    html += '<div class="info"><div class="t">' + it.name + '</div>';
-    html += '<div class="d">' + it.desc + '</div>';
-    if (it.type === 'consume' && owned) {
-      html += '<div class="own">库存 ×' + player.inventory[it.id] + '</div>';
-    }
-    html += '</div><div class="act">';
-    if (it.type === 'skin') {
-      if (!owned) {
+  /* 每日免费礼包：每天一次，随机 100~500 金币 */
+  var today = todayStr();
+  var giftDone = player.freeGiftAt === today;
+  html += '<div class="shop-item shop-gift' + (giftDone ? ' owned' : '') + '">'
+       + '<div class="ic">🎁</div><div class="info"><div class="t">每日免费礼包</div>'
+       + '<div class="d">' + (giftDone ? '今日已领取 · 明天再来' : '每天可领一次 · 随机 100 ~ 500 金币') + '</div></div>'
+       + '<div class="act">' + (giftDone ? '<div class="shop-price">明日再来</div>'
+         : '<button class="shop-btn green" data-freegift="1">领取</button>') + '</div></div>';
+
+  /* 分类展示：功能道具 / 牌背 / 座位边框 / 称号 */
+  var groups = [
+    { key: 'consume', name: '功能道具', tip: '对局中生效 · 有限购' },
+    { key: 'cardBack', name: '牌背', tip: '一次性拥有 · 随时装备' },
+    { key: 'frame', name: '座位边框', tip: '一次性拥有 · 随时装备' },
+    { key: 'title', name: '称号', tip: '名字前后显示 · 装备后生效' }
+  ];
+  groups.forEach(function (g) {
+    var items = SHOP_ITEMS.filter(function (it) {
+      return it.type === 'consume' ? g.key === 'consume' : (it.type === 'skin' && it.slot === g.key);
+    });
+    if (!items.length) return;
+    html += '<div class="shop-cat">' + g.name + '<span>' + g.tip + '</span></div>';
+    items.forEach(function (it) {
+      var owned = hasItem(it.id);
+      var eq = isEquipped(it.id);
+      html += '<div class="shop-item' + (owned ? ' owned' : '') + (eq ? ' eq' : '') + '">';
+      html += '<div class="ic">' + it.icon + '</div>';
+      html += '<div class="info"><div class="t">' + it.name + '</div>';
+      html += '<div class="d">' + it.desc + '</div>';
+      if (it.type === 'consume' && owned) {
+        html += '<div class="own">库存 ×' + player.inventory[it.id] + '</div>';
+      }
+      html += '</div><div class="act">';
+      if (it.type === 'skin') {
+        if (!owned) {
+          html += '<div class="shop-price">' + fmt(it.price) + ' 🪙</div>';
+          html += '<button class="shop-btn" data-buy="' + it.id + '">购买</button>';
+        } else {
+          html += '<button class="shop-btn ' + (eq ? 'ghost' : 'green') + '" data-equip="' + it.id + '">'
+               + (eq ? '卸下' : '装备') + '</button>';
+        }
+      } else {
+        if (owned) html += '<button class="shop-btn green" data-use="' + it.id + '">使用</button>';
         html += '<div class="shop-price">' + fmt(it.price) + ' 🪙</div>';
         html += '<button class="shop-btn" data-buy="' + it.id + '">购买</button>';
-      } else {
-        html += '<button class="shop-btn ' + (eq ? 'ghost' : 'green') + '" data-equip="' + it.id + '">'
-             + (eq ? '卸下' : '装备') + '</button>';
       }
-    } else {
-      if (owned) html += '<button class="shop-btn green" data-use="' + it.id + '">使用</button>';
-      html += '<div class="shop-price">' + fmt(it.price) + ' 🪙</div>';
-      html += '<button class="shop-btn" data-buy="' + it.id + '">购买</button>';
-    }
-    html += '</div></div>';
+      html += '</div></div>';
+    });
   });
   $('shopList').innerHTML = html;
 
-  function bindAll(sel, fn) {
-    var ns = document.querySelectorAll(sel);
-    for (var i = 0; i < ns.length; i++) {
-      ns[i].addEventListener('click', function () {
-        sfx('click');
-        fn(this.getAttribute(sel.slice(6, -2)) || this.getAttribute('data-buy')
-           || this.getAttribute('data-equip') || this.getAttribute('data-use'));
-      });
-    }
+  var gifts = document.querySelectorAll('[data-freegift]');
+  for (var gi = 0; gi < gifts.length; gi++) {
+    gifts[gi].addEventListener('click', function () {
+      sfx('coin');
+      var t = todayStr();
+      if (player.freeGiftAt === t) return;
+      var amt = 100 + Math.floor(Math.random() * 401);   /* 100 ~ 500 */
+      player.freeGiftAt = t;
+      addCoins(amt);
+      saveAllSaves();
+      showToast('🎁 每日免费礼包 +' + fmt(amt) + ' 金币', 2400, false, 'success');
+      renderShop(); renderLobby();
+    });
   }
+
   var buys = document.querySelectorAll('[data-buy]');
   for (var b = 0; b < buys.length; b++) {
     buys[b].addEventListener('click', function () {
