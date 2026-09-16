@@ -1493,6 +1493,17 @@
   .niu-tag{font-size:15px;font-weight:800;color:#f2c14e;letter-spacing:1px;min-height:20px}
   .niu-vs{font-size:16px;font-weight:800;color:#cfa85b;letter-spacing:3px}
   .niu-result{margin-top:8px;font-size:14px;font-weight:800;color:#f0d79a}
+  /* 牌谱复盘 + 兑换码面板 */
+  .hh-item{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.04);margin-bottom:7px}
+  .hh-cards{display:flex;gap:3px;flex-wrap:wrap}
+  .hh-card{width:26px;height:36px;border-radius:4px;background:#f4efe2;color:#1a0f0a;font-size:11px;font-weight:800;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05}
+  .hh-card.red{color:#c41a1a}
+  .hh-card.back{background:linear-gradient(150deg,#3d2b1f,#1a0f0a);color:#d4a847}
+  .hh-meta{flex:1;text-align:left}
+  .hh-meta .m{font-size:11px;color:#8fa0b4}
+  .hh-meta .n{font-size:13px;font-weight:800}
+  .hh-net.win{color:#8fd6b0}.hh-net.lose{color:#e8a098}
   /* 折叠规则说明 */
   details.rank-more{margin:6px 0 10px}
   details.rank-more summary{cursor:pointer;font-size:12px;color:#f0d79a;font-weight:700;padding:4px 0}
@@ -2096,6 +2107,30 @@
     </div>
   </div>
 
+  <!-- 牌谱复盘（最近 20 手德州） -->
+  <div class="overlay" id="ovHands">
+    <div class="panel" style="max-width:480px;">
+      <h2>牌谱复盘 <span style="font-size:11px;color:#8fa0b4">最近 20 手德州</span> <button class="closebtn" data-close="ovHands">✕ 返回</button></h2>
+      <div class="hh-list" id="hhList"></div>
+      <div class="pm-note">每局结束自动记录你的底牌、公共牌与结果；联机对局只记录你自己的牌（不记录他人手牌，保护对局公平）。</div>
+    </div>
+  </div>
+
+  <!-- 兑换码可视化面板 -->
+  <div class="overlay" id="ovRedeem">
+    <div class="panel" style="max-width:420px;">
+      <h2>兑换码 <button class="closebtn" data-close="ovRedeem">✕ 返回</button></h2>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input id="rdInput" class="friend-input" style="flex:1" placeholder="输入官方兑换码" spellcheck="false">
+        <button class="online-btn primary" id="rdGo" type="button">兑换</button>
+      </div>
+      <div class="acc-tip" id="rdTip"></div>
+      <div class="pm-note">邮箱余额：<b id="rdMailbox">0</b> 金币 · 兑换码 / 邀请好友 / 官方补发都会先存入邮箱，打开游戏自动领取入账。</div>
+      <div style="font-size:12px;color:#e8eef5;font-weight:700;margin:8px 0 6px">我的兑换记录</div>
+      <div class="about-log" id="rdList"></div>
+    </div>
+  </div>
+
   <!-- 账号：注册 / 登录（用户名 + 密码） -->
   <div class="overlay" id="ovAccount">
     <div class="panel" style="max-width:400px;">
@@ -2192,6 +2227,7 @@
   <div class="overlay" id="ovProfile">
     <div class="panel" style="max-width:440px;">
       <h2>🪪 用户资料 <button class="closebtn" data-close="ovProfile">✕ 返回</button></h2>
+      <div style="display:flex;justify-content:flex-end;margin:-4px 0 10px"><button class="online-btn" id="btnHands" type="button">牌谱复盘</button></div>
       <div class="pf-avrow">
         <div class="pf-avatar" id="pfAvatar"></div>
         <div class="pf-avmeta">
@@ -7223,6 +7259,11 @@ async function finishHand() {
 
   /* ---- 汇总结算界面 ---- */
   G.lastSettleData = buildSettleData(winnings, potTotal, rpDelta);
+  try {
+    var hRec = G.players[0] || {};
+    if (App.mode !== 'practice') recordHoldemHand(App.mode === 'ranked' ? '排位' : '金币场', hRec.hole, G.community,
+      (humanWinAmount || 0) - (human.totalBet || 0), humanWon ? '获胜' : (human.folded ? '弃牌' : '惜败'));
+  } catch (e) {}
   G.handSettled = true;
   G.settling = false;
   if (G.session) {
@@ -8253,6 +8294,7 @@ function reportInvite() {
     if (j && j.ok && j.coins > 0) claimMailbox();
   });
 }
+if (typeof window !== 'undefined') { window.recordHoldemHand = recordHoldemHand; window.openHands = openHands; }
 function openRedeem() {
   var code = prompt('输入官方兑换码（管理端生成）：');
   if (!code) return;
@@ -8264,6 +8306,88 @@ function openRedeem() {
 function copyInvite() {
   var link = 'https://milkteacoffee.github.io/PokerClub/?ref=' + onlineDeviceId();
   copyText(link, '邀请链接已复制：发给好友，好友首次进入后双方各得 1000 金币');
+}
+
+/* ---- 牌谱复盘：每局结束记录手牌（最近 20 手）---- */
+function hhCardText(c) {
+  if (c === null || c === undefined) return '';
+  if (typeof c === 'string') return c;
+  var rr = c.r === 14 ? 'A' : c.r === 13 ? 'K' : c.r === 12 ? 'Q' : c.r === 11 ? 'J' : c.r;
+  var sym = ['♠', '♥', '♦', '♣'][c.s] || '';
+  return rr + sym;
+}
+function pushHandHistory(entry) {
+  if (!player) return;
+  if (!Array.isArray(player.handHistory)) player.handHistory = [];
+  player.handHistory.unshift(entry);
+  if (player.handHistory.length > 20) player.handHistory.length = 20;
+}
+function hhCardsHTML(cards, hide) {
+  if (!cards || !cards.length) return '<span style="color:#6b7a86;font-size:11px">—</span>';
+  return '<div class="hh-cards">' + cards.map(function (c) {
+    if (hide) return '<div class="hh-card back">牌</div>';
+    var txt = hhCardText(c);
+    var red = txt.indexOf('♥') >= 0 || txt.indexOf('♦') >= 0;
+    return '<div class="hh-card' + (red ? ' red' : '') + '">' + txt + '</div>';
+  }).join('') + '</div>';
+}
+function renderHands() {
+  var box = $('hhList'); if (!box) return;
+  var list = (player && Array.isArray(player.handHistory)) ? player.handHistory : [];
+  if (!list.length) { box.innerHTML = '<div style="color:#6b7a86;font-size:12px;padding:14px 0;text-align:center">还没有牌谱——打一局德州，就会自动记录在这里。</div>'; return; }
+  box.innerHTML = list.map(function (h) {
+    var netCls = h.net > 0 ? 'win' : h.net < 0 ? 'lose' : '';
+    var netTxt = h.net > 0 ? '+' + fmt(h.net) : h.net < 0 ? '-' + fmt(-h.net) : '±0';
+    var d = new Date(h.t);
+    var tm = (d.getMonth() + 1) + '/' + d.getDate() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+    return '<div class="hh-item"><div class="hh-meta"><div class="m">' + esc(h.mode || '') + ' · ' + tm + ' · ' + esc(h.note || '') + '</div>'
+      + '<div class="n">净 ' + netTxt + '</div></div>'
+      + hhCardsHTML(h.hole, false) + '<div style="color:#5a6a76;font-size:12px">＋</div>' + hhCardsHTML(h.board, false)
+      + '<div class="hh-net ' + netCls + '" style="font-size:12px;font-weight:800">' + netTxt + '</div></div>';
+  }).join('');
+}
+function openHands() {
+  initAudio(); sfx('click'); openOverlay('ovHands'); renderHands();
+}
+function recordHoldemHand(mode, hole, board, net, note) {
+  try {
+    pushHandHistory({
+      t: Date.now(), mode: mode,
+      hole: (hole || []).map(function (c) { return typeof c === 'object' ? { r: c.r, s: c.s } : c; }),
+      board: (board || []).map(function (c) { return typeof c === 'object' ? { r: c.r, s: c.s } : c; }),
+      net: Math.round(net) || 0, note: String(note || '').slice(0, 24)
+    });
+  } catch (e) {}
+}
+function openRedeem() {
+  initAudio(); sfx('click'); openOverlay('ovRedeem');
+  var tip = $('rdTip'); if (tip) { tip.className = 'acc-tip'; tip.textContent = ''; }
+  var inp = $('rdInput'); if (inp) { inp.value = ''; }
+  function refresh() {
+    apiMail('/api/redeem/mine', null, function (j) {
+      if (!j || !j.ok) return;
+      var mb = $('rdMailbox'); if (mb) mb.textContent = fmt(j.mailbox || 0);
+      var lst = $('rdList'); if (!lst) return;
+      lst.innerHTML = (j.list && j.list.length)
+        ? j.list.map(function (r) {
+            var d = new Date(r.redeemed_at);
+            return '<div class="v"><b>' + esc(r.code) + '</b> +' + fmt(r.coins) + ' 金币 · ' + (d.getMonth() + 1) + '/' + d.getDate() + '</div>';
+          }).join('')
+        : '<div class="v">还没有兑换记录</div>';
+    });
+  }
+  var go = $('rdGo'); if (go) go.onclick = function () {
+    var code = ($('rdInput').value || '').trim();
+    if (!code) return;
+    apiMail('/api/redeem', { code: code }, function (j) {
+      var tip2 = $('rdTip'); if (!tip2) return;
+      if (j && j.ok) {
+        tip2.className = 'acc-tip ok'; tip2.textContent = j.msg || '兑换成功';
+        claimMailbox(); refresh();
+      } else { tip2.className = 'acc-tip'; tip2.textContent = (j && j.msg) || '兑换失败'; }
+    });
+  };
+  refresh();
 }
 
 function openFeedback() {
@@ -8517,6 +8641,7 @@ function bindEvents() {
   var av = $('aboutVer'); if (av) av.textContent = 'v' + APP_VERSION;
   var ab = $('btnAbout'); if (ab) ab.addEventListener('click', function(){ initAudio(); sfx('click'); openOverlay('ovAbout'); });
   var br = $('btnRedeem'); if (br) br.addEventListener('click', function(){ initAudio(); sfx('click'); openRedeem(); });
+  var bh = $('btnHands'); if (bh) bh.addEventListener('click', function(){ openHands(); });
   var bi = $('btnInvite'); if (bi) bi.addEventListener('click', function(){ initAudio(); sfx('click'); copyInvite(); });
   var asub = $('accSubmit'); if (asub) asub.addEventListener('click', submitAccount);
   var apwd = $('accPwd2'); if (apwd) apwd.addEventListener('keydown', function (e) { if (e.key === 'Enter') submitAccount(); });
@@ -10301,6 +10426,14 @@ function onlineShowSettle(m){
   $('odHand').hidden = true; $('odActions').hidden = true; $('odLog').hidden = true;
   $('odResult').hidden = false;
   Online._turnKey = null; Online._deadline = 0;
+  try {
+    if (res.game === 'holdem') {
+      var st = Online.state || {};
+      var me = (st.players || []).filter(function (p) { return p.seat === Online.seat; })[0] || {};
+      var pay = (res.payouts && res.payouts[Online.seat]) || 0;
+      recordHoldemHand('联机', me.hole, st.board, pay, pay > 0 ? '赢得底池份额' : '未赢得');
+    }
+  } catch (e) {}
   var names = {}; (m.seatInfo || []).forEach(function(s){ names[s.seat] = s.name; });
   var html = '';
   var won = false;

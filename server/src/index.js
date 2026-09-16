@@ -362,6 +362,11 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, coins: coins, msg: '兑换成功，' + coins + ' 金币已存入邮箱' });
     }
 
+    if (path === '/api/redeem/mine' && method === 'GET') {
+      if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
+      return json(res, 200, { ok: true, list: store.redemptionsOf(deviceId, 20), mailbox: store.mailboxOf(deviceId) });
+    }
+
     /* ---- 邀请上报：好友带 ?ref= 首次进入，双方各得 1000 金币 ---- */
     if (path === '/api/invite/report' && method === 'POST') {
       if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });

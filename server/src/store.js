@@ -277,6 +277,12 @@ class Store {
     this.db.prepare('UPDATE players SET mailbox_coins = 0 WHERE device_id = ?').run(String(deviceId));
     return n;
   }
+  redemptionsOf(deviceId, limit) {
+    try {
+      return this.db.prepare('SELECT cr.code, c.coins, cr.redeemed_at FROM code_redemptions cr JOIN redeem_codes c ON c.code = cr.code WHERE cr.device_id = ? ORDER BY cr.redeemed_at DESC LIMIT ?')
+        .all(String(deviceId), Math.min(50, limit || 20));
+    } catch (e) { return []; }
+  }
   listPlayersBrief(limit) {
     return this.db.prepare('SELECT device_id, nickname, mailbox_coins, last_seen FROM players ORDER BY last_seen DESC LIMIT ?')
       .all(Math.min(200, limit || 100));
