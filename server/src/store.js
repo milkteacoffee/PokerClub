@@ -283,9 +283,20 @@ class Store {
         .all(String(deviceId), Math.min(50, limit || 20));
     } catch (e) { return []; }
   }
-  listPlayersBrief(limit) {
+  listPlayersBrief(limit, search) {
+    if (search) {
+      var q = '%' + String(search).replace(/[%_]/g, '\\$&') + '%';
+      return this.db.prepare('SELECT device_id, nickname, mailbox_coins, last_seen FROM players WHERE nickname LIKE ? OR device_id LIKE ? ORDER BY last_seen DESC LIMIT ?').all(q, q, Math.min(200, limit || 100));
+    }
     return this.db.prepare('SELECT device_id, nickname, mailbox_coins, last_seen FROM players ORDER BY last_seen DESC LIMIT ?')
       .all(Math.min(200, limit || 100));
+  }
+  playerDetail(deviceId) {
+    var p = this.getPlayer(deviceId);
+    if (!p) return null;
+    var rank = {};
+    try { rank = this.getRank(deviceId) || {}; } catch (e) {}
+    return { device_id: p.device_id, nickname: p.nickname, avatar: p.avatar || 'a01', mailbox_coins: p.mailbox_coins || 0, last_seen: p.last_seen, created_at: p.created_at, rank: rank };
   }
   mailboxOf(deviceId) {
     var p = this.getPlayer(deviceId);

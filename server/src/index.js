@@ -73,7 +73,87 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, uptime: Math.floor(process.uptime()), ...rooms.stats(), memoryMB: Math.round(process.memoryUsage().rss / 1048576) });
     }
 
-    /* 服务信息 */
+    if (path === '/api/admin-panel' && method === 'GET') {
+      var page = `<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>牌友小馆管理</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0a1118;color:#d8e0e8;min-height:100vh;padding:20px}
+h1{color:#f2c14e;font-size:22px;margin-bottom:20px;letter-spacing:2px}
+h3{color:#f0d79a;font-size:14px;margin:18px 0 10px;letter-spacing:1px}
+input,select{background:#16222e;border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#d8e0e8;padding:9px 12px;font-size:13px;outline:none}
+input:focus{border-color:#cfa85b}
+button{background:linear-gradient(150deg,#f0d79a,#cfa85b);color:#2a1d0c;border:0;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer}
+button:hover{filter:brightness(1.1)}
+button.ghost{background:rgba(255,255,255,.06);color:#b9c6d2}
+.stat{display:inline-block;background:rgba(255,255,255,.04);border-radius:10px;padding:12px 18px;margin-right:12px;margin-bottom:8px;text-align:center}
+.stat .v{font-size:24px;font-weight:800;color:#f2c14e}
+.stat .l{font-size:11px;color:#8fa0b4;margin-top:2px}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th{text-align:left;padding:8px 10px;color:#8fa0b4;font-size:11px;border-bottom:1px solid rgba(255,255,255,.08)}
+td{padding:8px 10px;font-size:12.5px;border-bottom:1px solid rgba(255,255,255,.04)}
+tr:hover td{background:rgba(255,255,255,.03)}
+.code-tag{font-family:monospace;color:#f0d79a;font-weight:700}
+.mb{color:#8fd6b0;font-weight:700}
+.search-row{display:flex;gap:8px;margin-bottom:10px;align-items:center}
+.search-row input{flex:1;max-width:320px}
+.action-btn{padding:4px 10px;font-size:11px;border-radius:6px}
+.grant-row{display:none;background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-top:8px}
+.grant-row.show{display:block}
+.tip{font-size:11px;color:#8fa0b4;margin-top:6px;line-height:1.6}
+.success{color:#8fd6b0}.error{color:#e8a098}
+</style>
+</head><body>
+<h1>牌友小馆 · 管理端</h1>
+<div id="login">
+<h3>管理员登录</h3>
+<input id="au" placeholder="账号">&nbsp;<input id="ap" type="password" placeholder="密码">&nbsp;<button onclick="login()">登录</button>
+<p id="loginErr" class="error" style="margin-top:8px"></p>
+</div>
+<div id="panel" style="display:none">
+<div>
+<span class="stat"><div class="v" id="stP">-</div><div class="l">注册玩家</div></span>
+<span class="stat"><div class="v" id="stC">-</div><div class="l">兑换码</div></span>
+</div>
+<h3>玩家管理</h3>
+<div class="search-row">
+<input id="pSearch" placeholder="搜索昵称或设备ID" oninput="searchTO()">&nbsp;<button class="ghost" onclick="loadPlayers()">刷新</button>
+</div>
+<table><thead><tr><th>昵称</th><th>设备ID</th><th>邮箱金币</th><th>最后在线</th><th>操作</th></tr></thead><tbody id="pList"></tbody></table>
+<div class="grant-row" id="grantBox">
+<h3 style="margin-top:0">发放金币</h3>
+<div>目标：<b id="gName"></b>（<span id="gDev"></span>）</div>
+<input id="gCoins" type="number" placeholder="金币数" style="width:140px;margin-top:8px">&nbsp;<button onclick="doGrant()">确认发放</button>
+<p id="gTip" class="tip"></p>
+</div>
+<h3>生成兑换码</h3>
+<input id="cCoins" type="number" placeholder="面额金币" style="width:140px">&nbsp;<input id="cUses" type="number" placeholder="次数" value="1" style="width:80px">&nbsp;<button onclick="mkcode()">生成</button>
+<div id="lastCode" style="margin-top:8px"></div>
+<h3>最近兑换码</h3>
+<button class="ghost" onclick="loadCodes()">刷新列表</button>
+<table id="codeTable" style="margin-top:8px"><thead><tr><th>兑换码</th><th>面额</th><th>已用/上限</th><th>创建时间</th></tr></thead><tbody id="codeList"></tbody></table>
+</div>
+<script>
+var TK=localStorage.getItem("admTK")||"";
+function h(){return{"Content-Type":"application/json","X-Admin-Token":TK}}
+function api(m,p,b){return fetch("/_poker"+p,{method:m,headers:h(),body:b?JSON.stringify(b):void 0}).then(r=>r.json())}
+function out(t,c){var o=document.getElementById("out");if(!o){o=document.createElement("div");o.id="out";o.style.cssText="margin-top:12px;padding:10px;border-radius:8px;background:rgba(255,255,255,.04)";document.body.appendChild(o)}o.textContent=t;o.className=c||""}
+function login(){api("POST","/api/admin/login",{user:document.getElementById("au").value,password:document.getElementById("ap").value}).then(j=>{if(j.ok){TK=j.token;localStorage.setItem("admTK",TK);show();}else{document.getElementById("loginErr").textContent=j.msg||"登录失败"}})}
+function show(){document.getElementById("login").style.display="none";document.getElementById("panel").style.display="block";api("GET","/api/admin/stats").then(j=>{if(j.ok){document.getElementById("stP").textContent=j.totalPlayers;document.getElementById("stC").textContent=j.totalCodes}});loadPlayers();loadCodes()}
+function ts(t){if(!t)return"-";var d=new Date(t);return(d.getMonth()+1)+"/"+d.getDate()+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)}
+var searchTimer;function searchTO(){clearTimeout(searchTimer);searchTimer=setTimeout(loadPlayers,300)}
+function loadPlayers(){var q=document.getElementById("pSearch").value;api("GET","/api/admin/players?search="+encodeURIComponent(q)).then(j=>{if(!j.ok)return;var tb=document.getElementById("pList");tb.innerHTML=j.list.map(p=>'<tr><td>'+(p.nickname||"-")+'</td><td style="font-family:monospace;font-size:11px">'+p.device_id+'</td><td class="mb">'+(p.mailbox_coins||0)+'</td><td>'+ts(p.last_seen)+'</td><td><button class="ghost action-btn" onclick="showGrant(\\''+p.device_id+'\\',\\''+(p.nickname||"-")+'\\')">发放</button></td></tr>').join("")})}
+function showGrant(dev,name){document.getElementById("grantBox").classList.add("show");document.getElementById("gName").textContent=name;document.getElementById("gDev").textContent=dev;document.getElementById("gCoins").value="";document.getElementById("gTip").textContent=""}
+function doGrant(){var dev=document.getElementById("gDev").textContent,c=document.getElementById("gCoins").value;if(!c||c<=0)return gTipMsg("请输入有效金币数");api("POST","/api/admin/grant",{deviceId:dev,coins:Number(c)}).then(j=>{gTipMsg(j.msg||"",j.ok);if(j.ok)loadPlayers()})}
+function gTipMsg(t,ok){var e=document.getElementById("gTip");e.textContent=t;e.className="tip "+(ok?"success":"error")}
+function mkcode(){api("POST","/api/admin/code",{coins:Number(document.getElementById("cCoins").value),maxUses:Number(document.getElementById("cUses").value)}).then(j=>{if(j.ok){document.getElementById("lastCode").innerHTML='<span class="code-tag" style="font-size:16px">'+j.code+'</span> <span style="color:#8fa0b4;font-size:11px">面额 '+j.coins+' · 可用 '+j.maxUses+' 次</span>';loadCodes()}else out(j)})}  
+function loadCodes(){api("GET","/api/admin/codes").then(j=>{if(!j.ok)return;var tb=document.getElementById("codeList");tb.innerHTML=j.list.map(c=>'<tr><td class="code-tag">'+c.code+'</td><td>'+c.coins+'</td><td>'+c.used_count+' / '+c.max_uses+'</td><td>'+ts(c.created_at)+'</td></tr>').join("")})}
+if(TK){document.getElementById("login").style.display="none";document.getElementById("panel").style.display="block";api("GET","/api/admin/stats").then(j=>{if(j.ok){document.getElementById("stP").textContent=j.totalPlayers;document.getElementById("stC").textContent=j.totalCodes}});loadPlayers();loadCodes()}
+</scr`+`ipt></body></html>`;
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(page);
+      return;
+    }
+
     if (path === '/api/admin-panel') {
     var page = '<!DOCTYPE html><html lang="zh"><meta charset="utf-8"><title>牌友小馆管理</title>'
       + '<body style="font-family:system-ui;background:#0d1520;color:#d8e0e8;max-width:760px;margin:30px auto;padding:0 16px">'
@@ -394,7 +474,18 @@ const server = http.createServer(async (req, res) => {
     if (path.startsWith('/api/admin/') && path !== '/api/admin/login') {
       if (!adminOk(req)) return json(res, 401, { ok: false, msg: '请先登录管理端' });
       if (path === '/api/admin/players' && method === 'GET') {
-        return json(res, 200, { ok: true, list: store.listPlayersBrief(100) });
+        var search = url.searchParams.get('search') || '';
+        return json(res, 200, { ok: true, list: store.listPlayersBrief(100, search) });
+      }
+      if (path === '/api/admin/player-detail' && method === 'GET') {
+        var pd = url.searchParams.get('deviceId') || '';
+        return json(res, 200, { ok: true, player: store.playerDetail(pd) });
+      }
+      if (path === '/api/admin/stats' && method === 'GET') {
+        var totalP = store.db.prepare('SELECT COUNT(*) AS n FROM players').get().n;
+        var totalR = store.db.prepare('SELECT COUNT(*) AS n FROM rooms_active').get ? 0 : 0;
+        var totalCodes = store.db.prepare('SELECT COUNT(*) AS n FROM redeem_codes').get().n;
+        return json(res, 200, { ok: true, totalPlayers: totalP, totalCodes: totalCodes });
       }
       if (path === '/api/admin/grant' && method === 'POST') {
         const body = await readBody(req);
