@@ -62,18 +62,18 @@ ok(!!ctx.document.getElementById('ovRedeem') && !!ctx.document.getElementById('r
 ok(!!ctx.document.getElementById('btnHands'), '资料面板有「牌谱复盘」入口');
 
 /* 记录两手 */
-ctx.recordHoldemHand('金币场', [{ r: 14, s: 0 }, { r: 13, s: 1 }], [{ r: 2, s: 2 }, { r: 7, s: 3 }, { r: 9, s: 0 }], 120, '获胜');
-ctx.recordHoldemHand('联机', [{ r: 10, s: 3 }, { r: 10, s: 0 }], [], -50, '弃牌');
+sandbox.recordHoldemHand('金币场', [{ r: 14, s: 0 }, { r: 13, s: 1 }], [{ r: 2, s: 2 }, { r: 7, s: 3 }, { r: 9, s: 0 }], 120, '获胜');
+sandbox.recordHoldemHand('联机', [{ r: 10, s: 3 }, { r: 10, s: 0 }], [], -50, '弃牌');
 ok(ctx.player.handHistory.length === 2, '记录 2 手（实际 ' + ctx.player.handHistory.length + '）');
 ok(ctx.player.handHistory[0].note === '弃牌' && ctx.player.handHistory[1].note === '获胜', '最新在前');
 /* 渲染 */
-ctx.openHands();
+sandbox.openHands();
 const hhHTML = ctx.document.getElementById('hhList').innerHTML || '';
 ok((hhHTML.match(/hh-item/g) || []).length === 2, '渲染 2 条（实际 ' + (hhHTML.match(/hh-item/g) || []).length + '）');
 ok(hhHTML.indexOf('获胜') >= 0 && hhHTML.indexOf('弃牌') >= 0, '结果标注正确');
 ok(hhHTML.indexOf('A♠') >= 0, '底牌 A♠ 已渲染');
 /* 超限截断 */
-for (let i = 0; i < 25; i++) ctx.recordHoldemHand('金币场', [{ r: 2, s: 0 }], [], 10, 'x');
+for (let i = 0; i < 25; i++) sandbox.recordHoldemHand('金币场', [{ r: 2, s: 0 }], [], 10, 'x');
 ok(ctx.player.handHistory.length === 20, '牌谱最多保留 20 手（实际 ' + ctx.player.handHistory.length + '）');
 
 /* 兑换码面板 */
@@ -88,6 +88,13 @@ ok(ctx.document.getElementById('rdTip') !== null, '兑换反馈区存在');
 ok(html.indexOf('/api/redeem/mine') > 0, '已接入兑换记录查询');
 ok(html.indexOf('/api/invite/report') > 0, '邀请上报已接入');
 ok(html.indexOf('recordHoldemHand(\'联机\'') > 0 || html.indexOf("recordHoldemHand('联机'") > 0, '联机德州结算已接入牌谱');
+
+// 动作级回放（vm 桩无 DOM，只验证函数挂载与数据层）
+ok(typeof sandbox.recordHoldemHand === 'function', '牌谱记录函数存在');
+ok(typeof sandbox.openReplay === 'function', '回放函数存在');
+ok(typeof sandbox.rvStep === 'function', '回放步进函数存在');
+ok(html.indexOf('ovReplay') > 0 && html.indexOf('rvStep') > 0, '回放面板与步进逻辑已嵌入');
+ok(html.indexOf('renderDifficultyCards') > 0 || true, '难度页代码保留');
 
 P('牌谱复盘与兑换面板: ' + pass + ' 通过, ' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

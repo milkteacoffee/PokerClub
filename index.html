@@ -1510,6 +1510,10 @@
   .shop-cat{font-size:13px;color:#f0d79a;font-weight:800;letter-spacing:1px;margin:14px 0 8px;padding-left:10px;border-left:3px solid #cfa85b}
   .shop-cat span{font-size:10.5px;color:#8fa0b4;font-weight:400;margin-left:8px;letter-spacing:0}
   .shop-item.shop-gift{background:linear-gradient(150deg,rgba(207,168,91,.22),rgba(207,168,91,.06));box-shadow:0 0 0 1px rgba(240,215,154,.3) inset}
+  /* 动作级回放 */
+  .rv-log{max-height:220px;overflow:auto;background:rgba(255,255,255,.04);border-radius:10px;padding:8px 10px}
+  .rv-line{font-size:12px;color:#b9c6d2;padding:3px 6px;border-radius:6px}
+  .rv-line.cur{color:#f2c14e;font-weight:800;background:rgba(240,215,154,.1)}
   /* 牌谱复盘 + 兑换码面板 */
   .hh-item{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.04);margin-bottom:7px}
   .hh-cards{display:flex;gap:3px;flex-wrap:wrap}
@@ -2130,6 +2134,20 @@
       <h2>牌谱复盘 <span style="font-size:11px;color:#8fa0b4">最近 20 手德州</span> <button class="closebtn" data-close="ovHands">✕ 返回</button></h2>
       <div class="hh-list" id="hhList"></div>
       <div class="pm-note">每局结束自动记录你的底牌、公共牌与结果；联机对局只记录你自己的牌（不记录他人手牌，保护对局公平）。</div>
+    </div>
+  </div>
+
+  <!-- 动作级回放 -->
+  <div class="overlay" id="ovReplay">
+    <div class="panel" style="max-width:480px;">
+      <h2>🎬 回放 <button class="closebtn" data-close="ovReplay">✕ 返回</button></h2>
+      <div id="rvBoard" class="hh-cards" style="min-height:40px;margin-bottom:8px"></div>
+      <div id="rvLog" class="rv-log"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="online-btn" id="rvPrev" type="button">◀ 上一步</button>
+        <button class="online-btn primary" id="rvNext" style="flex:1" type="button">下一步 ▶</button>
+        <button class="online-btn" id="rvAuto" type="button">自动</button>
+      </div>
     </div>
   </div>
 
@@ -4988,8 +5006,7 @@ function goldAITurns(){var r=Arcade.round,d=level15(Arcade.difficulty);for(var i
   /* 最后防线：真人还在场时，最后一个 AI 对手不轻易弃牌（堵死「等 AI 全弃白拿底池」的路） */
   var humanIn=!r.seats[0].folded,aiAlive=r.seats.filter(function(q,i2){return i2>0&&!q.folded;}).length;
   /* 防全弃链：真人还在时，活着的 AI 越少越不许弃（否则真人白拿底池） */
-  if(humanIn&&aiAlive<=2)foldP=Math.min(foldP,12);
-  if(humanIn&&aiAlive<=1)foldP=Math.min(foldP,3);
+  if(humanIn&&aiAlive<=2)foldP=0;   /* 剩两个以上 AI 在场时不弃：彻底堵死「AI 全弃白拿底池」 */
   if(p.paid>r.base*2)foldP*=0.6;   /* 已重投入的 AI 不轻易弃（加注后弃牌自相矛盾） */
   if(p.seen&&randomInt(100)<foldP){p.folded=true;r.log.push(p.name+' 弃牌');continue;}
   /* 加注施压：对子以上按强度加注，把看牌跟注的成本抬起来 */
@@ -4998,7 +5015,8 @@ function goldAITurns(){var r=Arcade.round,d=level15(Arcade.difficulty);for(var i
   if(p.paid+cost>arcadeLimit15()*8){p.folded=true;r.log.push(p.name+' 达到单局上限，弃牌');continue;}
   p.stack-=cost;p.paid+=cost;r.pot+=cost;
   /* 比牌：第 3 轮起，强牌主动摊牌终结对局 */
-  var cmpP=r.turn>=3?(score>=30?40:score>=24?22:0):0;   /* 弱牌不比，强牌才挑玩家决战 */
+  var cmpP=r.turn>=3?(score>=40?38:score>=32?16:0):0;   /* 只用真正强的牌比（减少送死比牌） */
+  if(humanIn&&aiAlive<=1&&r.turn>=4)cmpP=Math.max(cmpP,35);   /* 单挑后期主动收敛 */
   /* AI 只跟真人比牌，AI 之间永不互比：互比会互相淘汰、让旁边跟注的真人白拿底池（结构性剥削） */
   var candidates=r.seats.filter(function(q){return q!==p&&!q.folded;});
   var humanIdx=candidates.indexOf(r.seats[0]);
@@ -5638,6 +5656,13 @@ function putIn(p, amt) {
 }
 
 function applyAction(p, act) {
+  try {
+    (G.actionLog = G.actionLog || []).push({
+      who: p.human ? 0 : (G.players.indexOf(p) + 1),
+      k: act.type || '', a: Math.round(act.amount || 0),
+      pot: Math.round(G.pot || 0)
+    });
+  } catch (e) {}
   var toCall = G.currentBet - p.bet;
   /* VPIP：面临下注时主动入池（跟注 / 加注） */
   if (p.human && toCall > 0) {
@@ -6141,6 +6166,7 @@ async function playHand() {
       await sleep((fastMode || G.skipFlag) ? 20 : 240);
     }
     G.stage++;
+    try { (G.actionLog = G.actionLog || []).push({ k: 'board', n: G.community.length, pot: Math.round(G.pot || 0) }); } catch (e) {}
     if (G.stage === 1) maybeApplyPeek();   // 翻牌后若持透视卡则公开一位对手底牌
     G.currentBet = 0;
     G.minRaise = G.bb;
@@ -7293,7 +7319,7 @@ async function finishHand() {
   try {
     var hRec = G.players[0] || {};
     if (App.mode !== 'practice') recordHoldemHand(App.mode === 'ranked' ? '排位' : '金币场', hRec.hole, G.community,
-      (humanWinAmount || 0) - (human.totalBet || 0), humanWon ? '获胜' : (human.folded ? '弃牌' : '惜败'));
+      (humanWinAmount || 0) - (human.totalBet || 0), humanWon ? '获胜' : (human.folded ? '弃牌' : '惜败'), (G.actionLog || []).slice());
   } catch (e) {}
   G.handSettled = true;
   G.settling = false;
@@ -8418,19 +8444,29 @@ function renderHands() {
     var netTxt = h.net > 0 ? '+' + fmt(h.net) : h.net < 0 ? '-' + fmt(-h.net) : '±0';
     var d = new Date(h.t);
     var tm = (d.getMonth() + 1) + '/' + d.getDate() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+    var canRp = h.actions && h.actions.length;
     return '<div class="hh-item"><div class="hh-meta"><div class="m">' + esc(h.mode || '') + ' · ' + tm + ' · ' + esc(h.note || '') + '</div>'
-      + '<div class="n">净 ' + netTxt + '</div></div>'
+      + '<div class="n">净 ' + netTxt + (canRp ? ' · <button class="shop-btn" data-replay="' + idx + '" type="button">回放</button>' : '') + '</div></div>'
       + hhCardsHTML(h.hole, false) + '<div style="color:#5a6a76;font-size:12px">＋</div>' + hhCardsHTML(h.board, false)
       + '<div class="hh-net ' + netCls + '" style="font-size:12px;font-weight:800">' + netTxt + '</div></div>';
   }).join('');
 }
 function openHands() {
   initAudio(); sfx('click'); openOverlay('ovHands'); renderHands();
+  var box = $('hhList');
+  if (box && !box.__rpBound) {
+    box.__rpBound = true;
+    box.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('[data-replay]') : null;
+      if (b) { sfx('click'); openReplay(Number(b.getAttribute('data-replay'))); }
+    });
+  }
 }
-function recordHoldemHand(mode, hole, board, net, note) {
+function recordHoldemHand(mode, hole, board, net, note, actions) {
   try {
     pushHandHistory({
       t: Date.now(), mode: mode,
+      actions: Array.isArray(actions) ? actions.slice(0, 80) : undefined,
       hole: (hole || []).map(function (c) { return typeof c === 'object' ? { r: c.r, s: c.s } : c; }),
       board: (board || []).map(function (c) { return typeof c === 'object' ? { r: c.r, s: c.s } : c; }),
       net: Math.round(net) || 0, note: String(note || '').slice(0, 24)
@@ -8478,6 +8514,54 @@ function playSpecialFx(text) {
   setTimeout(function () { sfx('coin'); }, 350);
   setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1500);
 }
+/* ---- 动作级回放器 ---- */
+var RV = { idx: 0, entry: null, timer: null };
+function rvActText(a) {
+  if (a.k === 'board') return '亮公共牌（' + a.n + ' 张）';
+  var names = { fold: '弃牌', check: '过牌', call: '跟注', raise: '加注', allin: '全下', bet: '下注' };
+  var who = a.who === 0 ? '你' : 'AI ' + a.who;
+  return who + ' ' + (names[a.k] || a.k) + (a.a ? ' ' + fmt(a.a) : '') + ' · 底池 ' + fmt(a.pot);
+}
+function rvRender() {
+  var e = RV.entry; if (!e) return;
+  var n = Math.min(RV.idx, (e.actions || []).length);
+  var acts = (e.actions || []).slice(0, n);
+  var boardN = 0;
+  acts.forEach(function (a) { if (a.k === 'board') boardN = a.n; });
+  var bb = $('rvBoard');
+  if (bb) {
+    var cards = (e.board || []).slice(0, boardN);
+    bb.innerHTML = cards.length ? hhCardsHTML(cards, false) : '<span style="color:#6b7a86;font-size:11px">未亮公共牌</span>';
+  }
+  var lg = $('rvLog');
+  if (lg) {
+    lg.innerHTML = acts.map(function (a, i) {
+      return '<div class="rv-line' + (i === n - 1 ? ' cur' : '') + '">' + rvActText(a) + '</div>';
+    }).join('') || '<div class="rv-line">开局</div>';
+    lg.scrollTop = lg.scrollHeight;
+  }
+}
+function rvStep(d) {
+  var e = RV.entry; if (!e) return;
+  RV.idx = Math.max(0, Math.min((e.actions || []).length, RV.idx + d));
+  rvRender();
+}
+function rvAuto() {
+  if (RV.timer) { clearInterval(RV.timer); RV.timer = null; return; }
+  RV.timer = setInterval(function () {
+    if (RV.idx >= (RV.entry.actions || []).length) { clearInterval(RV.timer); RV.timer = null; return; }
+    rvStep(1);
+  }, 900);
+}
+function openReplay(idx) {
+  var e = player && player.handHistory ? player.handHistory[idx] : null;
+  if (!e) return;
+  if (!e.actions || !e.actions.length) return showToast('该局为早期牌谱，无动作记录', 2000, true);
+  RV.entry = e; RV.idx = 0;
+  if (RV.timer) { clearInterval(RV.timer); RV.timer = null; }
+  initAudio(); sfx('click'); openOverlay('ovReplay'); rvRender();
+}
+
 function openFeedback() {
   initAudio(); sfx('click');
   var box = $('legalBody');
@@ -8730,6 +8814,9 @@ function bindEvents() {
   var ab = $('btnAbout'); if (ab) ab.addEventListener('click', function(){ initAudio(); sfx('click'); openOverlay('ovAbout'); });
   var br = $('btnRedeem'); if (br) br.addEventListener('click', function(){ initAudio(); sfx('click'); openRedeem(); });
   var bh = $('btnHands'); if (bh) bh.addEventListener('click', function(){ openHands(); });
+  var rvP = $('rvPrev'); if (rvP) rvP.addEventListener('click', function(){ sfx('click'); rvStep(-1); });
+  var rvN = $('rvNext'); if (rvN) rvN.addEventListener('click', function(){ sfx('click'); rvStep(1); });
+  var rvA = $('rvAuto'); if (rvA) rvA.addEventListener('click', function(){ sfx('click'); rvAuto(); });
   var bi = $('btnInvite'); if (bi) bi.addEventListener('click', function(){ initAudio(); sfx('click'); copyInvite(); });
   var asub = $('accSubmit'); if (asub) asub.addEventListener('click', submitAccount);
   var apwd = $('accPwd2'); if (apwd) apwd.addEventListener('keydown', function (e) { if (e.key === 'Enter') submitAccount(); });
