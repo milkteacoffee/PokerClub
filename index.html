@@ -8978,7 +8978,7 @@ function bindEvents() {
 
 /* v15 四游戏成长与独立排位。所有资产均为本地虚拟积分。 */
 var GAME_IDS = ['holdem','blackjack','gold','dice','diceduel'];
-var GAME_NAMES = {holdem:'德州扑克',blackjack:'21点',gold:'炸金花',dice:'猜骰子',diceduel:'骰子比大小'};
+var GAME_NAMES = {holdem:'德州扑克',blackjack:'21点',gold:'炸金花',dice:'猜骰子',diceduel:'骰子比大小',guandan:'掼蛋',niu:'斗牛'};
 var GAME_LEVELS = ['easy','normal','hard','champion'];
 var LEVEL_NAMES = ['新手','普通','困难','冠军'];
 var GROWTH_ROUTES = {
@@ -9191,11 +9191,11 @@ renderModeCards=function(){
   var s=profile15(hubGame),body=$('modeBody');body.innerHTML='';
   ['quick','online','friend'].forEach(function(mode){
     var card=document.createElement('button');
-    if(mode==='online'){card.className='mode-card online';card.innerHTML='<div class="mode-name">在线匹配</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>和在线真人快速凑桌 · 凑满自动开局<br>需要另一位真人也在线；超过 1 分钟没人会提示稍后再试</p></div>';card.onclick=function(){if(typeof guandanSelected!=='undefined'&&guandanSelected)return showToast('掼蛋暂不支持在线匹配，可用好友开房邀请牌友',2200,true);OM.game=hubGame;App.mode='quick';return omStart();};body.appendChild(card);return;}
-    if(mode==='friend'){var sup=(' '+['guandan','holdem','gold','diceduel'].join(' ')).indexOf(' '+hubGame)>=0;card.className='mode-card friend';card.innerHTML='<div class="mode-name">好友开房</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>'+(sup?'创建好友房间 · 分享房号或链接邀请牌友<br>房间内可继续聊天与快捷语':'该玩法暂不支持联机开房<br>可选：德州 / 炸金花 / 骰子比大小 / 掼蛋')+'</p></div>';card.onclick=function(){if(!sup)return showToast('该玩法暂不支持联机开房',2200,true);initAudio();sfx('click');openOnline();var g=$('onlineGames')&&$('onlineGames').querySelector('[data-ogame="'+hubGame+'"]');if(g)g.click();};body.appendChild(card);return;}
-    card.className='mode-card quick';card.innerHTML='<div class="mode-name">人机练习</div><div class="mode-info"><b>'+GAME_NAMES[hubGame]+'</b><p>金币对局 · 本地AI或庄家<br>门票 '+ENTRY_FEE_TEXT+'（按场次）</p></div>';card.onclick=function(){App.mode='quick';App.difficulty='hard';Arcade.difficulty='hard';if(hubGame==='holdem'){tryEnterGame('hard');return;}openArcade(hubGame);};body.appendChild(card);
+    if(mode==='online'){card.className='mode-card online';card.innerHTML='<div class="mode-name">在线匹配</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>和在线真人快速凑桌 · 凑满自动开局<br>需要另一位真人也在线；超过 1 分钟没人会提示稍后再试</p></div>';card.onclick=function(){if(typeof guandanSelected!=='undefined'&&guandanSelected)return showToast('掼蛋暂不支持在线匹配，可用好友开房邀请牌友',2200,true);OM.game=hubGame;App.mode='quick';return omStart();};body.appendChild(card);return;}
+    if(mode==='friend'){var sup=(' '+['guandan','holdem','gold','diceduel'].join(' ')).indexOf(' '+hubGame)>=0;card.className='mode-card friend';card.innerHTML='<div class="mode-name">好友开房</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>'+(sup?'创建好友房间 · 分享房号或链接邀请牌友<br>房间内可继续聊天与快捷语':'该玩法暂不支持联机开房<br>可选：德州 / 炸金花 / 骰子比大小 / 掼蛋')+'</p></div>';card.onclick=function(){if(!sup)return showToast('该玩法暂不支持联机开房',2200,true);initAudio();sfx('click');openOnline();var g=$('onlineGames')&&$('onlineGames').querySelector('[data-ogame="'+hubGame+'"]');if(g)g.click();};body.appendChild(card);return;}
+    card.className='mode-card quick';card.innerHTML='<div class="mode-name">人机练习</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>金币对局 · 本地AI或庄家<br>门票 '+ENTRY_FEE_TEXT+'（按场次）</p></div>';card.onclick=function(){App.mode='quick';App.difficulty='hard';Arcade.difficulty='hard';if(hubGame==='holdem'){tryEnterGame('hard');return;}openArcade(hubGame);};body.appendChild(card);
   });
- var bar=document.createElement('div');bar.className='exchange15';bar.innerHTML='<span>'+GAME_NAMES[hubGame]+'：1 积分 = 100 金币 · 积分只能靠排位赢取</span><input id="exchangeAmount15" type="number" min="1" step="1" value="1" aria-label="兑换积分数量"><button id="sellPoints15">积分换金币</button><small>积分是实力的体现，金币不能购买；四馆积分不互通。</small>';
+ var bar=document.createElement('div');bar.className='exchange15';bar.innerHTML='<span>'+(GAME_NAMES[hubGame]||'牌友')+'：1 积分 = 100 金币 · 积分只能靠排位赢取</span><input id="exchangeAmount15" type="number" min="1" step="1" value="1" aria-label="兑换积分数量"><button id="sellPoints15">积分换金币</button><small>积分是实力的体现，金币不能购买；四馆积分不互通。</small>';
  body.appendChild(bar);$('sellPoints15').onclick=function(){if(!exchangePoints(hubGame,'sell',Number($('exchangeAmount15').value)))showToast('兑换未完成：请检查积分、数量或未结束的对局',2500,true);};
  renderModeRankBar();
 };
@@ -9614,8 +9614,8 @@ renderRank=function(){if(!player)return;ensureRankGift(hubGame);
  var s=profile15(hubGame),info=subTierInfo(s.rankPoints),tier=info.tier,cur=RANKS[tier],next=RANKS[tier+1];
  var base=tierDisplayName(hubGame,tier),full=base+' '+info.label,pct=info.pct;
  var nextLabel=info.idx>0?(rankNameOf(hubGame,tier)+' '+SUB_TIER_LABELS[info.idx-1]):(rankNameOf(hubGame,next?tier+1:tier)+' III');
- var html='<div class="rank-row"><div class="mid"><div class="nm">'+GAME_NAMES[hubGame]+' · '+full+'</div><div class="pt">'+s.rankPoints+' 段位分 · 本小段 '+info.got+' / '+info.span+'</div><div class="rank-bar"><div class="rank-fill" style="width:'+pct+'%"></div></div></div></div><div class="stat-grid"><div class="stat-box"><div class="v">'+s.rankPoints+'</div><div class="l">段位分（不可兑换）</div></div><div class="stat-box"><div class="v">'+s.redeemPoints+'</div><div class="l">可兑换积分</div></div><div class="stat-box"><div class="v">'+s.rankedWins+' / '+s.rankedHands+'</div><div class="l">排位胜局 / 总局数</div></div></div>';
- html+='<p>段位只靠段位分晋级：每 1000 段位分升一个大段位，每个大段位再分 III → II → I 三个小段位（约 333 分一小段）。'+GAME_NAMES[hubGame]+' 段位阶梯：'+rankLadderText(hubGame)+'（0 / 1000 / 2000 / 3000 / 4000 / 5000 / 6000 分）。金币场与排位都要门票，每局重置比赛筹码，不结算金币。</p>';
+ var html='<div class="rank-row"><div class="mid"><div class="nm">'+(GAME_NAMES[hubGame]||'牌友')+' · '+full+'</div><div class="pt">'+s.rankPoints+' 段位分 · 本小段 '+info.got+' / '+info.span+'</div><div class="rank-bar"><div class="rank-fill" style="width:'+pct+'%"></div></div></div></div><div class="stat-grid"><div class="stat-box"><div class="v">'+s.rankPoints+'</div><div class="l">段位分（不可兑换）</div></div><div class="stat-box"><div class="v">'+s.redeemPoints+'</div><div class="l">可兑换积分</div></div><div class="stat-box"><div class="v">'+s.rankedWins+' / '+s.rankedHands+'</div><div class="l">排位胜局 / 总局数</div></div></div>';
+ html+='<p>段位只靠段位分晋级：每 1000 段位分升一个大段位，每个大段位再分 III → II → I 三个小段位（约 333 分一小段）。'+(GAME_NAMES[hubGame]||'牌友')+' 段位阶梯：'+rankLadderText(hubGame)+'（0 / 1000 / 2000 / 3000 / 4000 / 5000 / 6000 分）。金币场与排位都要门票，每局重置比赛筹码，不结算金币。</p>';
   html+='<p>排位规则：0 分起步，攒满 <b>10</b> 分即可开局；胜 +5~+10 / 负 -5~-10（按对手档位）；低于 10 分归零，次日赠送 10 分。完整说明见「规则」。</p>';
  html+='<p>🏅 当前排位积分 <b>'+s.rankPoints+'</b> / '+RANKED_ENTRY_MIN+' · '+(s.rankPoints>=RANKED_ENTRY_MIN?'已达标，可以开始排位':'不足 '+RANKED_ENTRY_MIN+'，今天先等系统赠送或兑换')
   +' · 今日兑换 '+ensureRankExchange().used+' / '+RANK_EXCHANGE.timesPerDay+' 次 · 今日已兑换 '+ensureRankExchange().gained+' / '+RANK_EXCHANGE.dailyCap+' 分'
