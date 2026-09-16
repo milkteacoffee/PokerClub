@@ -77,30 +77,37 @@ const server = http.createServer(async (req, res) => {
       var page = `<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>牌友小馆管理</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,-apple-system,sans-serif;background:#0a1118;color:#d8e0e8;min-height:100vh;padding:20px}
-h1{color:#f2c14e;font-size:22px;margin-bottom:20px;letter-spacing:2px}
-h3{color:#f0d79a;font-size:14px;margin:18px 0 10px;letter-spacing:1px}
-input,select{background:#16222e;border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#d8e0e8;padding:9px 12px;font-size:13px;outline:none}
-input:focus{border-color:#cfa85b}
-button{background:linear-gradient(150deg,#f0d79a,#cfa85b);color:#2a1d0c;border:0;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer}
-button:hover{filter:brightness(1.1)}
-button.ghost{background:rgba(255,255,255,.06);color:#b9c6d2}
-.stat{display:inline-block;background:rgba(255,255,255,.04);border-radius:10px;padding:12px 18px;margin-right:12px;margin-bottom:8px;text-align:center}
-.stat .v{font-size:24px;font-weight:800;color:#f2c14e}
-.stat .l{font-size:11px;color:#8fa0b4;margin-top:2px}
-table{width:100%;border-collapse:collapse;margin-top:8px}
-th{text-align:left;padding:8px 10px;color:#8fa0b4;font-size:11px;border-bottom:1px solid rgba(255,255,255,.08)}
-td{padding:8px 10px;font-size:12.5px;border-bottom:1px solid rgba(255,255,255,.04)}
-tr:hover td{background:rgba(255,255,255,.03)}
-.code-tag{font-family:monospace;color:#f0d79a;font-weight:700}
-.mb{color:#8fd6b0;font-weight:700}
-.search-row{display:flex;gap:8px;margin-bottom:10px;align-items:center}
-.search-row input{flex:1;max-width:320px}
-.action-btn{padding:4px 10px;font-size:11px;border-radius:6px}
-.grant-row{display:none;background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-top:8px}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0c1420;color:#c8d2dc;min-height:100vh;padding:24px 28px;max-width:860px;margin:0 auto}
+h1{color:#e8d5a3;font-size:20px;margin-bottom:24px;letter-spacing:2px;font-weight:700}
+h3{color:#d4a847;font-size:13px;margin:22px 0 10px;letter-spacing:1px;font-weight:700}
+input{background:rgba(255,255,255,.04);border:none;border-radius:8px;color:#c8d2dc;padding:10px 14px;font-size:13px;outline:none;transition:background .15s}
+input:focus{background:rgba(255,255,255,.07)}
+input::placeholder{color:#5a6a76}
+button{background:rgba(240,215,154,.12);color:#e8d5a3;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+button:hover{background:rgba(240,215,154,.2);color:#f0d79a}
+button.primary{background:rgba(240,215,154,.15);color:#f2c14e;font-weight:700}
+.stat-row{display:flex;gap:20px;margin-bottom:6px}
+.stat{flex:1;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.03)}
+.stat .v{font-size:26px;font-weight:800;color:#e8d5a3}
+.stat .l{font-size:11px;color:#5a6a76;margin-top:3px;letter-spacing:.5px}
+.sec{margin-top:6px}
+.search-row{display:flex;gap:10px;margin-bottom:12px;align-items:center}
+.search-row input{flex:1;max-width:340px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:7px 10px;color:#5a6a76;font-size:11px;font-weight:600;letter-spacing:.5px}
+td{padding:9px 10px;font-size:12.5px;border-bottom:1px solid rgba(255,255,255,.03)}
+tr:hover td{background:rgba(255,255,255,.02)}
+.code-tag{font-family:ui-monospace,monospace;color:#e8d5a3;font-weight:600;font-size:13px}
+.mb{color:#8fd6b0;font-weight:600}
+.action-btn{padding:5px 12px;font-size:11px;border-radius:6px;background:rgba(240,215,154,.08);color:#d4a847}
+.action-btn:hover{background:rgba(240,215,154,.16)}
+.grant-row{display:none;background:rgba(255,255,255,.03);border-radius:12px;padding:14px 16px;margin-top:10px}
 .grant-row.show{display:block}
-.tip{font-size:11px;color:#8fa0b4;margin-top:6px;line-height:1.6}
-.success{color:#8fd6b0}.error{color:#e8a098}
+.grant-row b{color:#e8d5a3}
+.tip{font-size:11px;color:#5a6a76;margin-top:8px}
+.tip.success{color:#8fd6b0}
+.last-code{font-family:ui-monospace,monospace;font-size:18px;color:#f2c14e;font-weight:700;letter-spacing:2px;margin:8px 0}
+.sub{font-size:11px;color:#5a6a76}
 </style>
 </head><body>
 <h1>牌友小馆 · 管理端</h1>
