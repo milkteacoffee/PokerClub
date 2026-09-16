@@ -9250,10 +9250,25 @@ renderModeCards=function(){
     var card=document.createElement('button');
     if(mode==='online'){
       if(!canOnline)return;
-      card.className='mode-card online';card.innerHTML='<div class="mode-name">在线匹配</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>和在线真人快速凑桌 · 凑满自动开局<br>需要另一位真人也在线；超过 1 分钟没人会提示稍后再试</p></div>';card.onclick=function(){if(player.coins<2000)return showToast('在线匹配需要至少 2000 金币',2200,true);OM.game=hubGame;App.mode='quick';return omStart();};body.appendChild(card);return;}
+      card.className='mode-card online';card.innerHTML='<div class="mode-name">在线匹配</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>和在线真人快速凑桌 · 凑满自动开局<br>需要另一位真人也在线；超过 1 分钟没人会提示稍后再试</p></div>';card.onclick=function(){
+        if(player.coins<2000)return showToast('在线匹配需要至少 2000 金币',2200,true);
+        initAudio();sfx('click');
+        var B=window.PokerOnlineBridge;
+        if(!B)return showToast('联机模块未就绪，请刷新页面重试',2400,true);
+        B.setMatchGame(hubGame);App.mode='quick';
+        B.openPanel();            /* 先开面板：匹配进度、取消按钮都在这里 */
+        B.renderMatchGames();
+        B.startMatch();
+      };body.appendChild(card);return;}
     if(mode==='friend'){
       if(!canOnline)return;
-      card.className='mode-card friend';card.innerHTML='<div class="mode-name">好友开房</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>创建好友房间 · 分享房号或链接邀请牌友<br>房间内可继续聊天与快捷语</p></div>';card.onclick=function(){initAudio();sfx('click');openOnline();var g=$('onlineGames')&&$('onlineGames').querySelector('[data-ogame="'+hubGame+'"]');if(g)g.click();};body.appendChild(card);return;}
+      card.className='mode-card friend';card.innerHTML='<div class="mode-name">好友开房</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>创建好友房间 · 分享房号或链接邀请牌友<br>房间内可继续聊天与快捷语</p></div>';card.onclick=function(){
+        initAudio();sfx('click');
+        var B=window.PokerOnlineBridge;
+        if(!B)return showToast('联机模块未就绪，请刷新页面重试',2400,true);
+        B.openPanel();
+        var g=$('onlineGames')&&$('onlineGames').querySelector('[data-ogame="'+hubGame+'"]');if(g)g.click();
+      };body.appendChild(card);return;}
     card.className='mode-card quick';card.innerHTML='<div class="mode-name">人机对局</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>免费入场 · 可赢金币<br>本地AI或庄家 · 随时开桌</p></div>';card.onclick=function(){App.mode='quick';App.difficulty='normal';Arcade.difficulty='normal';Arcade.mode='coins';if(hubGame==='holdem'){tryEnterGame('normal');return;}openArcade(hubGame);};body.appendChild(card);
   });
   /* 积分/兑换条已随排位取消而移除 */
@@ -9839,6 +9854,9 @@ function icifyStatic(root){
     var w = document.createTreeWalker(root || document.body, NodeFilter.SHOW_TEXT, null);
     var list = [], n;
     while ((n = w.nextNode())) {
+      var pn = n.parentNode;
+      /* 跳过脚本/样式等纯文本容器：否则会把整段 JS 源码当文本包进 span 再被解析成 DOM */
+      if (pn && /^(SCRIPT|STYLE|TEXTAREA|TITLE|NOSCRIPT|TEMPLATE)$/.test(pn.nodeName)) continue;
       if (n.nodeValue && EMOJI_RE.test(n.nodeValue)) list.push(n);
       EMOJI_RE.lastIndex = 0;
     }
@@ -10959,6 +10977,15 @@ function loadBoard(){
   });
 }
 function openBoard(){ initAudio(); sfx('click'); openOverlay('ovBoard'); renderBoardGames(); loadBoard(); }
+/* 跨 IIFE 桥接：外层（大厅/模式屏）必须显式挂载才能调用联机层函数，裸调会 ReferenceError */
+if (typeof window !== 'undefined') window.PokerOnlineBridge = {
+  openPanel: function(){ openOnline(); },
+  startMatch: function(){ omStart(); },
+  renderMatchGames: function(){ omRenderGames(); },
+  setMatchGame: function(game){ OM.game = game; },
+  getMatchGame: function(){ return OM.game; },
+  available: function(){ try { return onlineAvailable(); } catch (e) { return false; } }
+};
 function openOnline(){
   initAudio(); sfx('click'); openOverlay('ovOnline');
   var n = $('onlineNick'); if (n && !n.value) n.value = Online.nickname || (player && player.name) || '';
