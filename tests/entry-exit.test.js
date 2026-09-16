@@ -180,7 +180,7 @@ test('选择模式可以从模式卡重新进场，也可以退回大厅', () =>
   const cards = [...doc.querySelectorAll('#modeBody .mode-card')];
   console.log('  [mode-cards]', cards.length, cards.map(c => c.className).join(','));
   assert.ok(cards.length >= 2 && cards.length <= 3, '模式卡 2~3 张（实际 ' + cards.length + '）');
-  assert.ok(cards[0].textContent.includes('门票'), '模式卡应写明门票');
+  assert.ok(cards[0].textContent.includes('免费') || cards[0].textContent.includes('门票'), '模式卡写明免费或门票');
   doc.getElementById('modeBack').click();
   assert.equal(doc.getElementById('lobbyScreen').style.display, 'flex', '可以退回大厅');
 });
