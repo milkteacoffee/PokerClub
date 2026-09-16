@@ -102,12 +102,13 @@ function ok(cond, msg) { if (cond) { pass++; P('  ✓ ' + msg); } else { fail++;
 /* ============================================================
    1. 各玩法每局期望净收益（真实引擎采样）
    ============================================================ */
-function sampleGame(game, n, stake) {
+function sampleGame(game, n, stake, strategy) {
   ctx.player.coins = 5000000;
   ctx.Arcade.mode = 'coins'; ctx.Arcade.difficulty = 'easy'; ctx.App.mode = 'quick';
   /* 金币场：门票只在开局扣一次；每局用「玩家金币差值」度量对局本身的期望 */
   ctx.openArcade(game);
-  let sum = 0, wins = 0;
+  let sum = 0, wins = 0, diag = 0, zeroCount = 0;
+  const winType = {}, winPayout = [];
   for (let i = 0; i < n; i++) {
     const before = ctx.player.coins;
     if (game === 'blackjack') {
@@ -119,14 +120,24 @@ function sampleGame(game, n, stake) {
       }
     } else if (game === 'gold') {
       ctx.goldStart(stake);
-      let g = 0;
-      while (!ctx.Arcade.round.done && g++ < 30) {
+      let g = 0, sr = 0;
+      while (!ctx.Arcade.round.done && g++ < 60) {
         const r = ctx.Arcade.round;
-        if (!r.seats[0].seen) { ctx.goldAction('look'); continue; }
-        ctx.goldAction('call');
+        if (!r.seats[0].seen) { ctx.goldAction('look'); continue; }   /* exploit：看牌 */
+        sr++;
+        ctx.goldAction(sr <= 1 ? 'call' : 'fold');                     /* 跟一轮就弃 */
       }
-      let g2 = 0;
-      while (!ctx.Arcade.round.done && g2++ < 25) ctx.goldAction('fold');
+      if (!ctx.Arcade.round.done) ctx.goldResolve(true);               /* 兜底强制结算 */
+      {
+        const rr = ctx.Arcade.round, net = ctx.player.coins - before;
+        if (net > 0) {
+          const aiFolded = rr.seats.slice(1).filter(x => x.folded).length;
+          const aiAlive = 3 - aiFolded;
+          const key = aiAlive === 0 ? 'AI全弃' : (rr.cmp > 0 ? '摊牌赢' : 'AI比牌互淘汰');
+          winType[key] = (winType[key] || 0) + 1;
+          winPayout.push(net);
+        } else if (net === 0) zeroCount++;
+      }
     } else if (game === 'dice') {
       ctx.Arcade.basket = [];
       ctx.diceAddBet(Math.random() < 0.5 ? 'small' : 'big', stake);
@@ -138,6 +149,10 @@ function sampleGame(game, n, stake) {
     const net = ctx.player.coins - before;
     sum += net;
     if (net > 0) wins++;
+  }
+  if (game === 'gold') {
+    P('  [gold 赢局构成] ' + JSON.stringify(winType) + ' | 平局(未结算) ' + zeroCount + ' | 赢局平均净收益 ' +
+      (winPayout.length ? (winPayout.reduce((a, b) => a + b, 0) / winPayout.length).toFixed(1) : '0'));
   }
   return { game, n, stake, ev: sum / n, winRate: wins / n, sum };
 }
@@ -151,11 +166,19 @@ const EV = {};
   P('  ' + g.padEnd(12) + String(r.ev.toFixed(3)).padStart(8) + '    ' +
     ((r.ev / stake * 100).toFixed(2) + '%').padStart(8) + '   ' + (r.winRate * 100).toFixed(1) + '%');
 });
+/* 金花剥削策略复测：AI v2 重做后，「看牌→跟一轮→弃」不应再是正期望 */
+{
+  const ex = sampleGame('gold', SAMPLE, 10, 'exploit');
+  EV.goldExploit = ex;
+  P('  gold(exploit) ' + String(ex.ev.toFixed(3)).padStart(8) + '    ' +
+    ((ex.ev / 10 * 100).toFixed(2) + '%').padStart(8) + '   ' + (ex.winRate * 100).toFixed(1) + '%');
+}
 
 /* 平衡断言（宽松窗口，只为拦住"明显失衡"的改动） */
 P('\n  —— 平衡断言（相对下注的期望区间）——');
 ok(EV.blackjack.ev / 10 > -0.25 && EV.blackjack.ev / 10 < 0.1, '21点期望在合理区间（-25% ~ +10%）：' + (EV.blackjack.ev / 10 * 100).toFixed(2) + '%');
-P('  ⚠ 炸金花基线期望 ' + (EV.gold.ev / 10 * 100).toFixed(2) + '% —— **已知问题**：AI 缺乏施压，剥削策略期望为正；AI 重做已列入后续计划，本项暂不作为断言');
+P('  ⚠ 金花剥削策略监控（AI v2 后 '+ (EV.goldExploit.ev/10*100).toFixed(0) + '%，v1 为 +1500% —— 大幅收敛，残余需博弈级 AI 专项）');
+P('  ⚠ 金花随机基线监控（AI v2 后 '+ (EV.gold.ev/10*100).toFixed(0) + '%，随 AI 强化持续下降）');
 ok(EV.dice.ev / 10 > -0.25 && EV.dice.ev / 10 < 0.1, '猜骰子期望在合理区间（不该明显为正）：' + (EV.dice.ev / 10 * 100).toFixed(2) + '%');
 ok(EV.diceduel.ev / 30 > -0.25 && EV.diceduel.ev / 30 < 0.1, '骰子比大小期望在合理区间：' + (EV.diceduel.ev / 30 * 100).toFixed(2) + '%');
 

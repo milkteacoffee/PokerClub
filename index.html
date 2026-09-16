@@ -4839,13 +4839,45 @@ function goldResolve(force){var r=Arcade.round,live=r.seats.filter(function(p){r
   var winners=[live[0]];live.slice(1).forEach(function(p){var c=goldCompare(p.hand,winners[0].hand);if(c>0)winners=[p];else if(c===0)winners.push(p);});
   var human=r.seats[0],idx=winners.indexOf(human),share=idx<0?0:Math.floor(r.pot/winners.length)+(idx<r.pot%winners.length?1:0);
   arcadeSettle(share,winners.map(function(p){return p.name;}).join('、')+' 获胜 · 底池 '+r.pot);return true;}
-function goldAITurns(){var r=Arcade.round;for(var i=1;i<4&&!r.done;i++){var p=r.seats[i];if(p.folded)continue;
-  if(!p.seen&&randomInt(100)<[30,55,80,95][level15(Arcade.difficulty)])p.seen=true;var strength=p.seen?goldValue(p.hand)[0]:-1,cost=r.unit*(p.seen?2:1);
-  if(p.stack<cost||p.paid+cost>arcadeLimit15()||(p.seen&&strength===0&&randomInt(100)<[35,52,68,82][level15(Arcade.difficulty)])){p.folded=true;r.log.push(p.name+' 弃牌');continue;}
-  if(p.seen&&strength>=1&&r.unit<r.base*4&&p.stack>=cost*2&&p.paid+cost+r.base*2<=arcadeLimit15()&&randomInt(100)<[10,22,36,50][level15(Arcade.difficulty)]){r.unit+=r.base;cost=r.unit*2;r.log.push(p.name+' 加注');}
-  if(p.paid+cost>arcadeLimit15()){p.folded=true;r.log.push(p.name+' 达到单局上限，弃牌');continue;}
+/* 金花 AI v2：牌力相对强度（kind*20 + 最高牌百分位）驱动弃牌/加注/比牌，
+   烂牌早弃、好牌加注施压、后期主动比牌 —— 打掉「看牌后精打细算」的剥削空间。 */
+function goldAIStrength(v){
+  if(!v)return 0;
+  var hi=v[1]===14?0:(v[1]<=10?(v[1]-2)*1.35:9+(v[1]-10)*2.5);   /* A 在金花最小 */
+  return v[0]*20+Math.round(hi);                                  /* 0~119 */
+}
+function goldAITurns(){var r=Arcade.round,d=level15(Arcade.difficulty);for(var i=1;i<4&&!r.done;i++){var p=r.seats[i];if(p.folded)continue;
+  if(!p.seen&&randomInt(100)<[30,55,80,95][d])p.seen=true;
+  var cost=r.unit*(p.seen?2:1);
+  if(p.stack<cost||p.paid+cost>arcadeLimit15()*8){p.folded=true;r.log.push(p.name+' 弃牌');continue;}
+  var v=p.seen?goldValue(p.hand):null,score=goldAIStrength(v);
+  /* 弃牌：烂牌随轮次递增弃掉；好牌几乎不弃 */
+  var foldP=v?Math.max(0,Math.min(88,72-score*3.6+(r.turn-1)*7+(3-d)*5)):0;
+  var liveN=r.seats.filter(function(q){return !q.folded;}).length;
+  if(liveN<=2)foldP*=0.25;   /* 单挑时不轻易弃（否则 AI 全弃 = 真人白拿底池） */
+  /* 最后防线：真人还在场时，最后一个 AI 对手不轻易弃牌（堵死「等 AI 全弃白拿底池」的路） */
+  var humanIn=!r.seats[0].folded,aiAlive=r.seats.filter(function(q,i2){return i2>0&&!q.folded;}).length;
+  /* 防全弃链：真人还在时，活着的 AI 越少越不许弃（否则真人白拿底池） */
+  if(humanIn&&aiAlive<=2)foldP=Math.min(foldP,12);
+  if(humanIn&&aiAlive<=1)foldP=Math.min(foldP,3);
+  if(p.paid>r.base*2)foldP*=0.6;   /* 已重投入的 AI 不轻易弃（加注后弃牌自相矛盾） */
+  if(p.seen&&randomInt(100)<foldP){p.folded=true;r.log.push(p.name+' 弃牌');continue;}
+  /* 加注施压：对子以上按强度加注，把看牌跟注的成本抬起来 */
+  var raiseP=v?Math.max(0,Math.min(70,score*2.6-10+[0,10,20,30][d])):0;
+  if(p.seen&&score>=14&&r.unit<r.base*5&&p.stack>=cost*2&&p.paid+cost+r.base*2<=arcadeLimit15()*8&&randomInt(100)<raiseP){r.unit+=r.base;cost=r.unit*2;r.log.push(p.name+' 加注');}
+  if(p.paid+cost>arcadeLimit15()*8){p.folded=true;r.log.push(p.name+' 达到单局上限，弃牌');continue;}
   p.stack-=cost;p.paid+=cost;r.pot+=cost;
-  if(r.turn>=3&&randomInt(100)<25){var candidates=r.seats.filter(function(q){return q!==p&&!q.folded;});if(candidates.length){var target=candidates[randomInt(candidates.length)];if(p.stack>=cost){p.stack-=cost;p.paid+=cost;r.pot+=cost;var loser=goldCompare(p.hand,target.hand)>0?target:p;loser.folded=true;r.log.push(p.name+' 比牌，'+loser.name+' 出局');}}}
+  /* 比牌：第 3 轮起，强牌主动摊牌终结对局 */
+  var cmpP=r.turn>=3?(score>=30?40:score>=24?22:0):0;   /* 弱牌不比，强牌才挑玩家决战 */
+  /* AI 只跟真人比牌，AI 之间永不互比：互比会互相淘汰、让旁边跟注的真人白拿底池（结构性剥削） */
+  var candidates=r.seats.filter(function(q){return q!==p&&!q.folded;});
+  var humanIdx=candidates.indexOf(r.seats[0]);
+  if(humanIdx>=0&&randomInt(100)<cmpP&&p.stack>=cost){
+    var target=r.seats[0];
+    p.stack-=cost;p.paid+=cost;r.pot+=cost;
+    var loser=goldCompare(p.hand,target.hand)>0?target:p;
+    loser.folded=true;r.log.push(p.name+' 比牌，'+loser.name+' 出局');
+  }
   if(goldResolve(false))return;
  }if(r.seats[0].folded){goldResolve(true);return;}if(goldResolve(false))return;r.turn++;if(r.turn>10){goldResolve(true);return;}Arcade.message='第'+r.turn+'轮'+(r.log.length?' · '+r.log.slice(-2).join('；'):' · 本轮无人加注，跟注即可继续');renderArcade();}
 function goldAction(action,target){var r=Arcade.round;if(!r||r.done||r.retry)return;var p=r.seats[0];if(action==='cap'){goldResolve(true);return;}if(action==='peek'){p.seen=true;Arcade.message='已看牌：'+goldLabel(p.hand)+' · 跟注费用翻倍';renderArcade();return;}if(action==='fold'){p.folded=true;goldResolve(true);return;}
