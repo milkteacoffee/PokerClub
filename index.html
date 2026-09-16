@@ -1722,7 +1722,6 @@
       </div>
     </div>
     <div class="lobby-bottom">
-      <button class="btn-primary lobby-start-btn" id="lbQuickBtn" hidden aria-hidden="true">快速开局</button>
       <button class="btn-primary lobby-start-btn" id="lbStartBtn" hidden aria-hidden="true">开始游戏</button>
       <div class="lobby-hint" id="hubHint">已选德州扑克 · 所有对手均为本地AI</div>
       <div style="font-size:11px;color:#7d8b96;letter-spacing:1px;text-align:center;line-height:1.6">仅限 18 岁以上 · 虚拟金币仅供娱乐，不可充值兑现</div>
@@ -5317,7 +5316,7 @@ function clearSettleAuto(){
 function startSettleAuto(){
   clearSettleAuto();
   if(player.settleAuto===false)return;
-  var n=4,sb=$('settleNext');
+  var n=60,sb=$('settleNext');
   function paint(){if(sb)sb.textContent='下一手 ('+n+') ▶';}
   paint();
   settleAutoTimer=setInterval(function(){
@@ -8822,20 +8821,6 @@ function bindEvents() {
     renderModeCards();
     showScreen('mode');
   });
-  /* 快速开局：按上次玩法一键进桌（省去选游戏+选模式两步） */
-  $('lbQuickBtn').addEventListener('click', function(){
-    initAudio(); sfx('click');
-    var last=null;
-    try{last=JSON.parse(localStorage.getItem('poker_lastplay_v1')||'null');}catch(e){}
-    if(!last||!GAME_IDS.includes(last.game)||G.active)return;
-    guandanSelected=false;
-    if(last.game!=='holdem')hubGame=last.game;
-    App.mode='quick';App.difficulty=last.diff||'normal';
-    Arcade.difficulty=App.difficulty;Arcade.mode='coins';
-    if(last.game==='guandan'){window.Guandan.open();return;}
-    if(last.game==='holdem'){tryEnterGame(App.difficulty);return;}
-    openArcade(last.game);
-  });
   $('modeBack').addEventListener('click', function(){
     sfx('click');
     renderLobby();
@@ -9254,16 +9239,7 @@ function syncCrowns(){
     if(on)c.title='已封顶「'+crownNameOf(b.dataset.game)+'」';
   });
 }
-function refreshQuickStart(){
-  var b=$('lbQuickBtn');if(!b)return;
-  var last=null;try{last=JSON.parse(localStorage.getItem('poker_lastplay_v1')||'null');}catch(e){}
-  if(last&&GAME_IDS.includes(last.game)&&!G.active){
-    b.hidden=false;b.removeAttribute('aria-hidden');
-    var nm=last.game==='guandan'?'掼蛋':(GAME_NAMES[last.game]||'牌友');
-    b.textContent='⚡ 快速开局 · '+nm;
-  }else{b.hidden=true;b.setAttribute('aria-hidden','true');}
-}
-renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var ret=oldRenderLobby15();refreshQuickStart();try{if(player)syncTitles({silent:false});syncCrowns();}catch(e){}return ret;};
+renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var ret=oldRenderLobby15();try{if(player)syncTitles({silent:false});syncCrowns();}catch(e){}return ret;};
 renderModeCards=function(){
   if(!player)return;
   ensureRankGift(hubGame);
@@ -9308,7 +9284,6 @@ tryEnterGame=function(key){if(!GAME_LEVELS.includes(key)||G.active||(Arcade.roun
  /* 人机对局：免费入场、无最低金币门槛，输赢真实金币；空钱包提示先做任务 */
  if(App.mode!=='ranked'&&player.coins<=0){showToast('身上没有金币了 · 人机对局用身上金币输赢，先去任务里领点金币',2800,true);return false;}
  Arcade.entryFeePaid=0;
- try{localStorage.setItem('poker_lastplay_v1',JSON.stringify({game:hubGame,diff:key}));}catch(e){}
  App.difficulty=key;startGame(key);return true;
 };
 
@@ -9377,7 +9352,7 @@ openArcade=function(game){if(!GAME_IDS.includes(game)||game==='holdem'||G.active
  if(Arcade.mode==='ranked'){ensureRankGift(game);if(profile15(game).rankPoints<RANKED_ENTRY_MIN){showToast('🏅 排位需要 '+RANKED_ENTRY_MIN+' 排位积分（当前 '+profile15(game).rankPoints+'）',2800,true);return false;}}
  /* 人机对局：免门票，直接用身上金币输赢 */
  Arcade.entryFeePaid=0;
- Arcade.basket=[];Arcade.rankedBank=arcadeBank15();var ok=oldOpenArcade15(game);if(ok){Arcade.message='';try{localStorage.setItem('poker_lastplay_v1',JSON.stringify({game:game,diff:Arcade.difficulty||'normal'}));}catch(e){}if(Arcade.mode!=='ranked')showToast('人机对局 · 免费入场 · 输赢真实金币',1800);arcApplyLastBet=true;renderArcade();}return ok;};
+ Arcade.basket=[];Arcade.rankedBank=arcadeBank15();var ok=oldOpenArcade15(game);if(ok){Arcade.message='';if(Arcade.mode!=='ranked')showToast('人机对局 · 免费入场 · 输赢真实金币',1800);arcApplyLastBet=true;renderArcade();}return ok;};
 
 /* 公平骰子：总点数分布通过枚举生成，赔率为含本金总返还倍数。 */
 var diceDistribution15={};
