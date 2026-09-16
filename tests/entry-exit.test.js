@@ -176,8 +176,12 @@ test('选择模式可以从模式卡重新进场，也可以退回大厅', () =>
   assert.equal(doc.getElementById('modeScreen').classList.contains('active'), true);
   const cards = [...doc.querySelectorAll('#modeBody .mode-card')];
   console.log('  [mode-cards]', cards.length, cards.map(c => c.className).join(','));
-  assert.ok(cards.length >= 2 && cards.length <= 3, '模式卡 2~3 张（实际 ' + cards.length + '）');
-  assert.ok(cards[0].textContent.includes('免费') || cards[0].textContent.includes('门票'), '模式卡写明免费或门票');
+  assert.equal(cards.length, 1, '不支持联机的玩法（骰子）只显示人机卡（实际 ' + cards.length + '）');
+  assert.ok(cards[0].textContent.includes('免费'), '模式卡写明免费入场');
+  w.hubGame = 'holdem';
+  w.goModeScreen();
+  const hc = [...doc.querySelectorAll('#modeBody .mode-card')];
+  assert.equal(hc.length, 3, '支持联机的玩法（德州）显示人机/在线匹配/好友开房三卡（实际 ' + hc.length + '）');
   doc.getElementById('modeBack').click();
   assert.equal(doc.getElementById('lobbyScreen').style.display, 'flex', '可以退回大厅');
 });

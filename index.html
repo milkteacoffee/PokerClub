@@ -9244,10 +9244,16 @@ renderModeCards=function(){
   if(!player)return;
   ensureRankGift(hubGame);
   var s=profile15(hubGame),body=$('modeBody');body.innerHTML='';
+  /* 联机能力（与服务端一致）：掼蛋/德州/炸金花/骰子比大小；不支持的玩法直接不渲染联机卡，避免假按钮 */
+  var canOnline=['guandan','holdem','gold','diceduel'].indexOf(hubGame)>=0;
   ['quick','online','friend'].forEach(function(mode){
     var card=document.createElement('button');
-    if(mode==='online'){card.className='mode-card online';card.innerHTML='<div class="mode-name">在线匹配</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>和在线真人快速凑桌 · 凑满自动开局<br>需要另一位真人也在线；超过 1 分钟没人会提示稍后再试</p></div>';card.onclick=function(){if(typeof guandanSelected!=='undefined'&&guandanSelected)return showToast('掼蛋暂不支持在线匹配，可用好友开房邀请牌友',2200,true);if(player.coins<2000)return showToast('在线匹配需要至少 2000 金币',2200,true);OM.game=hubGame;App.mode='quick';return omStart();};body.appendChild(card);return;}
-    if(mode==='friend'){var sup=(' '+['guandan','holdem','gold','diceduel'].join(' ')).indexOf(' '+hubGame)>=0;card.className='mode-card friend';card.innerHTML='<div class="mode-name">好友开房</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>'+(sup?'创建好友房间 · 分享房号或链接邀请牌友<br>房间内可继续聊天与快捷语':'该玩法暂不支持联机开房<br>可选：德州 / 炸金花 / 骰子比大小 / 掼蛋')+'</p></div>';card.onclick=function(){if(!sup)return showToast('该玩法暂不支持联机开房',2200,true);initAudio();sfx('click');openOnline();var g=$('onlineGames')&&$('onlineGames').querySelector('[data-ogame="'+hubGame+'"]');if(g)g.click();};body.appendChild(card);return;}
+    if(mode==='online'){
+      if(!canOnline)return;
+      card.className='mode-card online';card.innerHTML='<div class="mode-name">在线匹配</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>和在线真人快速凑桌 · 凑满自动开局<br>需要另一位真人也在线；超过 1 分钟没人会提示稍后再试</p></div>';card.onclick=function(){if(player.coins<2000)return showToast('在线匹配需要至少 2000 金币',2200,true);OM.game=hubGame;App.mode='quick';return omStart();};body.appendChild(card);return;}
+    if(mode==='friend'){
+      if(!canOnline)return;
+      card.className='mode-card friend';card.innerHTML='<div class="mode-name">好友开房</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>创建好友房间 · 分享房号或链接邀请牌友<br>房间内可继续聊天与快捷语</p></div>';card.onclick=function(){initAudio();sfx('click');openOnline();var g=$('onlineGames')&&$('onlineGames').querySelector('[data-ogame="'+hubGame+'"]');if(g)g.click();};body.appendChild(card);return;}
     card.className='mode-card quick';card.innerHTML='<div class="mode-name">人机对局</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>免费入场 · 可赢金币<br>本地AI或庄家 · 随时开桌</p></div>';card.onclick=function(){App.mode='quick';App.difficulty='normal';Arcade.difficulty='normal';Arcade.mode='coins';if(hubGame==='holdem'){tryEnterGame('normal');return;}openArcade(hubGame);};body.appendChild(card);
   });
   /* 积分/兑换条已随排位取消而移除 */
