@@ -2072,7 +2072,7 @@
         <button class="closebtn" data-close="ovOnline">✕ 返回</button>
       </h2>
       <div style="font-size:11.5px;color:#8fa0b4;margin-bottom:12px;line-height:1.7;">
-        联机支持<b style="color:#f2c14e">掼蛋（4 人）</b>、<b style="color:#f2c14e">德州扑克（2~6 人）</b>、<b style="color:#f2c14e">炸金花（2~6 人）</b>与<b style="color:#f2c14e">骰子比大小（2~6 人）</b>，牌局判定全部在服务端完成。其余玩法为单机对 AI，不受影响。<br>
+        <span id="onlineIntro">联机支持<b style="color:#f2c14e">掼蛋（4 人）</b>、<b style="color:#f2c14e">德州扑克（2~6 人）</b>、<b style="color:#f2c14e">炸金花（2~6 人）</b>与<b style="color:#f2c14e">骰子比大小（2~6 人）</b>，牌局判定全部在服务端完成。其余玩法为单机对 AI，不受影响。<br></span>
         <b style="color:#c41a1a">本游戏仅供娱乐，严禁用于赌博；虚拟金币不可充值、不可兑现、不可转让。违者后果自负。</b>
       </div>
       <!-- 快速匹配：真人陌生人凑桌，凑满即开局（无需准备） -->
@@ -10200,6 +10200,7 @@ function refreshOnlineUI(){
 function applyOnlineView(){
   var setup=$('onlineSetup'), room=$('onlineRoom'), om=$('omBox'), vm=Online.viewMode||'';
   if(!setup||!room) return;
+  var intro=$('onlineIntro'); if(intro) intro.hidden = (vm==='room' || vm==='match' || !!Online.code);
   if(Online.code){                            /* 已在房间：只显示房间（斗地主式牌桌房间） */
     setup.hidden=true; room.hidden=false; if(om) om.hidden=true;
     var rt=$('roomTip');
