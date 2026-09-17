@@ -349,6 +349,8 @@ if(TK){document.getElementById("login").style.display="none";document.getElement
         achievements: body && body.achievements,
         checkinDays: body && body.checkinDays,
         checkinStreak: body && body.checkinStreak,
+        puzzles: body && body.puzzles,
+        tourBest: body && body.tourBest,
       });
       store.touchActiveDay(deviceId);
       const fresh = store.getPlayer(deviceId);
@@ -670,11 +672,30 @@ if(TK){document.getElementById("login").style.display="none";document.getElement
       return json(res, 404, { ok: false, msg: '未知管理接口' });
     }
 
+    /* ---- 免费锦标赛：提交成绩 / 榜单 / 我的成绩 ---- */
+    if (path === '/api/tournament' && method === 'POST') {
+      if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
+      let tb = {};
+      try { tb = await readBody(req); } catch (e) { tb = {}; }
+      const r = store.submitTournament(deviceId, tb.score, tb.hands);
+      return json(res, r.ok ? 200 : 400, r);
+    }
+    if (path === '/api/tournament/board' && method === 'GET') {
+      const scope = String(url.searchParams.get('scope') || 'today');
+      const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit')) || 50));
+      const list = store.tourBoard(scope === 'all' ? 'all' : 'today', limit);
+      return json(res, 200, { ok: true, scope: scope, list: list.map((x, i) => ({ rank: i + 1, ...x, isMe: !!deviceId && x.deviceId === deviceId })) });
+    }
+    if (path === '/api/tournament/mine' && method === 'GET') {
+      if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
+      return json(res, 200, { ok: true, mine: store.myTournament(deviceId) });
+    }
+
     /* ---- 排行榜：coins 金币 / titles 称号 / achievements 成就 / checkin 签到连签 ---- */
     if (path === '/api/rank' && method === 'GET') {
       var rtype = String(url.searchParams.get('type') || 'coins');
       var rlimit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit')) || 50));
-      if (['coins', 'titles', 'achievements', 'checkin'].indexOf(rtype) < 0) return json(res, 400, { ok: false, msg: '未知榜单类型' });
+      if (['coins', 'titles', 'achievements', 'checkin', 'puzzles', 'tournament'].indexOf(rtype) < 0) return json(res, 400, { ok: false, msg: '未知榜单类型' });
       var rlist = store.rankBy(rtype, rlimit);
       return json(res, 200, {
         ok: true, type: rtype, limit: rlimit,
@@ -907,7 +928,14 @@ wss.on('connection', (ws, req) => {
       }
 
       if (t === 'create') {
-        const r = rooms.create(msg.game, deviceId, conn.nickname, { level: 2, maxPlayers: Number(msg.maxPlayers) || 0, rounds: Number(msg.rounds) || 0 });
+        const r = rooms.create(msg.game, deviceId, conn.nickname, {
+          level: 2,
+          maxPlayers: Number(msg.maxPlayers) || 0,
+          rounds: Number(msg.rounds) || 0,
+          open: !!msg.open,                                  /* 明牌房 */
+          double: !!msg.double,                              /* 积分 ×2 */
+          turnMs: Number(msg.turnMs) || 0,                    /* 单步时长 */
+        });
         if (!r.ok) return send(ws, 'error', { msg: r.msg });
         conn.roomCode = r.code;
         r.room.seats[0].ws = ws;
@@ -1073,7 +1101,7 @@ function startTick(room) {
       const turnSeat = room.game === 'guandan' ? room.state.g.turn : room.state.turn;
       const s = room.seats.find(x => x.seat === turnSeat);
       const idle = now - room.lastActivity;
-      if (s && s.online && idle > config.room.actionTimeoutMs) {
+      if (s && s.online && idle > (room.turnMs ? room.turnMs() : config.room.actionTimeoutMs)) {
         const payload = room.adapter.autoAct(room.state, turnSeat);
         if (payload && payload.ids) room.act(s.deviceId, { ids: payload.ids });
         else if (payload && payload.pass) room.act(s.deviceId, { pass: true });
@@ -1097,10 +1125,20 @@ function settleRoom(room) {
   const res = room.result || (room.adapter.settlement ? room.adapter.settlement(room.state) : null);
   if (!res) return;
   room.settleSent = true;
+  /* 娱乐加倍房：结算积分翻倍（仅展示层倍率，玩法内部数值不变） */
+  let res2 = res;
+  try {
+    const f = room.doubleFactor ? room.doubleFactor() : 1;
+    if (f > 1 && res && res.payouts) {
+      const np = {};
+      Object.keys(res.payouts).forEach(k => { np[k] = Math.round((res.payouts[k] || 0) * f); });
+      res2 = Object.assign({}, res, { payouts: np, doubled: f });
+    }
+  } catch (e) { res2 = res; }
   const seatAvatar = (d) => { try { const p = store.getPlayer(d); return (p && p.avatar) || 'a01'; } catch (e) { return 'a01'; } };
   for (const s of room.seats) {
     if (s.online && s.ws) send(s.ws, 'settle', {
-      result: res,
+      result: res2,
       round: { no: room.roundNo || 1, total: room.roundTotal ? room.roundTotal() : 0, ended: !!room.roundEnded },
       seatInfo: room.seats.map(x => ({ seat: x.seat, name: x.name, avatar: seatAvatar(x.deviceId), online: x.online })),
     });

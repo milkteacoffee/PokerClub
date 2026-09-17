@@ -94,7 +94,7 @@ ok(np.buffs.goldBoost === 0 && np.buffs.diceLucky === 0, 'buffs 含 goldBoost/di
 const titles = g.TITLES || [];
 const onlineTitles = titles.filter(t => String(t.id).indexOf('tt_online') === 0);
 ok(onlineTitles.length === 13, '联机称号共 13 个（8 通用 + 5 新增玩法专属，实际 ' + onlineTitles.length + '）');
-ok(titles.length === 69, '称号总数 69（2026-09-17 富化 +20 与残局 +2，实际 ' + titles.length + '）');
+ok(titles.length === 72, '称号总数 72（富化 +20、残局 +2、锦标赛 +3，实际 ' + titles.length + '）');
 
 /* 4. 战绩累加 */
 const pl = g.createNewPlayer('牌友');
@@ -169,7 +169,7 @@ ok((g.SHOP_ITEMS || []).every(i => String(i.id).indexOf('tt_online') !== 0), '�
 
 /* 8. 商城道具：15 件；所有非皮肤商品都必须有限购（用户要求「每个道具都限购」） */
 const shop = g.SHOP_ITEMS || [];
-ok(shop.length === 15, '商城商品 15 件（实际 ' + shop.length + '）');
+ok(shop.length === 21, '商城商品 21 件（含新增头像框 3 + 牌桌皮肤 3，实际 ' + shop.length + '）');
 const consumables = shop.filter(i => i.type !== 'skin');
 ok(consumables.length === 7, '消耗/排位类道具 7 件（实际 ' + consumables.length + '）');
 const noLimit = consumables.filter(i => !i.limits || typeof i.limits.day !== 'number');
@@ -180,7 +180,7 @@ const noHold = consumables.filter(i => !i.limits || typeof i.limits.hold !== 'nu
 ok(noHold.length === 0, '所有消耗/排位道具都有持有上限');
 /* 皮肤是一次性购买，不应重复购买 */
 const skins = shop.filter(i => i.type === 'skin');
-ok(skins.length === 8, '外观类 8 件（实际 ' + skins.length + '）');
+ok(skins.length === 14, '外观类 14 件（牌背/边框/头像框/牌桌，实际 ' + skins.length + '）');
 ok(skins.every(i => i.slot), '每件外观都有 slot（牌背/边框/称号）');
 /* 限购数值合理性：日 ≤ 周 ≤ 持有×若干，且持有上限 ≥ 1 */
 const bad = consumables.filter(i => {

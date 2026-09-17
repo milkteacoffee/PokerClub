@@ -138,6 +138,29 @@
     filter:drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
   .lobby-bottom { padding:0 20px 18px; display:flex; flex-direction:column;
     align-items:center; gap:9px; position:relative; z-index:2; }
+  /* 头像框（商城外观 · 装备后生效） */
+  .skin-avf_gold{border:2px solid #d4a847;box-shadow:0 0 10px rgba(212,168,71,.55)}
+  .skin-avf_jade{border:2px solid #6cc4a1;box-shadow:0 0 10px rgba(108,196,161,.5)}
+  .skin-avf_crown{border:2px solid #f0d79a;box-shadow:0 0 0 2px rgba(240,215,154,.35),0 0 14px rgba(240,215,154,.65)}
+  /* 牌桌皮肤（商城外观 · 装备后生效） */
+  #table.skin-tbl_emerald{background:radial-gradient(120% 90% at 50% 35%,#1d5c46,#0c241c 70%)}
+  #table.skin-tbl_night{background:radial-gradient(120% 90% at 50% 35%,#1b3a63,#0a1626 70%)}
+  #table.skin-tbl_royal{background:radial-gradient(120% 90% at 50% 35%,#4a2a6b,#1a0f2b 70%)}
+  /* 免费锦标赛（对标斗地主挑战赛） */
+  .tour-hero{text-align:center;padding:12px 10px;border-radius:14px;margin-bottom:10px;
+    background:linear-gradient(160deg,rgba(240,215,154,.16),rgba(20,32,46,.55));border:1px solid rgba(240,215,154,.35)}
+  .tour-hero .th-t{font-size:17px;font-weight:800;color:#f2c14e;letter-spacing:1px}
+  .tour-hero .th-s{font-size:11.5px;color:#9fb0c0;margin-top:6px;line-height:1.7}
+  .tour-hero b{color:#e8d5a3}
+  .tour-mine{font-size:12px;color:#b9c6d2;background:rgba(255,255,255,.04);border-radius:10px;padding:9px 12px;margin-bottom:10px}
+  .tour-tabs{display:flex;gap:8px;margin:6px 0 8px}
+  .tour-tab{padding:6px 12px;border-radius:9px;border:1px solid rgba(143,160,180,.3);background:none;color:#c8d2dc;font-size:12px;cursor:pointer;font-family:inherit}
+  .tour-tab.on{background:linear-gradient(150deg,#f0d79a,#cfa85b);color:#2a1d0c;font-weight:800;border-color:transparent}
+  .tour-row{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:10px;font-size:12.5px;color:#dbe6ef}
+  .tour-row+.tour-row{border-top:1px dashed rgba(143,160,180,.16)}
+  .tour-row .tr-rk{width:20px;text-align:center;font-weight:800;color:#8fa0b4}
+  .tour-row.me{background:rgba(240,215,154,.10)}
+  .tour-row .tr-v{margin-left:auto;font-weight:800;color:#f2c14e}
   /* 残局挑战（对标斗地主残局闯关） */
   .pz-tier{font-size:11.5px;color:#8fa0b4;margin:12px 0 6px;letter-spacing:1px}
   .pz-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;margin-bottom:8px;
@@ -1805,6 +1828,7 @@
         <button class="lobby-iconbtn" id="lbQStats" title="战绩、图鉴与段位">档案</button>
         <button class="lobby-iconbtn" id="lbQHelp" title="查看玩法规则">规则</button>
         <button class="lobby-iconbtn" id="lbPuzzle" title="残局挑战（免费不限次）">残局</button>
+        <button class="lobby-iconbtn" id="lbTournament" title="免费锦标赛（每日一次）">锦标赛</button>
         <button class="lobby-iconbtn" id="lbQRegister" title="完善昵称与头像（完成注册）" style="display:none">资料</button>
         <button class="lobby-iconbtn" id="lbBtnSound" title="切换游戏音效">音效开</button>
       </nav>
@@ -2138,6 +2162,27 @@
     </div>
   </div>
 
+  <!-- 免费锦标赛（对标斗地主挑战赛：免费报名、独立筹码、按最终筹码排名发奖） -->
+  <div class="overlay" id="ovTournament">
+    <div class="panel" style="max-width:520px;">
+      <h2>免费锦标赛 <button class="closebtn" data-close="ovTournament">✕ 返回</button></h2>
+      <div class="tour-hero">
+        <div class="th-t">每日免费 · 独立筹码 <b id="tourStack">5,000</b></div>
+        <div class="th-s">连续打 <b id="tourHands">10</b> 手德州（普通场）· 不占用你的金币<br>结束时按<b>净赢筹码</b>发放金币奖励（净赢 × 0.6，上限 3,000），成绩计入榜单</div>
+      </div>
+      <div class="tour-mine" id="tourMine">加载中…</div>
+      <div class="go-btns" style="margin-bottom:12px">
+        <button class="again" id="tourJoin">报名参赛</button>
+        <button class="back" id="tourBoardRefresh">刷新榜单</button>
+      </div>
+      <div class="tour-tabs">
+        <button class="tour-tab on" data-tscope="today">今日榜</button>
+        <button class="tour-tab" data-tscope="all">历史最好</button>
+      </div>
+      <div id="tourList"></div>
+    </div>
+  </div>
+
   <!-- 牌桌「更多」 -->
   <div class="overlay" id="ovMore">
     <div class="panel" style="max-width:420px;">
@@ -2151,6 +2196,7 @@
         <button id="moreFeedback">意见反馈</button>
         <button id="moreCounter">记牌器：关</button>
         <button id="morePuzzle">残局挑战</button>
+        <button id="moreTournament">免费锦标赛</button>
       </div>
     </div>
   </div>
@@ -2195,6 +2241,9 @@
       <div class="rs-row"><label>玩法</label><div id="rsGames" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
       <div class="rs-row"><label>人数</label><div id="rsSeats" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
       <div class="rs-row"><label>局数</label><div id="rsRounds" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
+      <div class="rs-row"><label>明牌</label><div id="rsOpen" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
+      <div class="rs-row"><label>加倍</label><div id="rsDouble" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
+      <div class="rs-row"><label>时长</label><div id="rsTurn" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
       <div class="go-btns" style="margin-top:16px">
         <button class="again" id="rsCreate">开设房间</button>
         <button class="back" data-close="ovRoomSetup">取消</button>
@@ -2432,6 +2481,7 @@
         <button class="board-tab" data-btype="titles">称号榜</button>
         <button class="board-tab" data-btype="achievements">成就榜</button>
         <button class="board-tab" data-btype="checkin">签到榜</button>
+        <button class="board-tab" data-btype="puzzles">残局榜</button>
       </div>
       <div class="board-tabs" id="boardScope">
         <button class="board-tab selected" data-scope="global">全服榜</button>
@@ -3168,6 +3218,21 @@ window.addEventListener('pagehide', function () {
 });
 
 /* ---- 用户资料弹窗（头像 / 昵称签名 / 玩家号 / 恢复码 / 接管） ---- */
+/* ---- 外观装备应用（头像框 / 牌桌皮肤）---- */
+var AVF_CLASSES = ['skin-avf_gold', 'skin-avf_jade', 'skin-avf_crown'];
+var TBL_CLASSES = ['skin-tbl_emerald', 'skin-tbl_night', 'skin-tbl_royal'];
+function applyAppearance() {
+  try {
+    var f = (player && player.equipped && player.equipped.avatarFrame) || '';
+    var t = (player && player.equipped && player.equipped.table) || '';
+    var av = $('lbAvatar');
+    if (av) { AVF_CLASSES.forEach(function (c) { av.classList.remove(c); }); if (f) av.classList.add('skin-' + f); }
+    var av2 = $('pfAvatarBig') || $('pfAvatar');
+    if (av2) { AVF_CLASSES.forEach(function (c) { av2.classList.remove(c); }); if (f) av2.classList.add('skin-' + f); }
+    var tb = $('table');
+    if (tb) { TBL_CLASSES.forEach(function (c) { tb.classList.remove(c); }); if (t) tb.classList.add('skin-' + t); }
+  } catch (e) {}
+}
 /* ---- 德州带入登记（人机场）：只带选定金额上桌 ---- */
 var BI_PICK = 0;                    /* 当前选择（0 = 用下次计算的默认值） */
 function biRemember(key, val) { try { localStorage.setItem('poker_buyin_v1', JSON.stringify({ d: key, v: val })); } catch (e) {} }
@@ -3540,6 +3605,7 @@ function onlinePushProfile(cb) {
     coins: Math.max(0, Math.floor(player.coins || 0)),
     titles: Object.keys(player.titles || {}).length,
     achievements: Object.keys(player.achievements || {}).length,
+    puzzles: Object.keys(player.puzzles || {}).length,
     checkinDays: player.checkinTotal || 0,
     checkinStreak: (player.checkin && player.checkin.streak) || 0,
     /* 自定义头像：dataURL 超过上传上限时只本地生效，服务器回落默认头像 */
@@ -3842,6 +3908,9 @@ var TITLES = [
   { id:'tt_ach_500',    name:'成就大师', icon:'🧠', desc:'解锁 500 项成就',       check:function(p){ return Object.keys(p.achievements||{}).length >= 500; } },
   { id:'tt_net_4',      name:'联机舵手', icon:'🧭', desc:'在线对局 200 局',        check:function(p){ var o=p.online||{}; return (o.games||0) >= 200; } },
   { id:'tt_net_5',      name:'牌友满堂', icon:'🤝', desc:'在线对局赢下 100 场',     check:function(p){ var o=p.online||{}; return (o.wins||0) >= 100; } },
+  { id:'tt_tour_1',  name:'锦标赛选手', icon:'🏁', desc:'参加一次免费锦标赛', check:function(p){ return (p.tourPlays||0) >= 1; } },
+  { id:'tt_tour_2',  name:'锦标赛好手', icon:'🎽', desc:'锦标赛单场净赢 2,000', check:function(p){ return (p.tourBestLocal||0) >= 2000; } },
+  { id:'tt_tour_3',  name:'锦标赛高手', icon:'🏆', desc:'锦标赛单场净赢 5,000', check:function(p){ return (p.tourBestLocal||0) >= 5000; } },
   { id:'tt_pz_1',    name:'残局新手', icon:'🧩', desc:'通关 1 个残局关卡',   check:function(p){ return Object.keys(p.puzzles||{}).length >= 1; } },
   { id:'tt_pz_all',  name:'残局大师', icon:'👑', desc:'通关全部残局关卡',     check:function(p){ return Object.keys(p.puzzles||{}).length >= 8; } },
   { id:'tt_net_1',  name:'初次联网', icon:'🌐', desc:'完成首局在线对局', check:function(p){ var o=p.online||{}; return (o.games||0)>=1; } },
@@ -4165,6 +4234,14 @@ var SHOP_ITEMS = [
     desc:'3 次机会，翻牌后偷看一位对手的底牌',
     limits:{ day:2, week:8, hold:3 }, balance:'直接提供信息优势，日限 2 张以防被滥用' },
   /* ---- 外观（一次性购买，拥有即止，无需限购） ---- */
+  /* ---- 头像框（装备后在头像外圈显示装饰环） ---- */
+  { id:'avf_gold',  type:'skin', slot:'avatarFrame', name:'鎏金环',   icon:'🟡', price:1800, desc:'头像外圈鎏金描边 · 大厅与资料页生效' },
+  { id:'avf_jade',  type:'skin', slot:'avatarFrame', name:'青玉环',   icon:'🟢', price:1800, desc:'头像外圈青玉描边 · 低调雅致' },
+  { id:'avf_crown', type:'skin', slot:'avatarFrame', name:'王冠环',   icon:'👑', price:4200, desc:'头像外圈王冠金环 · 全场最亮' },
+  /* ---- 牌桌皮肤（装备后改变牌桌绒面配色） ---- */
+  { id:'tbl_emerald',type:'skin', slot:'table', name:'翡翠绒桌', icon:'🟩', price:2600, desc:'牌桌换为翡翠绿绒面' },
+  { id:'tbl_night', type:'skin', slot:'table', name:'深夜蓝桌', icon:'🟦', price:2600, desc:'牌桌换为深夜蓝绒面' },
+  { id:'tbl_royal', type:'skin', slot:'table', name:'皇家紫桌', icon:'🟪', price:5200, desc:'牌桌换为皇家紫绒面 · 稀有' },
   { id:'cb_gold',   type:'skin', slot:'cardBack', name:'鎏金牌背', icon:'🟡', price:2000,
     desc:'金色暗纹牌背', css:'gold' },
   { id:'cb_jade',   type:'skin', slot:'cardBack', name:'青玉牌背', icon:'🟢', price:2000,
@@ -5929,6 +6006,81 @@ function renderTable() {
   }
 }
 
+/* ---- 免费锦标赛（对标斗地主挑战赛）----
+   完全免费：不扣金币、独立筹码（完成手数后按净赢发奖）；成绩上报服务端进榜单。 */
+var TOUR = { stack: 5000, hands: 10, scope: 'today' };
+function tourDayKey() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+function tourPlayedToday() { return player && player.tourDate === tourDayKey(); }
+function tourRewardOf(score) { return score > 0 ? Math.min(3000, Math.floor(score * 0.6)) : 0; }
+function renderTourBoard() {
+  var box = $('tourList'); if (!box) return;
+  box.innerHTML = '<div class="tour-row" style="color:#8fa0b4">加载中…</div>';
+  if (!onlineAvailable()) { box.innerHTML = '<div class="tour-row" style="color:#8fa0b4">未连接服务器 · 榜单不可用（仍可单机参赛）</div>'; return; }
+  fetch(Online.server.replace(/\/$/, '') + '/api/tournament/board?scope=' + TOUR.scope + '&limit=20', { headers: { 'X-Device-Id': onlineDeviceId() } })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d || !d.list || !d.list.length) { box.innerHTML = '<div class="tour-row" style="color:#8fa0b4">本期还没有成绩 · 快去报名成为第一</div>'; return; }
+      box.innerHTML = d.list.map(function (x) {
+        return '<div class="tour-row' + (x.isMe ? ' me' : '') + '"><span class="tr-rk">' + x.rank + '</span>' +
+          avatarSVG(x.avatar || 'a01', 22) + '<span>' + esc(x.nickname) + (x.isMe ? '（我）' : '') + '</span>' +
+          '<span style="color:#8fa0b4;font-size:11px">' + esc(x.userCode || '') + '</span>' +
+          '<span class="tr-v">' + (x.value > 0 ? '+' : '') + fmt(x.value) + '</span></div>';
+      }).join('');
+    })
+    .catch(function () { box.innerHTML = '<div class="tour-row" style="color:#8fa0b4">榜单加载失败</div>'; });
+}
+function renderTourMine() {
+  var box = $('tourMine'); if (!box) return;
+  var best = player.tourBestLocal || 0;
+  if (!tourPlayedToday()) {
+    box.innerHTML = '今日尚未参赛 · 历史最好净赢 <b style="color:#f2c14e">' + (best > 0 ? '+' : '') + fmt(best) + '</b>';
+  } else {
+    box.innerHTML = '今日已参赛 · 今日成绩 <b style="color:#f2c14e">' + (player.tourScore > 0 ? '+' : '') + fmt(player.tourScore) + '</b> · 历史最好 <b style="color:#f2c14e">' + (best > 0 ? '+' : '') + fmt(best) + '</b>';
+  }
+  var jb = $('tourJoin');
+  if (jb) { jb.disabled = tourPlayedToday(); jb.textContent = tourPlayedToday() ? '今日已参赛（明日再来）' : '报名参赛'; }
+  var st = $('tourStack'); if (st) st.textContent = fmt(TOUR.stack);
+  var hd = $('tourHands'); if (hd) hd.textContent = TOUR.hands;
+}
+function openTournament() {
+  renderTourMine();
+  renderTourBoard();
+  openOverlay('ovTournament');
+}
+function startTournament() {
+  if (tourPlayedToday()) return showToast('今日已参赛，明天再来（每日一次）', 2400, true);
+  closeOverlay('ovTournament');
+  G.tournament = { hands: TOUR.hands, start: TOUR.stack, day: tourDayKey() };
+  App.mode = 'tournament';
+  App.difficulty = 'normal';
+  Arcade.difficulty = 'normal';
+  showToast('锦标赛开始 · ' + TOUR.hands + ' 手 · 独立筹码 ' + fmt(TOUR.stack) + '（不占地金币）', 3200);
+  startGame('normal');
+}
+function finishTournament() {
+  var t = G.tournament; if (!t) return;
+  var p = G.players[0];
+  var score = p ? p.chips - t.start : 0;
+  var reward = tourRewardOf(score);
+  G.tournament = null;
+  exitGame();
+  player.tourDate = t.day;
+  player.tourScore = score;
+  if (score > (player.tourBestLocal || 0)) player.tourBestLocal = score;
+  player.tourPlays = (player.tourPlays || 0) + 1;
+  if (reward > 0) addCoins(reward);
+  savePlayer();
+  try {
+    fetch(Online.server.replace(/\/$/, '') + '/api/tournament', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Device-Id': onlineDeviceId() },
+      body: JSON.stringify({ score: score, hands: t.hands }),
+    }).catch(function () {});
+  } catch (e) {}
+  syncTitles({ silent: false });
+  showToast('锦标赛结束 · 净赢 ' + (score > 0 ? '+' : '') + fmt(score) + (reward > 0 ? ' · 奖励 ' + fmt(reward) + ' 金币' : ' · 无净赢，下次加油'), 3600);
+  setTimeout(function () { try { openTournament(); } catch (e) {} }, 400);
+}
 /* ---- 残局挑战（对标斗地主残局闯关）----
    设计：翻牌前单手残局，固定牌局；目标两类：
    win  = 识破强势牌局并赢下底池；fold = 识破弱势牌局、及时弃牌止损。
@@ -5957,6 +6109,37 @@ var PUZZLES = [
     hole: ['As', 'Ks'], foes: [['Qd', 'Jd'], ['9c', '9h'], ['Td', 'Ts']], tip: 'AKs 是强牌，面对中对要敢于加注施压' },
   { id: 'pz08', tier: '专家', name: '顶级陷阱', stack: 5000, sb: 50, bb: 100, goal: 'win', reward: 800,
     hole: ['Ah', 'Ad'], foes: [['Kh', 'Kc'], ['Qs', 'Qh'], ['Js', 'Jh']], tip: 'AA 对三家中对是梦幻局面，把底池做大' },
+  /* ---- 扩充：入门 ---- */
+  { id: 'pz09', tier: '入门', name: '口袋对子', stack: 2000, sb: 10, bb: 20, goal: 'win', reward: 200,
+    hole: ['8h', '8s'], foes: [['Ah', 'Kd'], ['Qc', 'Js'], ['7d', '6d']], tip: '口袋对子面对两张高牌，先小注试探' },
+  { id: 'pz10', tier: '入门', name: '最强起手', stack: 2000, sb: 10, bb: 20, goal: 'win', reward: 200,
+    hole: ['Ks', 'Kc'], foes: [['Ah', 'Qd'], ['Jh', 'Td'], ['9s', '8c']], tip: 'KK 是第二强起手，正常加注即可' },
+  { id: 'pz11', tier: '入门', name: '同花连张', stack: 2000, sb: 10, bb: 20, goal: 'call', reward: 200,
+    hole: ['8h', '7h'], foes: [['Ac', 'Kc'], ['Qd', 'Js'], ['Ts', '9s']], tip: '同花连张适合便宜进池，别投入太多' },
+  { id: 'pz12', tier: '入门', name: 'A 高不稳', stack: 2000, sb: 10, bb: 20, goal: 'fold', reward: 200,
+    hole: ['Ah', '6d'], foes: [['Ks', 'Kd'], ['Qc', 'Qh'], ['9d', '9c']], tip: 'A 高面对三家强牌，翻前就该收手' },
+  { id: 'pz13', tier: '入门', name: '垃圾牌远离', stack: 2000, sb: 10, bb: 20, goal: 'fold', reward: 200,
+    hole: ['8d', '3c'], foes: [['Ac', 'Ad'], ['Kh', 'Qh'], ['Js', 'Jd']], tip: '83o 属最差起手，直接弃牌' },
+  /* ---- 扩充：进阶 ---- */
+  { id: 'pz14', tier: '进阶', name: '中对守摊', stack: 3000, sb: 25, bb: 50, goal: 'call', reward: 350,
+    hole: ['9h', '9s'], foes: [['Ac', 'Jd'], ['Kd', 'Ts'], ['6c', '6d']], tip: '中对别把底池做大，跟注看翻牌即可' },
+  { id: 'pz15', tier: '进阶', name: '顺子听牌', stack: 3000, sb: 25, bb: 50, goal: 'call', reward: 350,
+    hole: ['Th', '9d'], foes: [['Ac', 'Kc'], ['Qd', 'Jh'], ['7s', '7c']], tip: '顺子听牌要看赔率，便宜就跟' },
+  { id: 'pz16', tier: '进阶', name: '小对子碰运气', stack: 3000, sb: 25, bb: 50, goal: 'call', reward: 350,
+    hole: ['4h', '4d'], foes: [['As', 'Kd'], ['Qc', 'Js'], ['8d', '7d']], tip: '小对子便宜看翻牌，撞三条收益大' },
+  { id: 'pz17', tier: '进阶', name: '弱踢脚弃牌', stack: 3000, sb: 25, bb: 50, goal: 'fold', reward: 350,
+    hole: ['Ad', '4c'], foes: [['Kh', 'Kc'], ['Qs', 'Qd'], ['Js', 'Jc']], tip: 'A 带小踢脚不适合对抗三家强牌' },
+  { id: 'pz18', tier: '进阶', name: '诱惑的弃牌', stack: 3000, sb: 25, bb: 50, goal: 'fold', reward: 350,
+    hole: ['Kd', '6h'], foes: [['Ac', 'Ad'], ['Qh', 'Qc'], ['Jd', 'Js']], tip: 'K 高在多人强牌池毫无胜算' },
+  /* ---- 扩充：专家 ---- */
+  { id: 'pz19', tier: '专家', name: 'AK 对三小对', stack: 5000, sb: 50, bb: 100, goal: 'win', reward: 600,
+    hole: ['Ad', 'Kd'], foes: [['6h', '6c'], ['4s', '4d'], ['2h', '2c']], tip: '两高张对小对子，主动加注逼弃牌' },
+  { id: 'pz20', tier: '专家', name: '同花 A 强攻', stack: 5000, sb: 50, bb: 100, goal: 'win', reward: 600,
+    hole: ['Ah', 'Jh'], foes: [['Kc', 'Qd'], ['Ts', '9s'], ['7h', '7d']], tip: '同花 A 强，别怕对抗' },
+  { id: 'pz21', tier: '专家', name: '极弱逃生', stack: 5000, sb: 50, bb: 100, goal: 'fold', reward: 700,
+    hole: ['7c', '2h'], foes: [['As', 'Ad'], ['Kh', 'Kd'], ['Qs', 'Qc']], tip: '三家中对的强牌池，72o 必须弃' },
+  { id: 'pz22', tier: '专家', name: '控制底池', stack: 5000, sb: 50, bb: 100, goal: 'call', reward: 700,
+    hole: ['Qh', 'Qs'], foes: [['Ac', 'Kd'], ['Jh', 'Th'], ['9d', '9s']], tip: 'QQ 面对 A 高与中对，控制底池跟注' },
 ];
 function puzzleOf(id) { for (var i = 0; i < PUZZLES.length; i++) if (PUZZLES[i].id === id) return PUZZLES[i]; return null; }
 function puzzleDone(id) { return !!(player && player.puzzles && player.puzzles[id]); }
@@ -6243,6 +6426,7 @@ function render() {
   renderTable();
   renderControls();
   try { renderCardCounter(); } catch (e) {}
+  try { applyAppearance(); } catch (e) {}
 }
 
 /* 下注 */
@@ -6709,13 +6893,25 @@ function humanStack() {
 }
 /* 把桌上筹码交还钱包：钱包 = 未带入部分 + 桌上剩余 */
 function bankSync() {
-  if (App.mode === 'puzzle') { player.coins = Math.max(0, G.walletBefore || player.coins); return player.coins; }
+  if (App.mode === 'puzzle' || App.mode === 'tournament') { player.coins = Math.max(0, G.walletBefore || player.coins); return player.coins; }
   var chips = (G.players[0] && G.players[0].chips) || 0;
   player.coins = Math.max(0, (G.walletBefore || 0) + chips);
   return player.coins;
 }
 function initPlayers() {
   var opps = pickOpponents();
+  if (App.mode === 'tournament' && G.tournament) {
+    /* 锦标赛：独立筹码、不动钱包、对手同额 */
+    var tStack = G.tournament.start;
+    G.tableStack = tStack;
+    G.buyInMode = false;
+    G.walletBefore = player.coins;
+    G.players = [makePlayer(0, player.name || '玩家', '🧑', true, 'human', tStack, '')];
+    for (var ti = 0; ti < 3; ti++) G.players.push(newAIOpponent(ti + 1, opps[ti], G.players.map(function (p) { return p.name; })));
+    G.dealer = -1;
+    G.tournament.start = tStack;
+    return;
+  }
   if (App.mode === 'puzzle' && G.puzzle) {
     /* 残局：固定筹码、不动钱包、对手同额 */
     var pzStack = G.puzzle.def.stack;
@@ -8033,6 +8229,7 @@ async function runGameLoop() {
     await playHand();
     if (!G.active) return;
     if (G.puzzle) { settlePuzzle(); return; }   /* 残局：单手定胜负 */
+    if (G.tournament && G.handNo >= G.tournament.hands) { finishTournament(); return; }   /* 锦标赛：打满手数结算 */
     await new Promise(function(res){
       nextHandResolve = res;
       if (player.settlePanel !== false && G.lastSettleData) showSettle(G.lastSettleData);
@@ -8483,7 +8680,7 @@ function renderShop() {
   /* 类目 Tab：全部 / 功能道具 / 牌背 / 边框 / 称号（避免长列表滚动） */
   if (!SHOP_CAT) SHOP_CAT = 'all';
   html += '<div class="shop-tabs">'
-       + [['all', '全部'], ['consume', '功能道具'], ['cardBack', '牌背'], ['frame', '边框'], ['title', '称号']]
+       + [['all', '全部'], ['consume', '功能道具'], ['cardBack', '牌背'], ['frame', '边框'], ['avatarFrame', '头像框'], ['table', '牌桌'], ['title', '称号']]
          .map(function (c) {
            return '<button class="shop-tab' + (SHOP_CAT === c[0] ? ' on' : '') + '" data-shopcat="' + c[0] + '">' + c[1] + '</button>';
          }).join('') + '</div>';
@@ -8502,6 +8699,8 @@ function renderShop() {
     { key: 'consume', name: '功能道具', tip: '对局中生效 · 有限购' },
     { key: 'cardBack', name: '牌背', tip: '一次性拥有 · 随时装备' },
     { key: 'frame', name: '座位边框', tip: '一次性拥有 · 随时装备' },
+    { key: 'avatarFrame', name: '头像框', tip: '一次性拥有 · 装备后头像外圈显示' },
+    { key: 'table', name: '牌桌皮肤', tip: '一次性拥有 · 装备后牌桌变色' },
     { key: 'title', name: '称号', tip: '名字前后显示 · 装备后生效' }
   ];
   groups.forEach(function (g) {
@@ -9554,6 +9753,17 @@ function bindEvents() {
   var mp = $('morePuzzle'); if (mp) mp.addEventListener('click', function(){ sfx('click'); closeOverlay('ovMore'); openPuzzles(); });
   var mc = $('moreCounter'); if (mc) mc.addEventListener('click', function(){ sfx('click'); toggleCardCounter(); });
   var lzp = $('lbPuzzle'); if (lzp) lzp.addEventListener('click', function(){ initAudio(); sfx('click'); openPuzzles(); });
+  var ltp = $('lbTournament'); if (ltp) ltp.addEventListener('click', function(){ initAudio(); sfx('click'); openTournament(); });
+  var tjb = $('tourJoin'); if (tjb) tjb.addEventListener('click', function(){ sfx('click'); startTournament(); });
+  var tbr = $('tourBoardRefresh'); if (tbr) tbr.addEventListener('click', function(){ sfx('click'); renderTourBoard(); });
+  document.querySelectorAll('[data-tscope]').forEach(function(b){
+    b.addEventListener('click', function(){
+      TOUR.scope = b.getAttribute('data-tscope');
+      document.querySelectorAll('[data-tscope]').forEach(function(x){ x.classList.toggle('on', x === b); });
+      renderTourBoard();
+    });
+  });
+  var mtp = $('moreTournament'); if (mtp) mtp.addEventListener('click', function(){ sfx('click'); closeOverlay('ovMore'); openTournament(); });
   ['moreRules:openHelp','moreAchieve:openAchieve','moreTasks:openTasks','moreStats:openStats','moreSettings:openSettings','moreFeedback:openFeedback'].forEach(function(pair){
     var el = $(pair.split(':')[0]), fn = pair.split(':')[1];
     if (el) el.addEventListener('click', function(){ sfx('click'); closeOverlay('ovMore'); try { window[fn](); } catch (e) {} });
@@ -9882,7 +10092,7 @@ function syncCrowns(){
     if(on)c.title='已封顶「'+crownNameOf(b.dataset.game)+'」';
   });
 }
-renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var ret=oldRenderLobby15();try{refreshRegisterChip();}catch(e){}try{if(player)syncTitles({silent:false});syncCrowns();}catch(e){}return ret;};
+renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var ret=oldRenderLobby15();try{refreshRegisterChip();}catch(e){}try{applyAppearance();}catch(e){}try{if(player)syncTitles({silent:false});syncCrowns();}catch(e){}return ret;};
 /* 德州场次选择页（对标斗地主「选场」）：底分/人数卡片 + 好友房(绿)/快速开始(橙) */
 var STAGE_KEYS = ['easy', 'normal', 'hard'];
 var STAGE_TAGS = { easy: '', normal: '热门', hard: '' };
@@ -10897,7 +11107,12 @@ function onlineCreate(){
     if (!ok) return setOnlineTip(err || '连接失败');
     onlineSend('nick', { nickname: Online.nickname });
     var ro = Online.roomOpts || {};
-    onlineSend('create', { game: Online.game, maxPlayers: Number(ro.maxPlayers) || 0, rounds: Number(ro.rounds) || 0 });
+    onlineSend('create', {
+      game: Online.game,
+      maxPlayers: Number(ro.maxPlayers) || 0,
+      rounds: Number(ro.rounds) || 0,
+      open: !!ro.open, double: !!ro.double, turnMs: Number(ro.turnMs) || 0,
+    });
   });
 }
 /* ---- 房内邀请在线好友（斗地主式：房间里直接拉好友） ---- */
@@ -11007,7 +11222,8 @@ function renderOnlineLobby(room){
     var cm = $('roomCenterMeta');
     if (cm) {
       var total = Number(room.rounds) || 0;
-      cm.textContent = (total ? ('共 ' + total + ' 局 · ') : '不记局数 · ') + cap + ' 人房 · 已到 ' + seats.length + ' 人';
+      var ruleTxt = (room.rules && room.rules.summary) ? room.rules.summary : ((total ? ('共 ' + total + ' 局 · ') : '不记局数 · ') + cap + ' 人房');
+      cm.textContent = ruleTxt + ' · 已到 ' + seats.length + ' 人';
     }
     var rr = $('roomRounds'); if (rr) rr.textContent = (Number(room.rounds) || 0) ? (Number(room.rounds) + ' 局') : '不限';
     /* 自己是否已准备 */
@@ -11738,6 +11954,7 @@ var BOARD_META = {
   titles: { name: '称号榜', unit: ' 个称号' },
   achievements: { name: '成就榜', unit: ' 项成就' },
   checkin: { name: '签到榜', unit: ' 天连签' },
+  puzzles: { name: '残局榜', unit: ' 关通关' },
 };
 function loadRankBoard(type){
   var list = $('boardList'); if (!list) return;
@@ -11820,7 +12037,7 @@ if (typeof window !== 'undefined') window.PokerOnlineBridge = {
 /* ---- 开设房间（好友房参数）：人数 / 局数真实生效 ---- */
 var RS_GAMES = ['guandan', 'holdem', 'gold', 'diceduel'];
 var RS_MAX = { guandan: 4, holdem: 6, gold: 6, diceduel: 6 };
-var RS = { game: 'holdem', maxPlayers: 6, rounds: 6 };
+var RS = { game: 'holdem', maxPlayers: 6, rounds: 6, open: false, double: false, turnMs: 30000 };
 function rsRender(){
   var g = $('rsGames'), st = $('rsSeats'), rd = $('rsRounds');
   if (g) {
@@ -11856,6 +12073,32 @@ function rsRender(){
       b.onclick = function(){ RS.rounds = Number(b.getAttribute('data-rsr')); rsRender(); };
     });
   }
+  /* 明牌 / 加倍 / 出牌时长（对标斗地主「开设房间」的规则参数） */
+  var so = $('rsOpen'), sd = $('rsDouble'), stm = $('rsTurn');
+  if (so) {
+    so.innerHTML = [{ v: false, t: '关闭' }, { v: true, t: '明牌（公开手牌）' }].map(function(o){
+      return '<button type="button" class="rs-chip' + (o.v === RS.open ? ' on' : '') + '" data-rso="' + (o.v ? 1 : 0) + '">' + o.t + '</button>';
+    }).join('');
+    so.querySelectorAll('[data-rso]').forEach(function(b){
+      b.onclick = function(){ RS.open = b.getAttribute('data-rso') === '1'; rsRender(); };
+    });
+  }
+  if (sd) {
+    sd.innerHTML = [{ v: false, t: '×1' }, { v: true, t: '×2（积分翻倍）' }].map(function(o){
+      return '<button type="button" class="rs-chip' + (o.v === RS.double ? ' on' : '') + '" data-rsd="' + (o.v ? 1 : 0) + '">' + o.t + '</button>';
+    }).join('');
+    sd.querySelectorAll('[data-rsd]').forEach(function(b){
+      b.onclick = function(){ RS.double = b.getAttribute('data-rsd') === '1'; rsRender(); };
+    });
+  }
+  if (stm) {
+    stm.innerHTML = [{ v: 20000, t: '20 秒' }, { v: 60000, t: '60 秒' }, { v: 300000, t: '300 秒' }].map(function(o){
+      return '<button type="button" class="rs-chip' + (o.v === RS.turnMs ? ' on' : '') + '" data-rst="' + o.v + '">' + o.t + '</button>';
+    }).join('');
+    stm.querySelectorAll('[data-rst]').forEach(function(b){
+      b.onclick = function(){ RS.turnMs = Number(b.getAttribute('data-rst')); rsRender(); };
+    });
+  }
 }
 function openRoomSetup(game){
   if (game && RS_GAMES.indexOf(game) >= 0) { RS.game = game; RS.maxPlayers = RS_MAX[game] || 6; }
@@ -11866,7 +12109,7 @@ function submitRoomSetup(){
   var B = window.PokerOnlineBridge;
   if (!B) return showToast('联机模块未就绪，请刷新页面重试', 2400, true);
   closeOverlay('ovRoomSetup');
-  B.createRoom(RS.game, { maxPlayers: RS.maxPlayers, rounds: RS.rounds });
+  B.createRoom(RS.game, { maxPlayers: RS.maxPlayers, rounds: RS.rounds, open: RS.open, double: RS.double, turnMs: RS.turnMs });
 }
 function openOnline(mode){
   initAudio(); sfx('click');

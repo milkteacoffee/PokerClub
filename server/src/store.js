@@ -144,6 +144,11 @@ class Store {
     try { this.db.exec('ALTER TABLE players ADD COLUMN ach_count INTEGER NOT NULL DEFAULT 0'); } catch (e) {}
     try { this.db.exec('ALTER TABLE players ADD COLUMN checkin_days INTEGER NOT NULL DEFAULT 0'); } catch (e) {}
     try { this.db.exec('ALTER TABLE players ADD COLUMN checkin_streak INTEGER NOT NULL DEFAULT 0'); } catch (e) {}
+    try { this.db.exec('ALTER TABLE players ADD COLUMN puzzle_count INTEGER NOT NULL DEFAULT 0'); } catch (e) {}
+    try { this.db.exec('ALTER TABLE players ADD COLUMN tour_best INTEGER NOT NULL DEFAULT 0'); } catch (e) {}
+    /* 免费锦标赛成绩（每天每人一条，取当日最好） */
+    this.db.exec('CREATE TABLE IF NOT EXISTS tour_scores (device_id TEXT NOT NULL, day TEXT NOT NULL, score INTEGER NOT NULL, hands INTEGER NOT NULL DEFAULT 0, at INTEGER NOT NULL, PRIMARY KEY (device_id, day))');
+    this.db.exec('CREATE INDEX IF NOT EXISTS idx_tour_day ON tour_scores(day, score DESC)');
     /* 活跃日（每个玩家每天一条）——留存率的唯一可信来源 */
     this.db.exec('CREATE TABLE IF NOT EXISTS player_active_days (device_id TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY (device_id, day))');
     this.db.exec('CREATE INDEX IF NOT EXISTS idx_pad_day ON player_active_days(day)');
@@ -320,11 +325,46 @@ class Store {
     try { this.db.prepare('INSERT OR IGNORE INTO player_active_days (device_id, day) VALUES (?, ?)').run(String(deviceId), day); } catch (e) {}
   }
 
+  /* ---- 免费锦标赛：提交当日成绩（同日取最好）+ 榜单 ---- */
+  submitTournament(deviceId, score, hands) {
+    if (!deviceId) return { ok: false, msg: '缺少设备ID' };
+    var day = localDay();
+    var sc = Math.trunc(Number(score) || 0);
+    var hd = Math.max(0, Math.trunc(Number(hands) || 0));
+    try {
+      var cur = this.db.prepare('SELECT score FROM tour_scores WHERE device_id = ? AND day = ?').get(String(deviceId), day);
+      if (!cur || sc > cur.score) {
+        this.db.prepare('INSERT INTO tour_scores (device_id, day, score, hands, at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(device_id, day) DO UPDATE SET score = excluded.score, hands = excluded.hands, at = excluded.at')
+          .run(String(deviceId), day, sc, hd, Date.now());
+      }
+      var p = this.db.prepare('SELECT tour_best FROM players WHERE device_id = ?').get(String(deviceId));
+      if (!p || sc > (p.tour_best || 0)) this.db.prepare('UPDATE players SET tour_best = ? WHERE device_id = ?').run(sc, String(deviceId));
+    } catch (e) { return { ok: false, msg: e.message }; }
+    return { ok: true, day: day, score: sc };
+  }
+  tourBoard(scope, limit) {
+    var lim = Math.max(1, Math.min(100, Number(limit) || 50));
+    if (scope === 'all') {
+      return this.db.prepare('SELECT device_id, nickname, avatar, user_code, tour_best AS value FROM players WHERE tour_best != 0 ORDER BY tour_best DESC, last_seen DESC LIMIT ?').all(lim)
+        .map(function (r) { return { deviceId: r.device_id, nickname: r.nickname, avatar: r.avatar || 'a01', userCode: r.user_code, value: r.value }; });
+    }
+    var day = localDay();
+    return this.db.prepare('SELECT t.device_id, t.score AS value, p.nickname, p.avatar, p.user_code FROM tour_scores t LEFT JOIN players p ON p.device_id = t.device_id WHERE t.day = ? ORDER BY t.score DESC, t.at ASC LIMIT ?').all(day, lim)
+      .map(function (r) { return { deviceId: r.device_id, nickname: r.nickname || '牌友', avatar: r.avatar || 'a01', userCode: r.user_code, value: r.value }; });
+  }
+  myTournament(deviceId) {
+    var day = localDay();
+    try {
+      var row = this.db.prepare('SELECT score, hands, at FROM tour_scores WHERE device_id = ? AND day = ?').get(String(deviceId), day);
+      return row ? { played: true, score: row.score, hands: row.hands, at: row.at } : { played: false };
+    } catch (e) { return { played: false }; }
+  }
+
   /* ---- 榜单快照上报（金币/称号/成就/签到）---- */
   setRankStats(deviceId, st) {
     if (!deviceId || !st) return;
     var sets = [], vals = [];
-    var map = { coins: 'coins', titles: 'title_count', achievements: 'ach_count', checkinDays: 'checkin_days', checkinStreak: 'checkin_streak' };
+    var map = { coins: 'coins', titles: 'title_count', achievements: 'ach_count', checkinDays: 'checkin_days', checkinStreak: 'checkin_streak', puzzles: 'puzzle_count', tourBest: 'tour_best' };
     Object.keys(map).forEach(function (k) {
       if (st[k] === undefined || st[k] === null) return;
       var n = Math.max(0, Math.floor(Number(st[k]) || 0));
@@ -341,7 +381,7 @@ class Store {
   /* ---- 排行榜：coins / titles / achievements / checkin（金币/称号/成就/签到）---- */
   rankBy(type, limit) {
     var lim = Math.max(1, Math.min(100, Number(limit) || 50));
-    var col = ({ coins: 'coins', titles: 'title_count', achievements: 'ach_count', checkin: 'checkin_streak' })[type];
+    var col = ({ coins: 'coins', titles: 'title_count', achievements: 'ach_count', checkin: 'checkin_streak', puzzles: 'puzzle_count', tournament: 'tour_best' })[type];
     if (!col) return [];
     return this.db.prepare('SELECT device_id, nickname, avatar, user_code, ' + col + ' AS value FROM players WHERE ' + col + ' > 0 ORDER BY ' + col + ' DESC, last_seen DESC LIMIT ?').all(lim)
       .map(function (r) { return { deviceId: r.device_id, nickname: r.nickname, avatar: r.avatar || 'a01', userCode: r.user_code, value: r.value }; });
@@ -391,7 +431,7 @@ class Store {
   listPlayersPaged(limit, offset, search) {
     var lim = Math.max(1, Math.min(100, Number(limit) || 20));
     var off = Math.max(0, Number(offset) || 0);
-    var cols = 'device_id, nickname, user_code, mailbox_coins, coins, title_count, ach_count, checkin_days, checkin_streak, last_seen, created_at';
+    var cols = 'device_id, nickname, user_code, mailbox_coins, coins, title_count, ach_count, checkin_days, checkin_streak, puzzle_count, tour_best, last_seen, created_at';
     if (search) {
       var q = '%' + String(search).replace(/[%_]/g, '\\$&') + '%';
       var total = this.db.prepare('SELECT COUNT(*) AS n FROM players WHERE nickname LIKE ? OR device_id LIKE ? OR user_code LIKE ?').get(q, q, q).n;

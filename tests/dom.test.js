@@ -147,8 +147,8 @@ function click(el) {
   click($('lbBtnShop'));
   await tick(30);
   ok($('ovShop').classList.contains('show'), '打开商城面板');
-  ok($('shopList').querySelectorAll('.shop-item').length === 14,
-     '商城渲染 13 件商品 + 免费礼包（排位卡已随排位取消下架）（实际 ' + $('shopList').querySelectorAll('.shop-item').length + '）');
+  ok($('shopList').querySelectorAll('.shop-item').length === 20,
+     '商城渲染 19 件商品 + 免费礼包（含新增头像框 3 + 牌桌皮肤 3）（实际 ' + $('shopList').querySelectorAll('.shop-item').length + '）');
   ok($('shopCoins').textContent === '500', '商城顶栏显示金币');
   click($('ovShop').querySelector('[data-close="ovShop"]'));
   await tick(20);

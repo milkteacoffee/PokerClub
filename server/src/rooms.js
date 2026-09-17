@@ -525,6 +525,46 @@ class Room {
   }
   /* 房主设定的局数（0 = 不限） */
   roundTotal() { return Math.max(0, Number(this.opts && this.opts.rounds) || 0); }
+  /* 房主设定的单步行动时长（毫秒；默认取全局配置，范围 10s~600s） */
+  turnMs() {
+    const v = Number(this.opts && this.opts.turnMs) || 0;
+    if (!v) return config.room.actionTimeoutMs;
+    return Math.max(10e3, Math.min(600e3, v));
+  }
+  /* 娱乐加倍：本房结算积分翻倍（不改玩法内部数值） */
+  doubleFactor() { return (this.opts && this.opts.double) ? 2 : 1; }
+  /* 明牌房：开局即公开所有人手牌 */
+  isOpenHand() { return !!(this.opts && this.opts.open); }
+  /* 房间规则摘要（下发前端展示） */
+  ruleSummary() {
+    const parts = [];
+    parts.push(this.maxPlayers() + ' 人房');
+    parts.push(this.roundTotal() ? this.roundTotal() + ' 局' : '不限局数');
+    parts.push(Math.round(this.turnMs() / 1000) + ' 秒/步');
+    if (this.opts && this.opts.double) parts.push('积分×2');
+    if (this.isOpenHand()) parts.push('明牌');
+    return parts.join(' · ');
+  }
+  /* 房主设定的单步行动时长（毫秒；默认取全局配置，范围 10s~600s） */
+  turnMs() {
+    const v = Number(this.opts && this.opts.turnMs) || 0;
+    if (!v) return config.room.actionTimeoutMs;
+    return Math.max(10e3, Math.min(600e3, v));
+  }
+  /* 娱乐加倍：本房结算积分翻倍（不改玩法内部数值） */
+  doubleFactor() { return (this.opts && this.opts.double) ? 2 : 1; }
+  /* 明牌房：开局即公开所有人手牌 */
+  isOpenHand() { return !!(this.opts && this.opts.open); }
+  /* 房间规则摘要（下发前端展示） */
+  ruleSummary() {
+    const parts = [];
+    parts.push(this.maxPlayers() + ' 人房');
+    parts.push(this.roundTotal() ? this.roundTotal() + ' 局' : '不限局数');
+    parts.push(Math.round(this.turnMs() / 1000) + ' 秒/步');
+    if (this.opts && this.opts.double) parts.push('积分×2');
+    if (this.isOpenHand()) parts.push('明牌');
+    return parts.join(' · ');
+  }
 
   isEmpty() { return this.seats.every(s => !s.online); }
 
@@ -681,12 +721,27 @@ class Room {
 
   viewFor(deviceId) {
     if (!this.started || !this.state) {
-      return { game: this.game, waiting: true, seats: this.seats.map(s => ({ seat: s.seat, deviceId: s.deviceId, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), title: this.titleOf(s.deviceId), ready: s.ready, online: s.online })), host: this.hostDevice, maxPlayers: this.maxPlayers(), rounds: this.roundTotal(), roundNo: this.roundNo, roundEnded: !!this.roundEnded };
+      return { game: this.game, waiting: true, seats: this.seats.map(s => ({ seat: s.seat, deviceId: s.deviceId, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), title: this.titleOf(s.deviceId), ready: s.ready, online: s.online })), host: this.hostDevice, maxPlayers: this.maxPlayers(), rounds: this.roundTotal(), roundNo: this.roundNo, roundEnded: !!this.roundEnded,
+        rules: { open: this.isOpenHand(), double: this.doubleFactor() > 1, turnMs: this.turnMs(), summary: this.ruleSummary() } };
     }
     const seat = this.seatOf(deviceId);
     const v = this.adapter.publicView(this.state, seat);
     v.seatInfo = this.seats.map(s => ({ seat: s.seat, deviceId: s.deviceId, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), title: this.titleOf(s.deviceId), online: s.online, ready: s.ready }));
     v.host = this.hostDevice;
+    v.rules = { open: this.isOpenHand(), double: this.doubleFactor() > 1, turnMs: this.turnMs(), summary: this.ruleSummary() };
+    /* 明牌房：把所有人手牌换成真牌（德州用 players[].hole，金花用 players[].hand，均按座位下标对齐） */
+    if (this.isOpenHand() && this.state && this.state.players && v.players) {
+      for (let i = 0; i < v.players.length && i < this.state.players.length; i++) {
+        const src = this.state.players[i];
+        const dst = v.players[i];
+        if (!src || !dst) continue;
+        const ids = function (arr) { return (arr || []).map(function (c) { return (c && c.id) ? c.id : c; }); };
+        if (src.hole) dst.hole = ids(src.hole);
+        if (src.hand) dst.hand = ids(src.hand);
+        if (dst.seat === undefined && src.seat !== undefined) dst.seat = src.seat;
+      }
+      v.openHand = true;
+    }
     /* 注意：不能叫 round —— 炸金花/骰子用 state.round 表示「第几轮」，会冲突 */
     v.roundInfo = { no: (this.roundNo || 0) + 1, total: this.roundTotal() };
     /* 思考倒计时：与「行动超时自动代打」严格对齐。下发剩余毫秒（而非绝对时间戳），
@@ -695,7 +750,7 @@ class Room {
       const done = this.adapter.isDone(this.state);
       const turn = this.game === 'guandan' ? (this.state.g ? this.state.g.turn : -1) : this.state.turn;
       v.turnLeftMs = (!done && typeof turn === 'number' && turn >= 0)
-        ? Math.max(0, this.lastActivity + config.room.actionTimeoutMs - Date.now()) : 0;
+        ? Math.max(0, this.lastActivity + this.turnMs() - Date.now()) : 0;
     } catch (e) { v.turnLeftMs = 0; }
     return v;
   }
