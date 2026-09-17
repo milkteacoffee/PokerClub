@@ -6015,8 +6015,9 @@ function tourRewardOf(score) { return score > 0 ? Math.min(3000, Math.floor(scor
 function renderTourBoard() {
   var box = $('tourList'); if (!box) return;
   box.innerHTML = '<div class="tour-row" style="color:#8fa0b4">加载中…</div>';
-  if (!onlineAvailable()) { box.innerHTML = '<div class="tour-row" style="color:#8fa0b4">未连接服务器 · 榜单不可用（仍可单机参赛）</div>'; return; }
-  fetch(Online.server.replace(/\/$/, '') + '/api/tournament/board?scope=' + TOUR.scope + '&limit=20', { headers: { 'X-Device-Id': onlineDeviceId() } })
+  var B = window.PokerOnlineBridge;
+  if (!B || !B.available()) { box.innerHTML = '<div class="tour-row" style="color:#8fa0b4">未连接服务器 · 榜单不可用（仍可单机参赛）</div>'; return; }
+  fetch(B.serverUrl() + '/api/tournament/board?scope=' + TOUR.scope + '&limit=20', { headers: { 'X-Device-Id': B.deviceId() } })
     .then(function (r) { return r.json(); })
     .then(function (d) {
       if (!d || !d.list || !d.list.length) { box.innerHTML = '<div class="tour-row" style="color:#8fa0b4">本期还没有成绩 · 快去报名成为第一</div>'; return; }
@@ -6063,6 +6064,11 @@ function finishTournament() {
   var score = p ? p.chips - t.start : 0;
   var reward = tourRewardOf(score);
   G.tournament = null;
+  /* 结束前收尾结算状态：否则 exitGame 会被「本手正在结算」守卫拦下，卡在牌桌出不去 */
+  G.settling = false;
+  G.handSettled = true;
+  G.handOver = false;
+  try { hideSettle(); } catch (e) {}
   exitGame();
   player.tourDate = t.day;
   player.tourScore = score;
@@ -6071,13 +6077,16 @@ function finishTournament() {
   if (reward > 0) addCoins(reward);
   savePlayer();
   try {
-    fetch(Online.server.replace(/\/$/, '') + '/api/tournament', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Device-Id': onlineDeviceId() },
-      body: JSON.stringify({ score: score, hands: t.hands }),
-    }).catch(function () {});
+    var B = window.PokerOnlineBridge;
+    if (B && B.available()) {
+      fetch(B.serverUrl() + '/api/tournament', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Device-Id': B.deviceId() },
+        body: JSON.stringify({ score: score, hands: t.hands }),
+      }).catch(function () {});
+    }
   } catch (e) {}
-  syncTitles({ silent: false });
+  try { syncTitles({ silent: false }); } catch (e) {}
   showToast('锦标赛结束 · 净赢 ' + (score > 0 ? '+' : '') + fmt(score) + (reward > 0 ? ' · 奖励 ' + fmt(reward) + ' 金币' : ' · 无净赢，下次加油'), 3600);
   setTimeout(function () { try { openTournament(); } catch (e) {} }, 400);
 }
@@ -8259,7 +8268,13 @@ function showLevelUp() {
 function requestExit() {
   /* 结算面板打开时，这一手已结算完毕：直接关面板离桌（否则会被"正在结算"挡住出不去） */
   try { if ($('ovSettle') && $('ovSettle').classList.contains('show')) hideSettle(); } catch (e) {}
-  if (G.settling && !G.handSettled) { showToast('本手正在结算，请稍候', 1400); return; }
+  if (G.settling && !G.handSettled) {
+    /* 结算落库失败（quickRetry 挂起）时不能把玩家永久卡在牌桌：放行离桌并提示 */
+    if (G.quickRetry || G.rankRetry) {
+      G.settling = false; G.handSettled = true;
+      showToast('本手结算保存失败，已离桌（本手不计入战绩）', 2600, true);
+    } else { showToast('本手正在结算，请稍候', 1400); return; }
+  }
   /* 一键离桌：自动保存并返回模式选择（不再弹确认层） */
   exitGame();
 }
@@ -12032,7 +12047,9 @@ if (typeof window !== 'undefined') window.PokerOnlineBridge = {
   renderMatchGames: function(){ omRenderGames(); },
   setMatchGame: function(game){ OM.game = game; },
   getMatchGame: function(){ return OM.game; },
-  available: function(){ try { return onlineAvailable(); } catch (e) { return false; } }
+  available: function(){ try { return onlineAvailable(); } catch (e) { return false; } },
+  deviceId: function(){ try { return onlineDeviceId(); } catch (e) { return ''; } },
+  serverUrl: function(){ return (typeof Online !== 'undefined' && Online.server) ? String(Online.server).replace(/\/$/, '') : (window.POKERCLUB_SERVER || ''); }
 };
 /* ---- 开设房间（好友房参数）：人数 / 局数真实生效 ---- */
 var RS_GAMES = ['guandan', 'holdem', 'gold', 'diceduel'];
