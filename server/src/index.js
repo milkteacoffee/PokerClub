@@ -101,6 +101,14 @@ button.primary{background:rgba(240,215,154,.15);color:#f2c14e;font-weight:700}
 .pager button:disabled{opacity:.35;cursor:default}
 .pager .pageinfo{margin-left:auto}
 .empty{padding:16px 10px;color:#5a6a76;font-size:12px}
+.copybtn{padding:4px 10px;font-size:11px;border-radius:6px;background:rgba(240,215,154,.12);color:#e8d5a3;border:none;cursor:pointer}
+.copybtn:hover{background:rgba(240,215,154,.22)}
+.ret-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px}
+.ret-card{padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04)}
+.ret-card .rv{font-size:22px;font-weight:800;color:#6cc4a1}
+.ret-card .rl{font-size:11px;color:#5a6a76;margin-top:2px}
+.ret-card .rs{font-size:10.5px;color:#4d5a66;margin-top:4px}
+.row2{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .sec{margin-top:6px}
 .search-row{display:flex;gap:10px;margin-bottom:12px;align-items:center}
 .search-row input{flex:1;max-width:340px}
@@ -139,6 +147,17 @@ tr:hover td{background:rgba(255,255,255,.02)}
 </div>
 
 <div class="card">
+<h3>留存率</h3>
+<div class="ret-grid" id="retCards">
+<div class="ret-card"><div class="rv" id="retD1">-</div><div class="rl">次日留存</div><div class="rs">注册次日仍打开游戏</div></div>
+<div class="ret-card"><div class="rv" id="retD7">-</div><div class="rl">7 日留存</div><div class="rs">注册后第 7 天活跃</div></div>
+<div class="ret-card"><div class="rv" id="retD30">-</div><div class="rl">30 日留存</div><div class="rs">注册后第 30 天活跃</div></div>
+<div class="ret-card"><div class="rv" id="retSize">-</div><div class="rl">统计样本</div><div class="rs">近 30 天新注册玩家</div></div>
+</div>
+<div style="font-size:11px;color:#4d5a66">按注册日分群统计；活跃 = 当天有打开游戏/保存资料/联机行为（留存需积累天数，d7/d30 在自然日到达后才有数）</div>
+</div>
+
+<div class="card">
 <h3>趋势（最近 14 天）</h3>
 <svg class="chart" id="trendChart" viewBox="0 0 720 190" preserveAspectRatio="none"></svg>
 <div class="chart-legend">
@@ -153,7 +172,16 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <div class="search-row">
 <input id="pSearch" placeholder="搜索昵称或设备ID" oninput="searchTO()">&nbsp;<button class="ghost" onclick="loadPlayers(1)">刷新</button>
 </div>
-<table><thead><tr><th>昵称</th><th>设备ID</th><th>邮箱金币</th><th>最后在线</th><th>操作</th></tr></thead><tbody id="pList"></tbody></table>
+<div class="row2" style="margin-bottom:8px">
+<span style="font-size:12px;color:#8fa0b4">每页</span>
+<select id="pSize" onchange="changePageSize()" style="padding:6px 10px">
+<option value="10">10 条</option>
+<option value="20" selected>20 条</option>
+<option value="50">50 条</option>
+</select>
+<span style="font-size:11px;color:#4d5a66">共 <b id="pTotal">-</b> 名玩家 · 数据自服务端上线起统计</span>
+</div>
+<table><thead><tr><th>昵称</th><th>玩家号</th><th>金币</th><th>设备ID</th><th>称号/成就</th><th>最后在线</th><th>操作</th></tr></thead><tbody id="pList"></tbody></table>
 <div class="pager">
 <button id="pPrev" onclick="gotoPage(-1)">上一页</button>
 <button id="pNext" onclick="gotoPage(1)">下一页</button>
@@ -171,8 +199,11 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <input id="cCoins" type="number" placeholder="面额金币" style="width:140px">&nbsp;<input id="cUses" type="number" placeholder="次数" value="1" style="width:80px">&nbsp;<button onclick="mkcode()">生成</button>
 <div id="lastCode" style="margin-top:8px"></div>
 <h3>最近兑换码</h3>
+<div class="row2" style="margin-top:8px">
 <button class="ghost" onclick="loadCodes()">刷新列表</button>
-<table id="codeTable" style="margin-top:8px"><thead><tr><th>兑换码</th><th>面额</th><th>已用/上限</th><th>创建时间</th></tr></thead><tbody id="codeList"></tbody></table>
+<button class="ghost" id="copyAllBtn" onclick="copyAllCodes()">一键复制全部</button>
+</div>
+<table id="codeTable" style="margin-top:8px"><thead><tr><th>兑换码</th><th>面额</th><th>已用/上限</th><th>创建时间</th><th>操作</th></tr></thead><tbody id="codeList"></tbody></table>
 </div>
 </div>
 <script>
@@ -184,18 +215,35 @@ function needLogin(j){if(j&&j.ok===false&&/登录/.test(j.msg||"")){TK="";localS
 function login(){api("POST","/api/admin/login",{user:document.getElementById("au").value,password:document.getElementById("ap").value}).then(j=>{if(j.ok){TK=j.token;localStorage.setItem("admTK",TK);show();}else{document.getElementById("loginErr").textContent=j.msg||"登录失败"}})}
 function paintStats(j){if(!j||!j.ok)return;var st=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v};
  st("stP",j.totalPlayers);st("stC",j.totalCodes);st("stO",j.online);st("stG",j.playing);st("stN",j.newToday);st("stA",j.activeToday);st("stM",j.matchesToday)}
-function show(){document.getElementById("login").style.display="none";document.getElementById("panel").style.display="block";api("GET","/api/admin/stats").then(paintStats);loadTrend();loadPlayers(1);loadCodes()}
+function show(){document.getElementById("login").style.display="none";document.getElementById("panel").style.display="block";api("GET","/api/admin/stats").then(paintStats);loadTrend();loadRetention();loadPlayers(1);loadCodes()}
 function ts(t){if(!t)return"-";var d=new Date(t);return(d.getMonth()+1)+"/"+d.getDate()+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)}
 var searchTimer;function searchTO(){clearTimeout(searchTimer);searchTimer=setTimeout(function(){loadPlayers(1)},300)}
 var PG={page:1,size:20,pages:1,total:0};
 function gotoPage(d){var p=PG.page+d;if(p<1||p>PG.pages)return;loadPlayers(p)}
+function changePageSize(){var el=document.getElementById("pSize");PG.size=Number(el.value)||20;loadPlayers(1)}
+function copyTxt(t,btn){try{navigator.clipboard.writeText(t).then(function(){flash(btn,"已复制")},function(){flash(btn,"复制失败")})}catch(e){flash(btn,"复制失败")}}
+function flash(btn,txt){if(!btn)return;var o=btn.textContent;btn.textContent=txt;setTimeout(function(){btn.textContent=o},900)}
 function loadPlayers(page){var q=document.getElementById("pSearch").value;var pg=page||1;api("GET","/api/admin/players?search="+encodeURIComponent(q)+"&page="+pg+"&size="+PG.size).then(j=>{if(needLogin(j))return;if(!j.ok)return;
  PG.page=j.page||1;PG.pages=j.pages||1;PG.total=j.total||0;
  var tb=document.getElementById("pList");var list=j.list||[];
- tb.innerHTML=list.length?list.map(p=>'<tr><td>'+(p.nickname||"-")+'</td><td style="font-family:monospace;font-size:11px">'+p.device_id+'</td><td class="mb">'+(p.mailbox_coins||0)+'</td><td>'+ts(p.last_seen)+'</td><td><button class="ghost action-btn" onclick="showGrant(\\''+p.device_id+'\\',\\''+(p.nickname||"-")+'\\')">发放</button></td></tr>').join(""):'<tr><td colspan="5" class="empty">暂无玩家数据 · 玩家首次进入游戏（或首次保存资料）时会自动注册</td></tr>';
- var info=document.getElementById("pInfo");if(info)info.textContent="第 "+PG.page+" / "+PG.pages+" 页 · 共 "+PG.total+" 名玩家";
+ tb.innerHTML=list.length?list.map(p=>'<tr><td>'+(p.nickname||"-")+'</td>'
+  +'<td style="font-family:monospace;font-size:11.5px;color:#e8d5a3">'+(p.user_code||"-")+'</td>'
+  +'<td class="mb">'+(p.coins||0)+'</td>'
+  +'<td style="font-family:monospace;font-size:11px">'+p.device_id+'</td>'
+  +'<td style="font-size:11.5px;color:#8fa0b4">'+(p.title_count||0)+' / '+(p.ach_count||0)+' · 签'+(p.checkin_days||0)+'</td>'
+  +'<td>'+ts(p.last_seen)+'</td>'
+  +'<td><button class="ghost action-btn" onclick="showGrant(\\''+p.device_id+'\\',\\''+(p.nickname||"-")+'\\')">发放</button> '
+  +'<button class="copybtn" onclick="copyTxt(\\''+p.device_id+'\\',this)">复制ID</button></td></tr>').join(""):'<tr><td colspan="7" class="empty">暂无玩家数据 · 玩家首次进入游戏（或首次保存资料）时会自动注册</td></tr>';
+ var info=document.getElementById("pInfo");if(info)info.textContent="第 "+PG.page+" / "+PG.pages+" 页";
+ var tt=document.getElementById("pTotal");if(tt)tt.textContent=PG.total;
  var pv=document.getElementById("pPrev"),nx=document.getElementById("pNext");
  if(pv)pv.disabled=PG.page<=1;if(nx)nx.disabled=PG.page>=PG.pages;
+})}
+/* 留存率 */
+function loadRetention(){api("GET","/api/admin/retention?days=30").then(j=>{if(needLogin(j))return;if(!j.ok)return;var r=j.retention||{},o=r.overall||{};
+ var set=function(id,v){var e=document.getElementById(id);if(e)e.textContent=(v===null||v===undefined)?"待累计":(v+"%")};
+ set("retD1",o.d1);set("retD7",o.d7);set("retD30",o.d30);
+ var sz=document.getElementById("retSize");if(sz)sz.textContent=(o.size||0)+" 人";
 })}
 /* 折线图：纯 SVG 手绘（不引外部库） */
 function sparkPath(vals,max,w,h,pad){
@@ -231,8 +279,13 @@ function showGrant(dev,name){document.getElementById("grantBox").classList.add("
 function doGrant(){var dev=document.getElementById("gDev").textContent,c=document.getElementById("gCoins").value;if(!c||c<=0)return gTipMsg("请输入有效金币数");api("POST","/api/admin/grant",{deviceId:dev,coins:Number(c)}).then(j=>{gTipMsg(j.msg||"",j.ok);if(j.ok)loadPlayers()})}
 function gTipMsg(t,ok){var e=document.getElementById("gTip");e.textContent=t;e.className="tip "+(ok?"success":"error")}
 function mkcode(){api("POST","/api/admin/code",{coins:Number(document.getElementById("cCoins").value),maxUses:Number(document.getElementById("cUses").value)}).then(j=>{if(needLogin(j))return;if(j.ok){document.getElementById("lastCode").innerHTML='<span class="code-tag" style="font-size:16px">'+j.code+'</span> <span style="color:#8fa0b4;font-size:11px">面额 '+j.coins+' · 可用 '+j.maxUses+' 次</span>';var o=document.getElementById("out");if(o)o.textContent="";loadCodes()}else out(j.msg||j)})}  
-function loadCodes(){api("GET","/api/admin/codes").then(j=>{if(needLogin(j))return;if(!j.ok)return;var tb=document.getElementById("codeList");var list=j.list||[];tb.innerHTML=list.length?list.map(c=>'<tr><td class="code-tag">'+c.code+'</td><td>'+c.coins+'</td><td>'+c.used_count+' / '+c.max_uses+'</td><td>'+ts(c.created_at)+'</td></tr>').join(""):'<tr><td colspan="4" style="color:#5a6a76;padding:14px 10px">暂无兑换码</td></tr>'})}
-if(TK){document.getElementById("login").style.display="none";document.getElementById("panel").style.display="block";api("GET","/api/admin/stats").then(paintStats);loadTrend();loadPlayers(1);loadCodes()}
+function copyTxt(t,btn){try{navigator.clipboard.writeText(t).then(function(){flash(btn,"已复制")},function(){flash(btn,"复制失败")})}catch(e){flash(btn,"复制失败")}}
+function flash(btn,txt){if(!btn)return;var o=btn.textContent;btn.textContent=txt;setTimeout(function(){btn.textContent=o},900)}
+function loadCodes(){api("GET","/api/admin/codes").then(j=>{if(needLogin(j))return;if(!j.ok)return;var tb=document.getElementById("codeList");var list=j.list||[];
+ tb.innerHTML=list.length?list.map(c=>'<tr><td class="code-tag">'+c.code+'</td><td>'+c.coins+'</td><td>'+c.used_count+' / '+c.max_uses+'</td><td>'+ts(c.created_at)+'</td>'
+  +'<td><button class="copybtn" onclick="copyTxt(\\''+c.code+'\\',this)">复制</button></td></tr>').join(""):'<tr><td colspan="5" class="empty">暂无兑换码</td></tr>'})}
+function copyAllCodes(){api("GET","/api/admin/codes").then(j=>{if(!j.ok||!j.list||!j.list.length)return;copyTxt(j.list.map(function(c){return c.code}).join("\\n"),document.getElementById("copyAllBtn"))})}
+if(TK){document.getElementById("login").style.display="none";document.getElementById("panel").style.display="block";api("GET","/api/admin/stats").then(paintStats);loadTrend();loadRetention();loadPlayers(1);loadCodes()}
 </scr`+`ipt></body></html>`;
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(page);
@@ -289,6 +342,15 @@ if(TK){document.getElementById("login").style.display="none";document.getElement
         const tid = String(body.title || '').trim();
         if (!tid || /^[A-Za-z0-9_]{1,32}$/.test(tid)) store.setTitle(deviceId, tid);
       }
+      /* 榜单快照：金币 / 称号数 / 成就数 / 签到天数与连签（客户端保存资料时带上） */
+      store.setRankStats(deviceId, {
+        coins: body && body.coins,
+        titles: body && body.titles,
+        achievements: body && body.achievements,
+        checkinDays: body && body.checkinDays,
+        checkinStreak: body && body.checkinStreak,
+      });
+      store.touchActiveDay(deviceId);
       const fresh = store.getPlayer(deviceId);
       return json(res, 200, { ok: true, deviceId, nickname: fresh.nickname, avatar: fresh.avatar || 'a01', bio: fresh.bio || '', title: fresh.title || '', userCode: fresh.user_code, recoveryCode: fresh.recovery_code, rank: store.getRank(deviceId), items: store.getItems(deviceId) });
     }
@@ -297,6 +359,7 @@ if(TK){document.getElementById("login").style.display="none";document.getElement
     if (path === '/api/state' && method === 'GET') {
       if (!validDeviceId(deviceId)) return json(res, 400, { ok: false, msg: '缺少或非法设备ID' });
       store.ensurePlayer(deviceId, '牌友');
+      store.touchActiveDay(deviceId);
       const s = store.getState(deviceId);
       return json(res, 200, { ok: true, state: s.state, updatedAt: s.updatedAt });
     }
@@ -565,6 +628,10 @@ if(TK){document.getElementById("login").style.display="none";document.getElement
         var pg = store.listPlayersPaged(size, (page - 1) * size, search);
         return json(res, 200, { ok: true, list: pg.list, total: pg.total, page: page, size: size, pages: Math.max(1, Math.ceil(pg.total / size)) });
       }
+      if (path === '/api/admin/retention' && method === 'GET') {
+        var rdays = Math.max(3, Math.min(90, Number(url.searchParams.get('days')) || 30));
+        return json(res, 200, { ok: true, days: rdays, retention: store.retention(rdays) });
+      }
       if (path === '/api/admin/trend' && method === 'GET') {
         var days = Math.max(3, Math.min(60, Number(url.searchParams.get('days')) || 14));
         return json(res, 200, { ok: true, days: days, trend: store.adminTrend(days) });
@@ -601,6 +668,18 @@ if(TK){document.getElementById("login").style.display="none";document.getElement
         return json(res, 200, { ok: true, list: store.listCodes(30) });
       }
       return json(res, 404, { ok: false, msg: '未知管理接口' });
+    }
+
+    /* ---- 排行榜：coins 金币 / titles 称号 / achievements 成就 / checkin 签到连签 ---- */
+    if (path === '/api/rank' && method === 'GET') {
+      var rtype = String(url.searchParams.get('type') || 'coins');
+      var rlimit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit')) || 50));
+      if (['coins', 'titles', 'achievements', 'checkin'].indexOf(rtype) < 0) return json(res, 400, { ok: false, msg: '未知榜单类型' });
+      var rlist = store.rankBy(rtype, rlimit);
+      return json(res, 200, {
+        ok: true, type: rtype, limit: rlimit,
+        list: rlist.map(function (x, i) { return { rank: i + 1, deviceId: x.deviceId, nickname: x.nickname, avatar: x.avatar, userCode: x.userCode, value: x.value, isMe: !!deviceId && x.deviceId === deviceId }; }),
+      });
     }
 
     /* ---- 拉黑名单（UGC 处置）：GET 列表 / POST 拉黑 / DELETE 解除 ---- */
@@ -801,6 +880,7 @@ wss.on('connection', (ws, req) => {
 
   const conn = { ws, deviceId, nickname, roomCode: null, msgs: [] };
   conns.set(deviceId, conn);
+  try { store.touchActiveDay(deviceId); } catch (e) {}
   const meP = store.getPlayer(deviceId);
   send(ws, 'hello', { deviceId, nickname, userCode: meP ? meP.user_code : '', avatar: meP ? (meP.avatar || 'a01') : 'a01', games: Object.keys(ADAPTERS) });
 

@@ -2326,6 +2326,13 @@
       <h2>🏆 段位排行
         <button class="closebtn" data-close="ovBoard">✕ 返回</button>
       </h2>
+      <div class="board-tabs" id="boardTypes">
+        <button class="board-tab selected" data-btype="points">段位榜</button>
+        <button class="board-tab" data-btype="coins">金币榜</button>
+        <button class="board-tab" data-btype="titles">称号榜</button>
+        <button class="board-tab" data-btype="achievements">成就榜</button>
+        <button class="board-tab" data-btype="checkin">签到榜</button>
+      </div>
       <div class="board-tabs" id="boardScope">
         <button class="board-tab selected" data-scope="global">全服榜</button>
         <button class="board-tab" data-scope="friends">好友榜</button>
@@ -3429,6 +3436,12 @@ function onlinePushProfile(cb) {
   if (!api || !api.fetchIdentity) return cb && cb(false, 'offline');
   api.fetchIdentity(cb, {
     nickname: player.name || '',
+    /* 榜单快照：金币 / 称号数 / 成就数 / 签到连签与累计（服务端用于四类排行榜） */
+    coins: Math.max(0, Math.floor(player.coins || 0)),
+    titles: Object.keys(player.titles || {}).length,
+    achievements: Object.keys(player.achievements || {}).length,
+    checkinDays: player.checkinTotal || 0,
+    checkinStreak: (player.checkin && player.checkin.streak) || 0,
     /* 自定义头像：dataURL 超过上传上限时只本地生效，服务器回落默认头像 */
     avatar: (player.avatar === 'custom' && player.customAvatar && player.customAvatar.length <= AVATAR_UPLOAD_MAX)
       ? player.customAvatar : (player.avatar || 'a01'),
@@ -3708,6 +3721,27 @@ var TITLES = [
   { id:'tt_six_crowns',    name:'四冠牌神',   icon:'👑', desc:'四大排位游戏（德州王牌 · 二十一之神 · 金花炸王 · 掼蛋的神）全部达到最高段位', check:function(p){ return crownCount(p) >= 4; } },
   { id:'tt_niu_1',  name:'初生牛犊', icon:'🐮', desc:'斗牛对局累计 10 局', check:function(p){ var m=(p.games&&p.games.niu&&p.games.niu.metrics)||{}; return (m.hands||0)>=10; } },
   { id:'tt_niu_2',  name:'牛气冲天', icon:'🐂', desc:'斗牛对局累计 100 局', check:function(p){ var m=(p.games&&p.games.niu&&p.games.niu.metrics)||{}; return (m.hands||0)>=100; } },
+  /* 新增：牌局积累 / 签到 / 成就 / 金币 / 联机深度（20 项） */
+  { id:'tt_hands_50',   name:'常客',     icon:'🃏', desc:'累计完成 50 手对局',   check:function(p){ return (p.totalHands||0) >= 50; } },
+  { id:'tt_hands_200',  name:'老牌友',   icon:'🎴', desc:'累计完成 200 手对局',  check:function(p){ return (p.totalHands||0) >= 200; } },
+  { id:'tt_hands_600',  name:'牌桌常驻', icon:'🪑', desc:'累计完成 600 手对局',  check:function(p){ return (p.totalHands||0) >= 600; } },
+  { id:'tt_hands_2000', name:'牌桌支柱', icon:'🏛️', desc:'累计完成 2000 手对局', check:function(p){ return (p.totalHands||0) >= 2000; } },
+  { id:'tt_wins_50',    name:'小赢手',   icon:'🪙', desc:'累计获胜 50 局',       check:function(p){ return (p.totalWins||0) >= 50; } },
+  { id:'tt_wins_200',   name:'稳健赢家', icon:'📈', desc:'累计获胜 200 局',      check:function(p){ return (p.totalWins||0) >= 200; } },
+  { id:'tt_wins_800',   name:'常胜将军', icon:'🎖️', desc:'累计获胜 800 局',      check:function(p){ return (p.totalWins||0) >= 800; } },
+  { id:'tt_streak_20',  name:'二十连捷', icon:'🌟', desc:'达成 20 连胜',         check:function(p){ return (p.maxStreak||0) >= 20; } },
+  { id:'tt_allhands_100', name:'全能牌手', icon:'🧩', desc:'各玩法合计 100 手（含小游戏）', check:function(p){ return titleMetricAny(p,'hands') >= 100; } },
+  { id:'tt_coin_10k',   name:'万元户',   icon:'💰', desc:'持有 10,000 金币',      check:function(p){ return (p.coins||0) >= 10000; } },
+  { id:'tt_coin_50k',   name:'小康之家', icon:'🏦', desc:'持有 50,000 金币',      check:function(p){ return (p.coins||0) >= 50000; } },
+  { id:'tt_coin_200k',  name:'富甲一方', icon:'💠', desc:'持有 200,000 金币',     check:function(p){ return (p.coins||0) >= 200000; } },
+  { id:'tt_checkin_7',  name:'七日连签', icon:'📅', desc:'连续签到 7 天',         check:function(p){ return ((p.checkin&&p.checkin.streak)||0) >= 7; } },
+  { id:'tt_checkin_30', name:'月度全勤', icon:'🗓️', desc:'连续签到 30 天',        check:function(p){ return ((p.checkin&&p.checkin.streak)||0) >= 30; } },
+  { id:'tt_checkin_60', name:'签到达人', icon:'⏱️', desc:'累计签到 60 天',        check:function(p){ return (p.checkinTotal||0) >= 60; } },
+  { id:'tt_ach_50',     name:'成就收集', icon:'🧭', desc:'解锁 50 项成就',        check:function(p){ return Object.keys(p.achievements||{}).length >= 50; } },
+  { id:'tt_ach_200',    name:'成就猎人', icon:'🗺️', desc:'解锁 200 项成就',       check:function(p){ return Object.keys(p.achievements||{}).length >= 200; } },
+  { id:'tt_ach_500',    name:'成就大师', icon:'🧠', desc:'解锁 500 项成就',       check:function(p){ return Object.keys(p.achievements||{}).length >= 500; } },
+  { id:'tt_net_4',      name:'联机舵手', icon:'🧭', desc:'在线对局 200 局',        check:function(p){ var o=p.online||{}; return (o.games||0) >= 200; } },
+  { id:'tt_net_5',      name:'牌友满堂', icon:'🤝', desc:'在线对局赢下 100 场',     check:function(p){ var o=p.online||{}; return (o.wins||0) >= 100; } },
   { id:'tt_net_1',  name:'初次联网', icon:'🌐', desc:'完成首局在线对局', check:function(p){ var o=p.online||{}; return (o.games||0)>=1; } },
   { id:'tt_net_2',  name:'联网常客', icon:'🛰️', desc:'完成 50 局在线对局', check:function(p){ var o=p.online||{}; return (o.games||0)>=50; } },
   { id:'tt_net_3',  name:'网络豪客', icon:'💎', desc:'在线对局赢下 20 场', check:function(p){ var o=p.online||{}; return (o.wins||0)>=20; } },
@@ -6857,6 +6891,7 @@ function ensureCheckin() {
     if (player.checkin && player.checkin.date === yesterdayOf(today)) {
       st = (player.checkin.streak || 0) + 1;
     }
+    player.checkinTotal = (player.checkinTotal || 0) + 1;   /* 累计签到天数（签到榜依据） */
     player.checkin = { date: today, streak: st, claimed: false };
     saveAllSaves(true);
   }
@@ -10222,7 +10257,7 @@ var ONLINE_SERVER = (function(){
 var Online = {
   deviceId: '', nickname: '', ws: null, connected: false,
   game: 'guandan', code: '', seat: -1, host: null,
-  room: null, state: null, picked: new Set(), ready: false, boardGame: 'holdem', boardScope: 'global',
+  room: null, state: null, picked: new Set(), ready: false, boardGame: 'holdem', boardScope: 'global', boardType: 'points',
   friendMode: 'id', userCode: '',
   server: ONLINE_SERVER,
 };
@@ -11292,8 +11327,41 @@ function onlineAcceptFriend(fromId, accept){
     });
   }
 }
+/* 其他榜单（金币/称号/成就/签到）：走 /api/rank */
+var BOARD_META = {
+  coins: { name: '金币榜', unit: ' 金币' },
+  titles: { name: '称号榜', unit: ' 个称号' },
+  achievements: { name: '成就榜', unit: ' 项成就' },
+  checkin: { name: '签到榜', unit: ' 天连签' },
+};
+function loadRankBoard(type){
+  var list = $('boardList'); if (!list) return;
+  list.innerHTML = '<div class="board-empty">加载中…</div>';
+  var meta = BOARD_META[type] || { name: '榜单', unit: '' };
+  /* 先上报一次自身快照，保证自己出现在榜单里 */
+  try { onlinePushProfile(); } catch (e) {}
+  if (!onlineAvailable()) { list.innerHTML = '<div class="board-empty">未配置联机服务器<br>排行榜功能暂不可用</div>'; return; }
+  fetch(Online.server.replace(/\/$/, '') + '/api/rank?type=' + type + '&limit=100', {
+    headers: { 'X-Device-Id': onlineDeviceId() },
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (!d.ok || !d.list) { list.innerHTML = '<div class="board-empty">暂无数据</div>'; return; }
+    var rows = d.list.filter(function(x){ return x.isMe || !isBlocked(x.deviceId); });
+    if (!rows.length) { list.innerHTML = '<div class="board-empty">' + meta.name + '暂无上榜玩家<br>保存一次资料即可上榜</div>'; return; }
+    list.innerHTML = rows.map(function(x){
+      var cls = 'board-row' + (x.isMe ? ' me' : '') + (x.rank <= 3 ? ' top' + x.rank : '');
+      return '<div class="' + cls + '" data-puser="' + esc(x.deviceId) + '" data-pname="' + esc(x.nickname) +
+        '" data-pavatar="' + esc(x.avatar || 'a01') + '" data-psub="' + esc(meta.name + ' · ' + x.value + meta.unit) +
+        '"><span class="rk">' + x.rank + '</span>' +
+        '<span class="bavatar">' + avatarSVG(x.avatar, 22) + '</span>' +
+        '<span class="nm">' + esc(x.nickname) + (x.isMe ? '（我）' : '') + '</span>' +
+        '<span class="tr">' + esc(x.userCode || '') + '</span>' +
+        '<span class="pt">' + fmt(x.value) + meta.unit + '</span></div>';
+    }).join('');
+  }).catch(function(){ list.innerHTML = '<div class="board-empty">加载失败</div>'; });
+}
 function loadBoard(){
   var list = $('boardList'); if (!list) return;
+  if (Online.boardType && Online.boardType !== 'points') { loadRankBoard(Online.boardType); return; }
   list.innerHTML = '<div class="board-empty">加载中…</div>';
   if (!onlineAvailable()) { list.innerHTML = '<div class="board-empty">未配置联机服务器<br>排行榜功能暂不可用</div>'; return; }
   if (typeof fetch !== 'function') { list.innerHTML = '<div class="board-empty">当前环境不支持联网<br>排行榜不可用</div>'; return; }
@@ -11410,6 +11478,15 @@ function openOnline(mode){
 function onlineInitUI(){
   var ob = $('lbBtnOnline'); if (ob) ob.onclick = openOnline;
   var bb = $('lbBtnBoard'); if (bb) bb.onclick = openBoard;
+  var bts = $('boardTypes');
+  if (bts) bts.querySelectorAll('[data-btype]').forEach(function(b){
+    b.onclick = function(){
+      Online.boardType = b.getAttribute('data-btype');
+      bts.querySelectorAll('[data-btype]').forEach(function(x){ x.classList.toggle('selected', x === b); });
+      var bg = $('boardGames'); if (bg) bg.style.display = (Online.boardType === 'points') ? '' : 'none';
+      loadBoard();
+    };
+  });
   var og = $('onlineGames');
   if (og) og.querySelectorAll('[data-ogame]').forEach(function(b){
     b.onclick = function(){

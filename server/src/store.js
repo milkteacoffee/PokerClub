@@ -1,4 +1,17 @@
 'use strict';
+
+/* 本地日期工具（YYYY-MM-DD）——活跃日与留存统计统一用它 */
+function localDay(d) {
+  var x = d ? new Date(d) : new Date();
+  var m = String(x.getMonth() + 1), day = String(x.getDate());
+  return x.getFullYear() + '-' + (m.length < 2 ? '0' + m : m) + '-' + (day.length < 2 ? '0' + day : day);
+}
+function shiftDay(dayStr, n) {
+  var parts = String(dayStr).split('-');
+  var t = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  t.setDate(t.getDate() + n);
+  return localDay(t);
+}
 /**
  * 持久化层：Node 内置 node:sqlite（零外部依赖，免编译）
  * 存三张表：
@@ -125,6 +138,15 @@ class Store {
     this.db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_players_code ON players(user_code)');
     /* 资料与云存档：recovery_code=跨设备接管凭据（明文存，低风险好友局）；
        state_json=全量存档 blob（allSaves），state_updated_at=最后上推时间 */
+    /* 榜单统计（客户端在保存资料时上报快照） */
+    try { this.db.exec('ALTER TABLE players ADD COLUMN coins INTEGER NOT NULL DEFAULT 0'); } catch (e) {}
+    try { this.db.exec('ALTER TABLE players ADD COLUMN title_count INTEGER NOT NULL DEFAULT 0'); } catch (e) {}
+    try { this.db.exec('ALTER TABLE players ADD COLUMN ach_count INTEGER NOT NULL DEFAULT 0'); } catch (e) {}
+    try { this.db.exec('ALTER TABLE players ADD COLUMN checkin_days INTEGER NOT NULL DEFAULT 0'); } catch (e) {}
+    try { this.db.exec('ALTER TABLE players ADD COLUMN checkin_streak INTEGER NOT NULL DEFAULT 0'); } catch (e) {}
+    /* 活跃日（每个玩家每天一条）——留存率的唯一可信来源 */
+    this.db.exec('CREATE TABLE IF NOT EXISTS player_active_days (device_id TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY (device_id, day))');
+    this.db.exec('CREATE INDEX IF NOT EXISTS idx_pad_day ON player_active_days(day)');
     try { this.db.exec('ALTER TABLE players ADD COLUMN recovery_code TEXT'); } catch (e) {}
     try { this.db.exec("ALTER TABLE players ADD COLUMN state_json TEXT NOT NULL DEFAULT ''"); } catch (e) {}
     try { this.db.exec('ALTER TABLE players ADD COLUMN state_updated_at INTEGER NOT NULL DEFAULT 0'); } catch (e) {}
@@ -291,18 +313,93 @@ class Store {
     return this.db.prepare('SELECT device_id, nickname, mailbox_coins, last_seen FROM players ORDER BY last_seen DESC LIMIT ?')
       .all(Math.min(200, limit || 100));
   }
+  /* ---- 活跃日：每次触达（打开游戏/保存资料/云存档）打点，当天只写一次 ---- */
+  touchActiveDay(deviceId, dayKey) {
+    if (!deviceId) return;
+    var day = dayKey || localDay();
+    try { this.db.prepare('INSERT OR IGNORE INTO player_active_days (device_id, day) VALUES (?, ?)').run(String(deviceId), day); } catch (e) {}
+  }
+
+  /* ---- 榜单快照上报（金币/称号/成就/签到）---- */
+  setRankStats(deviceId, st) {
+    if (!deviceId || !st) return;
+    var sets = [], vals = [];
+    var map = { coins: 'coins', titles: 'title_count', achievements: 'ach_count', checkinDays: 'checkin_days', checkinStreak: 'checkin_streak' };
+    Object.keys(map).forEach(function (k) {
+      if (st[k] === undefined || st[k] === null) return;
+      var n = Math.max(0, Math.floor(Number(st[k]) || 0));
+      sets.push(map[k] + ' = ?'); vals.push(n);
+    });
+    if (!sets.length) return;
+    vals.push(String(deviceId));
+    try {
+      var stmt = this.db.prepare('UPDATE players SET ' + sets.join(', ') + ' WHERE device_id = ?');
+      stmt.run.apply(stmt, vals);
+    } catch (e) {}
+  }
+
+  /* ---- 排行榜：coins / titles / achievements / checkin（金币/称号/成就/签到）---- */
+  rankBy(type, limit) {
+    var lim = Math.max(1, Math.min(100, Number(limit) || 50));
+    var col = ({ coins: 'coins', titles: 'title_count', achievements: 'ach_count', checkin: 'checkin_streak' })[type];
+    if (!col) return [];
+    return this.db.prepare('SELECT device_id, nickname, avatar, user_code, ' + col + ' AS value FROM players WHERE ' + col + ' > 0 ORDER BY ' + col + ' DESC, last_seen DESC LIMIT ?').all(lim)
+      .map(function (r) { return { deviceId: r.device_id, nickname: r.nickname, avatar: r.avatar || 'a01', userCode: r.user_code, value: r.value }; });
+  }
+
+  /* ---- 留存：按注册日分群，统计次日/7 日/30 日是否活跃 ---- */
+  retention(days) {
+    var n = Math.max(3, Math.min(90, Number(days) || 30));
+    var dayMs = 24 * 3600 * 1000;
+    var today = localDay();
+    var startDay = shiftDay(today, -(n - 1));
+    /* 每个玩家的注册日与活跃日集合 */
+    var regs = this.db.prepare("SELECT device_id, substr(date(created_at/1000, 'unixepoch', 'localtime'), 1, 10) AS d FROM players WHERE device_id != ''").all();
+    var acts = this.db.prepare('SELECT device_id, day FROM player_active_days').all();
+    var actSet = {};
+    acts.forEach(function (a) { (actSet[a.device_id] = actSet[a.device_id] || {})[a.day] = 1; });
+    var cohorts = {};
+    regs.forEach(function (r) {
+      if (!r.d || r.d < startDay) return;
+      var c = cohorts[r.d] = cohorts[r.d] || { day: r.d, size: 0, n1: 0, n7: 0, n30: 0, q1: 0, q7: 0, q30: 0 };
+      c.size++;
+      var set = actSet[r.device_id] || {};
+      /* 只有「自然日已到达」的群组才计入分母，未到达的返回 null（前端显示「待累计」） */
+      var d1 = shiftDay(r.d, 1), d7 = shiftDay(r.d, 7), d30 = shiftDay(r.d, 30);
+      if (d1 <= today) { c.q1++; if (set[d1]) c.n1++; }
+      if (d7 <= today) { c.q7++; if (set[d7]) c.n7++; }
+      if (d30 <= today) { c.q30++; if (set[d30]) c.n30++; }
+    });
+    var pct = function (a, b) { return b ? Math.round(a / b * 1000) / 10 : null; };
+    var list = Object.keys(cohorts).sort().map(function (k) {
+      var c = cohorts[k];
+      return { day: c.day, size: c.size, d1: pct(c.n1, c.q1), d7: pct(c.n7, c.q7), d30: pct(c.n30, c.q30) };
+    });
+    var sum = { size: 0, n1: 0, n7: 0, n30: 0, q1: 0, q7: 0, q30: 0 };
+    Object.keys(cohorts).forEach(function (k) {
+      var c = cohorts[k];
+      sum.size += c.size; sum.n1 += c.n1; sum.n7 += c.n7; sum.n30 += c.n30;
+      sum.q1 += c.q1; sum.q7 += c.q7; sum.q30 += c.q30;
+    });
+    return {
+      cohorts: list,
+      overall: { size: sum.size, d1: pct(sum.n1, sum.q1), d7: pct(sum.n7, sum.q7), d30: pct(sum.n30, sum.q30) },
+    };
+  }
+
   /* 管理端：分页玩家列表（带总数，供后端分页 UI） */
   listPlayersPaged(limit, offset, search) {
     var lim = Math.max(1, Math.min(100, Number(limit) || 20));
     var off = Math.max(0, Number(offset) || 0);
+    var cols = 'device_id, nickname, user_code, mailbox_coins, coins, title_count, ach_count, checkin_days, checkin_streak, last_seen, created_at';
     if (search) {
       var q = '%' + String(search).replace(/[%_]/g, '\\$&') + '%';
-      var total = this.db.prepare('SELECT COUNT(*) AS n FROM players WHERE nickname LIKE ? OR device_id LIKE ?').get(q, q).n;
-      var list = this.db.prepare('SELECT device_id, nickname, mailbox_coins, last_seen, created_at FROM players WHERE nickname LIKE ? OR device_id LIKE ? ORDER BY last_seen DESC LIMIT ? OFFSET ?').all(q, q, lim, off);
+      var total = this.db.prepare('SELECT COUNT(*) AS n FROM players WHERE nickname LIKE ? OR device_id LIKE ? OR user_code LIKE ?').get(q, q, q).n;
+      var list = this.db.prepare('SELECT ' + cols + ' FROM players WHERE nickname LIKE ? OR device_id LIKE ? OR user_code LIKE ? ORDER BY last_seen DESC LIMIT ? OFFSET ?').all(q, q, q, lim, off);
       return { list: list, total: total };
     }
     var total2 = this.db.prepare('SELECT COUNT(*) AS n FROM players').get().n;
-    var list2 = this.db.prepare('SELECT device_id, nickname, mailbox_coins, last_seen, created_at FROM players ORDER BY last_seen DESC LIMIT ? OFFSET ?').all(lim, off);
+    var list2 = this.db.prepare('SELECT ' + cols + ' FROM players ORDER BY last_seen DESC LIMIT ? OFFSET ?').all(lim, off);
     return { list: list2, total: total2 };
   }
 
