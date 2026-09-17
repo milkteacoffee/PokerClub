@@ -1272,6 +1272,18 @@
     color:#f2c14e;font-family:inherit;font-size:15px;letter-spacing:3px;text-align:center;
     box-shadow:0 0 0 1px rgba(212,197,169,.14) inset}
   .online-tip{font-size:11.5px;color:#8fa0b4;margin-top:12px;line-height:1.7;min-height:18px}
+  /* 房内邀请好友 + 邀请横幅 */
+  .room-invite-box{margin-top:10px;border:1px solid rgba(51,65,82,.5);border-radius:10px;padding:6px 8px;max-height:180px;overflow:auto}
+  .ri-row{display:flex;align-items:center;gap:8px;padding:7px 4px;font-size:12.5px;color:#dbe6ef}
+  .ri-row+.ri-row{border-top:1px dashed rgba(51,65,82,.45)}
+  .ri-dot{width:7px;height:7px;border-radius:50%;background:#5a6b7a;flex:none}
+  .ri-dot.on{background:#4fd67a;box-shadow:0 0 6px rgba(79,214,122,.6)}
+  .ri-row button{margin-left:auto}
+  .room-waiting{border-style:dashed;opacity:.9}
+  .invite-banner{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:10px;
+    background:linear-gradient(150deg,#2c1810,#3d2b1f);border:1px solid rgba(207,168,91,.5);border-radius:12px;padding:10px 14px;
+    color:#f5f0e8;box-shadow:0 10px 30px rgba(0,0,0,.65);font-size:13px;max-width:92%}
+  .invite-banner .ib-av{display:inline-flex;flex:none}
   .online-codebar{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;
     background:rgba(207,168,91,.08);box-shadow:0 0 0 1px rgba(207,168,91,.18) inset;margin-bottom:14px}
   .online-codebar span{font-size:12px;color:#9fb0c2}
@@ -2026,6 +2038,14 @@
     </div>
   </div>
 
+  <!-- 好友房间邀请横幅 -->
+  <div class="invite-banner" id="inviteBanner" hidden>
+    <span class="ib-av" id="ibWho"></span>
+    <span id="ibInfo"></span>
+    <button class="online-btn primary" id="ibEnter">进入房间</button>
+    <button class="online-btn" id="ibIgnore">忽略</button>
+  </div>
+
   <!-- 商城 -->
   <div class="overlay" id="ovShop">
     <div class="panel">
@@ -2103,6 +2123,11 @@
           <span style="margin-left:12px">玩法</span><b id="roomGame" style="color:#f2c14e">--</b>
         </div>
         <div class="online-tip" id="roomDisclaimer" style="margin-top:6px">仅供娱乐，严禁赌博；虚拟金币不可充值兑现，违者后果自负。</div>
+        <div class="online-actions" style="margin-top:8px">
+          <button class="online-btn" id="roomShareBtn">复制邀请链接</button>
+          <button class="online-btn primary" id="roomInviteBtn">邀请在线好友</button>
+        </div>
+        <div class="room-invite-box" id="roomInviteBox" hidden></div>
         <div class="online-seats" id="onlineSeats"></div>
         <div class="online-actions">
           <button class="online-btn" id="roomReady">准备</button>
@@ -9266,8 +9291,7 @@ renderModeCards=function(){
         initAudio();sfx('click');
         var B=window.PokerOnlineBridge;
         if(!B)return showToast('联机模块未就绪，请刷新页面重试',2400,true);
-        B.openPanel();
-        var g=$('onlineGames')&&$('onlineGames').querySelector('[data-ogame="'+hubGame+'"]');if(g)g.click();
+        B.createRoom(hubGame);   /* 斗地主式：点开即建房进房，房内邀请好友 */
       };body.appendChild(card);return;}
     card.className='mode-card quick';card.innerHTML='<div class="mode-name">人机对局</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>免费入场 · 可赢金币<br>本地AI或庄家 · 随时开桌</p></div>';card.onclick=function(){App.mode='quick';App.difficulty='normal';Arcade.difficulty='normal';Arcade.mode='coins';if(hubGame==='holdem'){tryEnterGame('normal');return;}openArcade(hubGame);};body.appendChild(card);
   });
@@ -10129,6 +10153,11 @@ function onlineHandle(m){
   if (m.type === 'error') { setOnlineTip(m.msg || '操作失败'); onlineSyncStatus(); return; }
   if (m.type === 'matching') { omOnMatching(m); return; }
   if (m.type === 'say') { sayBubble(m.seat, m.text); return; }
+  if (m.type === 'invite') { showInviteBanner(m); return; }
+  if (m.type === 'inviteResult') {
+    showToast(m.ok ? '邀请已发送，等好友进房' : (m.msg || '邀请失败'), 2200, !m.ok);
+    return;
+  }
   if (m.type === 'room') {
     /* 真人匹配成功：先播 0.8 秒过场，再进牌桌（好友房保持即时进入） */
     if (m.matched && !Online._introShown) {
@@ -10163,9 +10192,26 @@ function onlineSyncStatus(){
 }
 function refreshOnlineUI(){
   onlineSyncStatus();
-  if (Online.code) $('onlineSetup').hidden = true, $('onlineRoom').hidden = false;
+  applyOnlineView();
   var rc = $('roomCode'); if (rc) rc.textContent = Online.code || '------';
   var uc = $('onlineUserCode'); if (uc) uc.textContent = Online.userCode || '----';
+}
+/* 面板视图：room=直接进房视图（建房/已进房）· match=匹配等待 · 其他=手动加入 */
+function applyOnlineView(){
+  var setup=$('onlineSetup'), room=$('onlineRoom'), om=$('omBox'), vm=Online.viewMode||'';
+  if(!setup||!room) return;
+  if(Online.code){                            /* 已在房间：只显示房间（斗地主式牌桌房间） */
+    setup.hidden=true; room.hidden=false; if(om) om.hidden=true;
+    var rt=$('roomTip');
+    if(rt&&!rt.textContent) rt.textContent='把邀请链接发给好友，或点「邀请在线好友」；人齐点「开始牌局」';
+  } else if(vm==='room'){                     /* 正在建房 */
+    setup.hidden=true; room.hidden=false; if(om) om.hidden=true;
+    var r2=$('roomTip'); if(r2) r2.textContent='正在创建房间…';
+  } else if(vm==='match'){                    /* 匹配等待 */
+    setup.hidden=true; room.hidden=true; if(om) om.hidden=false;
+  } else {
+    setup.hidden=false; room.hidden=true; if(om) om.hidden=false;
+  }
 }
 
 /* ---- 房间操作 ---- */
@@ -10176,6 +10222,53 @@ function onlineCreate(){
     onlineSend('nick', { nickname: Online.nickname });
     onlineSend('create', { game: Online.game });
   });
+}
+/* ---- 房内邀请在线好友（斗地主式：房间里直接拉好友） ---- */
+function renderRoomInvite(){
+  var box=$('roomInviteBox'); if(!box) return;
+  if(!box.hidden){ box.hidden=true; return; }
+  box.hidden=false;
+  box.innerHTML='<div class="ri-row" style="color:#8fa0b4">加载好友…</div>';
+  onlineFriendApi('GET','/api/friends',null,function(ok,d){
+    var list=(ok&&d&&d.friends)||[];
+    if(!list.length){ box.innerHTML='<div class="ri-row" style="color:#8fa0b4">还没有好友 · 把「我的玩家号」发给牌友加好友后就能邀请</div>'; return; }
+    list.sort(function(a,b){ return (b.online?1:0)-(a.online?1:0); });
+    box.innerHTML=list.map(function(f){
+      return '<div class="ri-row"><span class="ri-dot'+(f.online?' on':'')+'"></span>'+
+        '<span>'+esc(f.nickname||'牌友')+'</span>'+
+        '<small style="color:#8fa0b4">'+(f.online?'在线':'离线')+'</small>'+
+        (f.online
+          ? '<button class="online-btn tiny" data-invite="'+esc(f.deviceId)+'">邀请</button>'
+          : '<button class="online-btn tiny" data-copylink="1">发链接</button>')+
+        '</div>';
+    }).join('');
+    box.querySelectorAll('[data-invite]').forEach(function(b){
+      b.onclick=function(){
+        onlineSend('invite',{ to:b.getAttribute('data-invite') });
+        setOnlineTip('已向好友发送房间邀请，等 TA 进房');
+      };
+    });
+    box.querySelectorAll('[data-copylink]').forEach(function(b){
+      b.onclick=function(){ copyText(roomShareLink(Online.code, Online.game), '邀请链接已复制，发给好友即可进房'); };
+    });
+  });
+}
+/* 收到好友邀请：顶部横幅一键进房 */
+function showInviteBanner(m){
+  var bn=$('inviteBanner'); if(!bn) return;
+  var gname=(ONLINE_GAME_LABEL&&ONLINE_GAME_LABEL[m.game])||(GAME_NAMES&&GAME_NAMES[m.game])||'牌局';
+  var wh=$('ibWho'); if(wh) wh.innerHTML=avatarSVG(m.fromAvatar||'a01',26);
+  var info=$('ibInfo'); if(info) info.innerHTML='<b>'+esc(m.fromName||'好友')+'</b> 邀请你加入「'+esc(gname)+'」· 房号 <b>'+esc(m.code||'')+'</b>';
+  bn.hidden=false;
+  var en=$('ibEnter'); if(en) en.onclick=function(){ bn.hidden=true; enterInvitedRoom(m.code); };
+  var ig=$('ibIgnore'); if(ig) ig.onclick=function(){ bn.hidden=true; };
+}
+function enterInvitedRoom(code){
+  if(!code) return;
+  if(Online.code && Online.code!==code) onlineLeaveRoom();
+  openOnline('join');
+  var ci=$('onlineCode'); if(ci) ci.value=code;
+  onlineJoin();
 }
 function onlineJoin(){
   var code = ($('onlineCode') && $('onlineCode').value.trim()) || '';
@@ -10193,8 +10286,9 @@ function onlineLeaveRoom(){
 }
 function onlineResetRoom(){
   Online.code = ''; Online.seat = -1; Online.room = null; Online.state = null; Online.picked = new Set(); Online.ready = false;
-  if ($('onlineSetup')) $('onlineSetup').hidden = false;
-  if ($('onlineRoom')) $('onlineRoom').hidden = true;
+  var rb=$('roomInviteBox'); if (rb) rb.hidden = true;
+  Online.viewMode = '';
+  applyOnlineView();
   showScreen('lobby');
 }
 function onlineApplyRoom(m){
@@ -10220,6 +10314,12 @@ function renderOnlineLobby(room){
           '<div class="s">' + (s.online === false ? '离线' : s.ready ? '已准备' : '未准备') + '</div>' +
           (s.bio ? '<div class="bio">' + esc(s.bio) + '</div>' : '') + '</div>';
       }).join('') || '<div class="online-seat"><div class="n">等待玩家…</div></div>';
+      var need = (room.game === 'guandan') ? 4 : 2;
+      if (seats.length < need) {
+        box.innerHTML += '<div class="online-seat room-waiting"><div class="n">等待牌友 ' + seats.length + ' / ' + need + '</div>' +
+          '<div class="s">复制邀请链接发给好友，或点「邀请在线好友」</div></div>';
+      }
+      var rcw = $('roomCode'); if (rcw) rcw.textContent = Online.code || '------';
     }
     /* 自己是否已准备 */
     var me = seats.find(function(s){ return s.deviceId === onlineDeviceId(); });
@@ -10979,18 +11079,23 @@ function loadBoard(){
 function openBoard(){ initAudio(); sfx('click'); openOverlay('ovBoard'); renderBoardGames(); loadBoard(); }
 /* 跨 IIFE 桥接：外层（大厅/模式屏）必须显式挂载才能调用联机层函数，裸调会 ReferenceError */
 if (typeof window !== 'undefined') window.PokerOnlineBridge = {
-  openPanel: function(){ openOnline(); },
+  openPanel: function(mode){ openOnline(mode); },
+  createRoom: function(game){ if (game) Online.game = game; openOnline('room'); onlineCreate(); },
+  joinRoomByCode: function(code){ enterInvitedRoom(code); },
+  inviteFriend: function(deviceId){ if (Online.code) onlineSend('invite', { to: deviceId }); },
   startMatch: function(){ omStart(); },
   renderMatchGames: function(){ omRenderGames(); },
   setMatchGame: function(game){ OM.game = game; },
   getMatchGame: function(){ return OM.game; },
   available: function(){ try { return onlineAvailable(); } catch (e) { return false; } }
 };
-function openOnline(){
-  initAudio(); sfx('click'); openOverlay('ovOnline');
+function openOnline(mode){
+  initAudio(); sfx('click');
+  Online.viewMode = mode || (Online.code ? 'room' : '');
+  openOverlay('ovOnline');
   var n = $('onlineNick'); if (n && !n.value) n.value = Online.nickname || (player && player.name) || '';
-  if (Online.code) { $('onlineSetup').hidden = true; $('onlineRoom').hidden = false; refreshOnlineUI(); }
-  else { $('onlineSetup').hidden = false; $('onlineRoom').hidden = true; }
+  var rt = $('roomTip'); if (rt) rt.textContent = '';
+  applyOnlineView();
   onlineSyncStatus();
   onlineFetchIdentity();
   setOnlineTip(onlineAvailable() ? '' : '联机服务器未配置，单机玩法不受影响');
@@ -11018,6 +11123,11 @@ function onlineInitUI(){
     }
     catch(e){ setOnlineTip('自动复制失败，请手动复制链接：' + link); }
   };
+  var rsb = $('roomShareBtn'); if (rsb) rsb.onclick = function(){
+    if (!Online.code) return setOnlineTip('尚未创建房间');
+    copyText(roomShareLink(Online.code, Online.game), '邀请链接已复制，发给好友即可直接进房（房号 ' + Online.code + '）');
+  };
+  var rib = $('roomInviteBtn'); if (rib) rib.onclick = renderRoomInvite;
   var osb = $('odSayBtn'); if (osb) osb.onclick = sayOpen;
   var oms = $('omStart'); if (oms) oms.onclick = omStart;
   var omc = $('omCancel'); if (omc) omc.onclick = omCancel;

@@ -315,7 +315,7 @@ if(TK){document.getElementById("login").style.display="none";document.getElement
         const ids = store.friendsOf(deviceId);
         const list = ids.map(id => {
           const p = store.getPlayer(id);
-          return p ? { deviceId: id, nickname: p.nickname, avatar: p.avatar || 'a01', rank: store.getRank(id), lastSeen: p.last_seen } : null;
+          return p ? { deviceId: id, nickname: p.nickname, avatar: p.avatar || 'a01', rank: store.getRank(id), lastSeen: p.last_seen, online: conns.has(id) } : null;
         }).filter(Boolean);
         return json(res, 200, {
           ok: true, friends: list,
@@ -800,6 +800,20 @@ wss.on('connection', (ws, req) => {
         /* 注意：不刷新 lastActivity —— 发言不该影响「行动超时自动代打」的计时 */
         broadcast(room, 'say', { seat: sd.seat, text });
         return;
+      }
+
+      if (t === 'invite') {
+        /* 房内邀请好友：仅限好友关系，目标在线才推送（断线好友提示用链接邀请） */
+        const target = String(msg.to || '').trim();
+        if (!validDeviceId(target)) return send(ws, 'error', { msg: '邀请目标非法' });
+        if (target === deviceId) return;
+        if (store.friendsOf(deviceId).indexOf(target) < 0) return send(ws, 'inviteResult', { ok: false, to: target, msg: '只能邀请你的好友' });
+        const room = getRoomOf(conn);
+        if (!room) return send(ws, 'inviteResult', { ok: false, to: target, msg: '你还没有房间，请先创建房间' });
+        const tc = conns.get(target);
+        if (!tc || !tc.ws || tc.ws.readyState !== 1) { try { store.ensurePlayer(deviceId, conn.nickname); } catch {} return send(ws, 'inviteResult', { ok: false, to: target, msg: '对方不在线，可复制邀请链接发给 TA' }); }
+        send(tc.ws, 'invite', { code: room.code, game: room.game, from: deviceId, fromName: conn.nickname || '牌友', fromAvatar: (store.getPlayer(deviceId) || {}).avatar || 'a01' });
+        return send(ws, 'inviteResult', { ok: true, to: target });
       }
 
       if (t === 'leave') {
