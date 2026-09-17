@@ -12,6 +12,7 @@ const files = [
   ['炸金花/骰子联机', 'gold-diceduel.test.js', []],
   ['双客户端联机冒烟', 'smoke-online.js', []],
   ['快速匹配端到端', 'match.test.js', []],
+  ['好友房参数', 'room-options.test.js', []],
   ['账号体系', 'account.test.js', []],
 ];
 

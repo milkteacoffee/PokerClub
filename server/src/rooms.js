@@ -504,6 +504,8 @@ class Room {
     this.store = store;
     this.id = ++roomSeq;
     this.seats = [];          // { seat, deviceId, name, online, ws, ready, lastSeen }
+    this.roundNo = 0;         // 本轮已完成的局数（好友房按「局数」参数结算轮次）
+    this.roundEnded = false;  // 本轮局数已打满
     this.state = null;        // 服务端权威牌局状态
     this.started = false;
     this.hostDevice = null;
@@ -514,6 +516,16 @@ class Room {
 
   get adapter() { return ADAPTERS[this.game]; }
 
+  /* 房主设定的人数上限（夹在玩法允许区间内） */
+  maxPlayers() {
+    const ad = this.adapter;
+    const cap = Number(this.opts && this.opts.maxPlayers) || 0;
+    if (!cap) return ad.maxPlayers;
+    return Math.max(ad.minPlayers, Math.min(ad.maxPlayers, cap));
+  }
+  /* 房主设定的局数（0 = 不限） */
+  roundTotal() { return Math.max(0, Number(this.opts && this.opts.rounds) || 0); }
+
   isEmpty() { return this.seats.every(s => !s.online); }
 
   seatOf(deviceId) { const s = this.seats.find(x => x.deviceId === deviceId); return s ? s.seat : -1; }
@@ -523,7 +535,8 @@ class Room {
     if (s) { s.online = true; s.ws = ws; s.lastSeen = Date.now(); return { ok: true, seat: s.seat, rejoin: true }; }
     const ad = this.adapter;
     if (this.started) return { ok: false, msg: '牌局已开始，无法加入' };
-    if (this.seats.length >= ad.maxPlayers) return { ok: false, msg: '房间已满' };
+    const cap = this.maxPlayers();
+    if (this.seats.length >= cap) return { ok: false, msg: '房间已满（' + cap + ' 人房）' };
     const used = new Set(this.seats.map(x => x.seat));
     let seat = 0; while (used.has(seat)) seat++;
     this.seats.push({ seat, deviceId, name: name || '牌友', online: true, ws, ready: false, lastSeen: Date.now() });
@@ -548,7 +561,8 @@ class Room {
 
   canStart() {
     const ad = this.adapter;
-    if (this.started) return { ok: false, msg: '已开始' };
+    /* 已开始：仅当上一局尚未结束才算「进行中」；上一局结束后房间回到可开局（支持连续对局） */
+    if (this.started && !(this.state && this.adapter.isDone(this.state))) return { ok: false, msg: '已开始' };
     if (ad.seatsExact && this.seats.length !== ad.seatsExact) return { ok: false, msg: this.game === 'guandan' ? '掼蛋需要正好 4 人' : '人数不符' };
     if (this.seats.length < ad.minPlayers) return { ok: false, msg: '至少 ' + ad.minPlayers + ' 人才能开始' };
     /* 快速匹配房由服务端凑满即开，不需要玩家点准备；好友房仍需全员准备 */
@@ -559,6 +573,7 @@ class Room {
   start() {
     const chk = this.canStart();
     if (!chk.ok) return chk;
+    if (this.roundEnded) { this.roundNo = 0; this.roundEnded = false; }   /* 开新一轮 */
     const seats = this.seats.map(s => ({ seat: s.seat, name: s.name, deviceId: s.deviceId }));
     this.state = this.adapter.init(seats, this.opts);
     if (this.game === 'holdem' && this.adapter._postBlinds) this.adapter._postBlinds(this.state);
@@ -569,6 +584,17 @@ class Room {
     this.result = null;
     this.lastActivity = Date.now();
     return { ok: true };
+  }
+
+  /* 一局结束 → 房间回到等待态，房主可立刻开下一局（或新一轮）
+     修复：此前 started 从未复位，好友房打完一局后「开始牌局」永远返回「已开始」 */
+  backToWaiting() {
+    /* 只把房间从「进行中」放回「可开局」：state/result/settleSent 保留（结算留存、幂等守卫），
+       下一局 start() 会统一重置。斗地主式：默认全员继续，房主一键开下一局。 */
+    this.started = false;
+    this.settledFlag = false;
+    this.seats.forEach(s => { s.ready = true; });
+    if (this.tickTimer) { clearInterval(this.tickTimer); this.tickTimer = null; }
   }
 
   act(deviceId, payload) {
@@ -655,12 +681,14 @@ class Room {
 
   viewFor(deviceId) {
     if (!this.started || !this.state) {
-      return { game: this.game, waiting: true, seats: this.seats.map(s => ({ seat: s.seat, deviceId: s.deviceId, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), title: this.titleOf(s.deviceId), ready: s.ready, online: s.online })), host: this.hostDevice };
+      return { game: this.game, waiting: true, seats: this.seats.map(s => ({ seat: s.seat, deviceId: s.deviceId, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), title: this.titleOf(s.deviceId), ready: s.ready, online: s.online })), host: this.hostDevice, maxPlayers: this.maxPlayers(), rounds: this.roundTotal(), roundNo: this.roundNo, roundEnded: !!this.roundEnded };
     }
     const seat = this.seatOf(deviceId);
     const v = this.adapter.publicView(this.state, seat);
     v.seatInfo = this.seats.map(s => ({ seat: s.seat, deviceId: s.deviceId, name: s.name, avatar: this.avatarOf(s.deviceId), bio: this.bioOf(s.deviceId), title: this.titleOf(s.deviceId), online: s.online, ready: s.ready }));
     v.host = this.hostDevice;
+    /* 注意：不能叫 round —— 炸金花/骰子用 state.round 表示「第几轮」，会冲突 */
+    v.roundInfo = { no: (this.roundNo || 0) + 1, total: this.roundTotal() };
     /* 思考倒计时：与「行动超时自动代打」严格对齐。下发剩余毫秒（而非绝对时间戳），
        避免客户端时钟与服务器不一致导致倒计时错乱。 */
     try {
@@ -675,6 +703,9 @@ class Room {
   _settle(res) {
     this.result = res;
     this.settledAt = Date.now();
+    this.roundNo = (this.roundNo || 0) + 1;
+    const total = this.roundTotal();
+    if (total > 0 && this.roundNo >= total) this.roundEnded = true;
     /* 记录对局 */
     try {
       this.store.recordMatch({ game: this.game, roomCode: this.code, mode: 'friend', result: res });

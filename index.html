@@ -1279,6 +1279,25 @@
     color:#f2c14e;font-family:inherit;font-size:15px;letter-spacing:3px;text-align:center;
     box-shadow:0 0 0 1px rgba(212,197,169,.14) inset}
   .online-tip{font-size:11.5px;color:#8fa0b4;margin-top:12px;line-height:1.7;min-height:18px}
+  /* 房间牌桌（对标斗地主好友房）：中央房号 + 环座 + 底部大按钮 */
+  .room-table-wrap{position:relative;border-radius:16px;padding:14px 10px 10px;
+    background:radial-gradient(120% 90% at 50% 10%,rgba(74,122,156,.22),rgba(12,20,30,.2) 70%);border:1px solid rgba(74,122,156,.28)}
+  .room-center{text-align:center;padding:6px 0 10px}
+  .room-center .rc-game{font-size:13px;color:#b9c6d2;letter-spacing:1px}
+  .room-center .rc-code{font-family:ui-monospace,monospace;font-size:26px;font-weight:800;color:#f2c14e;letter-spacing:3px;margin:4px 0}
+  .room-center .rc-meta{font-size:11.5px;color:#8fa0b4}
+  .room-seatgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px;margin:4px 0 10px}
+  .room-slot{border:1px dashed rgba(143,160,180,.45);border-radius:12px;padding:10px 8px;text-align:center;color:#8fa0b4;font-size:12px;cursor:pointer}
+  .room-slot:hover{border-color:#cfa85b;color:#e8d5a3}
+  .room-slot .rs-plus{font-size:18px;line-height:1}
+  .room-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .room-actions .wide{grid-column:1/-1}
+  .online-btn.big{padding:14px 18px;font-size:15px;font-weight:800;border-radius:12px}
+  /* 开设房间参数卡 */
+  .rs-row{display:flex;align-items:center;gap:8px;margin:10px 0;flex-wrap:wrap}
+  .rs-row>label{flex:none;width:52px;font-size:12.5px;color:#8fa0b4}
+  .rs-chip{padding:7px 13px;border-radius:10px;border:1px solid rgba(143,160,180,.35);background:rgba(255,255,255,.03);color:#c8d2dc;font-size:12.5px;cursor:pointer}
+  .rs-chip.on{border-color:#cfa85b;background:linear-gradient(150deg,#f0d79a,#cfa85b);color:#2a1d0c;font-weight:800}
   /* 房内邀请好友 + 邀请横幅 */
   .room-invite-box{margin-top:10px;border:1px solid rgba(51,65,82,.5);border-radius:10px;padding:6px 8px;max-height:180px;overflow:auto}
   .ri-row{display:flex;align-items:center;gap:8px;padding:7px 4px;font-size:12.5px;color:#dbe6ef}
@@ -2046,6 +2065,23 @@
     </div>
   </div>
 
+  <!-- 开设房间（好友房参数，对标斗地主开设房间） -->
+  <div class="overlay" id="ovRoomSetup">
+    <div class="panel" style="max-width:460px;">
+      <h2>开设房间</h2>
+      <div style="font-size:11.5px;color:#8fa0b4;line-height:1.7;margin-bottom:4px">
+        好友房仅供娱乐、不输赢金币。设好人数与局数后开设，把房间号或邀请链接发给好友即可。
+      </div>
+      <div class="rs-row"><label>玩法</label><div id="rsGames" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
+      <div class="rs-row"><label>人数</label><div id="rsSeats" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
+      <div class="rs-row"><label>局数</label><div id="rsRounds" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
+      <div class="go-btns" style="margin-top:16px">
+        <button class="again" id="rsCreate">开设房间</button>
+        <button class="back" data-close="ovRoomSetup">取消</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 首次使用：完善资料即完成注册 -->
   <div class="overlay" id="ovRegister">
     <div class="panel" style="max-width:430px;">
@@ -2146,19 +2182,24 @@
           <span>房号</span><b id="roomCode">------</b>
           <button class="online-btn tiny" id="roomCopy">复制</button>
           <span style="margin-left:12px">玩法</span><b id="roomGame" style="color:#f2c14e">--</b>
+          <span style="margin-left:12px">局数</span><b id="roomRounds" style="color:#f2c14e">--</b>
         </div>
-        <div class="online-tip" id="roomDisclaimer" style="margin-top:6px">仅供娱乐，严禁赌博；虚拟金币不可充值兑现，违者后果自负。</div>
-        <div class="online-actions" style="margin-top:8px">
-          <button class="online-btn" id="roomShareBtn">复制邀请链接</button>
-          <button class="online-btn primary" id="roomInviteBtn">邀请在线好友</button>
+        <div class="room-table-wrap">
+          <div class="room-center">
+            <div class="rc-game" id="roomCenterGame">经典好友房</div>
+            <div class="rc-code" id="roomCenterCode">------</div>
+            <div class="rc-meta" id="roomCenterMeta">等待牌友…</div>
+          </div>
+          <div class="room-seatgrid" id="onlineSeats"></div>
+        </div>
+        <div class="online-tip" id="roomDisclaimer" style="margin-top:6px">好友房仅供娱乐，不输赢金币；虚拟金币不可充值兑现，违者后果自负。</div>
+        <div class="room-actions" style="margin-top:8px">
+          <button class="online-btn big wide primary" id="roomShareBtn">邀请好友（复制邀请链接）</button>
+          <button class="online-btn" id="roomInviteBtn">邀请在线好友</button>
+          <button class="online-btn primary" id="roomStart" disabled>开始牌局</button>
+          <button class="online-btn danger wide" id="roomLeave">离开房间</button>
         </div>
         <div class="room-invite-box" id="roomInviteBox" hidden></div>
-        <div class="online-seats" id="onlineSeats"></div>
-        <div class="online-actions">
-          <button class="online-btn" id="roomReady">准备</button>
-          <button class="online-btn primary" id="roomStart" disabled>开始牌局</button>
-          <button class="online-btn danger" id="roomLeave">离开房间</button>
-        </div>
         <div class="online-tip" id="roomTip"></div>
       </div>
     </div>
@@ -9386,7 +9427,7 @@ renderModeCards=function(){
         initAudio();sfx('click');
         var B=window.PokerOnlineBridge;
         if(!B)return showToast('联机模块未就绪，请刷新页面重试',2400,true);
-        B.createRoom(hubGame);   /* 斗地主式：点开即建房进房，房内邀请好友 */
+        if (B.openRoomSetup) B.openRoomSetup(hubGame);   /* 斗地主式：先设人数/局数，再进房邀请 */
       };body.appendChild(card);return;}
     card.className='mode-card quick';card.innerHTML='<div class="mode-name">人机对局</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>免费入场 · 可赢金币<br>本地AI或庄家 · 随时开桌</p></div>';card.onclick=function(){App.mode='quick';App.difficulty='normal';Arcade.difficulty='normal';Arcade.mode='coins';if(hubGame==='holdem'){tryEnterGame('normal');return;}openArcade(hubGame);};body.appendChild(card);
   });
@@ -10316,7 +10357,8 @@ function onlineCreate(){
   onlineConnect(function(ok, err){
     if (!ok) return setOnlineTip(err || '连接失败');
     onlineSend('nick', { nickname: Online.nickname });
-    onlineSend('create', { game: Online.game });
+    var ro = Online.roomOpts || {};
+    onlineSend('create', { game: Online.game, maxPlayers: Number(ro.maxPlayers) || 0, rounds: Number(ro.rounds) || 0 });
   });
 }
 /* ---- 房内邀请在线好友（斗地主式：房间里直接拉好友） ---- */
@@ -10403,20 +10445,32 @@ function renderOnlineLobby(room){
   if (room.waiting) {
     var rg = $('roomGame'); if (rg) rg.textContent = ONLINE_GAME_LABEL[room.game] || room.game || '--';
     var box = $('onlineSeats');
+    var cap = Number(room.maxPlayers) || ((room.game === 'guandan') ? 4 : 6);
     if (box) {
-      box.innerHTML = seats.map(function(s){
+      var filled = seats.map(function(s){
         var cls = 'online-seat' + (s.deviceId === onlineDeviceId() ? ' me' : '') + (s.ready ? ' ready' : '') + (s.online === false ? ' off' : '');
         return '<div class="' + cls + '"><span class="odav">' + avatarSVG(s.avatar || 'a01', 30) + '</span><div class="n">' + esc(s.name) + '</div>' +
-          '<div class="s">' + (s.online === false ? '离线' : s.ready ? '已准备' : '未准备') + '</div>' +
+          '<div class="s">' + (s.deviceId === room.host ? '房主 · ' : '') + (s.online === false ? '离线' : s.ready ? '已准备' : '未准备') + '</div>' +
           (s.bio ? '<div class="bio">' + esc(s.bio) + '</div>' : '') + '</div>';
-      }).join('') || '<div class="online-seat"><div class="n">等待玩家…</div></div>';
-      var need = (room.game === 'guandan') ? 4 : 2;
-      if (seats.length < need) {
-        box.innerHTML += '<div class="online-seat room-waiting"><div class="n">等待牌友 ' + seats.length + ' / ' + need + '</div>' +
-          '<div class="s">复制邀请链接发给好友，或点「邀请在线好友」</div></div>';
+      }).join('');
+      var empties = '';
+      for (var ei = seats.length; ei < cap; ei++) {
+        empties += '<div class="room-slot" data-invite-slot="1"><div class="rs-plus">＋</div><div>等待牌友</div><div style="font-size:10.5px;opacity:.75">点此邀请</div></div>';
       }
+      box.innerHTML = filled + empties;
+      box.querySelectorAll('[data-invite-slot]').forEach(function(b){
+        b.onclick = function(){ if (typeof renderRoomInvite === 'function') renderRoomInvite(); };
+      });
       var rcw = $('roomCode'); if (rcw) rcw.textContent = Online.code || '------';
     }
+    var cg = $('roomCenterGame'); if (cg) cg.textContent = (ONLINE_GAME_LABEL[room.game] || room.game) + ' 好友房';
+    var cc = $('roomCenterCode'); if (cc) cc.textContent = Online.code || '------';
+    var cm = $('roomCenterMeta');
+    if (cm) {
+      var total = Number(room.rounds) || 0;
+      cm.textContent = (total ? ('共 ' + total + ' 局 · ') : '不记局数 · ') + cap + ' 人房 · 已到 ' + seats.length + ' 人';
+    }
+    var rr = $('roomRounds'); if (rr) rr.textContent = (Number(room.rounds) || 0) ? (Number(room.rounds) + ' 局') : '不限';
     /* 自己是否已准备 */
     var me = seats.find(function(s){ return s.deviceId === onlineDeviceId(); });
     Online.ready = !!(me && me.ready);
@@ -10853,6 +10907,11 @@ function onlineRecordResult(game, won){
 }
 function onlineShowSettle(m){
   var res = m.result || {};
+  var rinfo = m.round || null;
+  if (rinfo && rinfo.total) {
+    var tipTxt = '第 ' + rinfo.no + ' / ' + rinfo.total + ' 局' + (rinfo.ended ? ' · 本轮已打完，可继续下一轮' : '');
+    setOnlineTip(tipTxt);
+  }
   $('odWaiting').hidden = true; $('odTable').hidden = true;
   var sb2 = $('odSayBtn'); if (sb2) sb2.hidden = true;
   $('odHand').hidden = true; $('odActions').hidden = true; $('odLog').hidden = true;
@@ -11176,7 +11235,8 @@ function openBoard(){ initAudio(); sfx('click'); openOverlay('ovBoard'); renderB
 /* 跨 IIFE 桥接：外层（大厅/模式屏）必须显式挂载才能调用联机层函数，裸调会 ReferenceError */
 if (typeof window !== 'undefined') window.PokerOnlineBridge = {
   openPanel: function(mode){ openOnline(mode); },
-  createRoom: function(game){ if (game) Online.game = game; openOnline('room'); onlineCreate(); },
+  createRoom: function(game, opts){ if (game) Online.game = game; Online.roomOpts = opts || {}; openOnline('room'); onlineCreate(); },
+  openRoomSetup: function(game){ openRoomSetup(game); },
   joinRoomByCode: function(code){ enterInvitedRoom(code); },
   inviteFriend: function(deviceId){ if (Online.code) onlineSend('invite', { to: deviceId }); },
   startMatch: function(){ omStart(); },
@@ -11185,6 +11245,57 @@ if (typeof window !== 'undefined') window.PokerOnlineBridge = {
   getMatchGame: function(){ return OM.game; },
   available: function(){ try { return onlineAvailable(); } catch (e) { return false; } }
 };
+/* ---- 开设房间（好友房参数）：人数 / 局数真实生效 ---- */
+var RS_GAMES = ['guandan', 'holdem', 'gold', 'diceduel'];
+var RS_MAX = { guandan: 4, holdem: 6, gold: 6, diceduel: 6 };
+var RS = { game: 'holdem', maxPlayers: 6, rounds: 6 };
+function rsRender(){
+  var g = $('rsGames'), st = $('rsSeats'), rd = $('rsRounds');
+  if (g) {
+    g.innerHTML = RS_GAMES.map(function(k){
+      return '<button type="button" class="rs-chip' + (k === RS.game ? ' on' : '') + '" data-rsg="' + k + '">' + (ONLINE_GAME_LABEL[k] || k) + '</button>';
+    }).join('');
+    g.querySelectorAll('[data-rsg]').forEach(function(b){
+      b.onclick = function(){
+        RS.game = b.getAttribute('data-rsg');
+        var cap = RS_MAX[RS.game] || 6;
+        if (RS.game === 'guandan') RS.maxPlayers = 4;
+        else if (RS.maxPlayers > cap || RS.maxPlayers < 2) RS.maxPlayers = cap;
+        rsRender();
+      };
+    });
+  }
+  if (st) {
+    var cap = RS_MAX[RS.game] || 6;
+    var opts = RS.game === 'guandan' ? [4] : [2, 3, 4, 5, 6].filter(function(n){ return n <= cap; });
+    st.innerHTML = opts.map(function(n){
+      return '<button type="button" class="rs-chip' + (n === RS.maxPlayers ? ' on' : '') + '" data-rss="' + n + '">' + n + ' 人</button>';
+    }).join('');
+    st.querySelectorAll('[data-rss]').forEach(function(b){
+      b.onclick = function(){ RS.maxPlayers = Number(b.getAttribute('data-rss')); rsRender(); };
+    });
+  }
+  if (rd) {
+    var ropts = [{ v: 3, t: '3 局' }, { v: 6, t: '6 局' }, { v: 9, t: '9 局' }, { v: 0, t: '不限' }];
+    rd.innerHTML = ropts.map(function(o){
+      return '<button type="button" class="rs-chip' + (o.v === RS.rounds ? ' on' : '') + '" data-rsr="' + o.v + '">' + o.t + '</button>';
+    }).join('');
+    rd.querySelectorAll('[data-rsr]').forEach(function(b){
+      b.onclick = function(){ RS.rounds = Number(b.getAttribute('data-rsr')); rsRender(); };
+    });
+  }
+}
+function openRoomSetup(game){
+  if (game && RS_GAMES.indexOf(game) >= 0) { RS.game = game; RS.maxPlayers = RS_MAX[game] || 6; }
+  rsRender();
+  openOverlay('ovRoomSetup');
+}
+function submitRoomSetup(){
+  var B = window.PokerOnlineBridge;
+  if (!B) return showToast('联机模块未就绪，请刷新页面重试', 2400, true);
+  closeOverlay('ovRoomSetup');
+  B.createRoom(RS.game, { maxPlayers: RS.maxPlayers, rounds: RS.rounds });
+}
 function openOnline(mode){
   initAudio(); sfx('click');
   Online.viewMode = mode || (Online.code ? 'room' : '');
@@ -11219,6 +11330,7 @@ function onlineInitUI(){
     }
     catch(e){ setOnlineTip('自动复制失败，请手动复制链接：' + link); }
   };
+  var rsc = $('rsCreate'); if (rsc) rsc.onclick = function(){ sfx('click'); submitRoomSetup(); };
   var rsb = $('roomShareBtn'); if (rsb) rsb.onclick = function(){
     if (!Online.code) return setOnlineTip('尚未创建房间');
     copyText(roomShareLink(Online.code, Online.game), '邀请链接已复制，发给好友即可直接进房（房号 ' + Online.code + '）');

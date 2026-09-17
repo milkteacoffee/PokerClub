@@ -746,7 +746,7 @@ wss.on('connection', (ws, req) => {
       }
 
       if (t === 'create') {
-        const r = rooms.create(msg.game, deviceId, conn.nickname, { level: 2 });
+        const r = rooms.create(msg.game, deviceId, conn.nickname, { level: 2, maxPlayers: Number(msg.maxPlayers) || 0, rounds: Number(msg.rounds) || 0 });
         if (!r.ok) return send(ws, 'error', { msg: r.msg });
         conn.roomCode = r.code;
         r.room.seats[0].ws = ws;
@@ -938,8 +938,15 @@ function settleRoom(room) {
   room.settleSent = true;
   const seatAvatar = (d) => { try { const p = store.getPlayer(d); return (p && p.avatar) || 'a01'; } catch (e) { return 'a01'; } };
   for (const s of room.seats) {
-    if (s.online && s.ws) send(s.ws, 'settle', { result: res, seatInfo: room.seats.map(x => ({ seat: x.seat, name: x.name, avatar: seatAvatar(x.deviceId), online: x.online })) });
+    if (s.online && s.ws) send(s.ws, 'settle', {
+      result: res,
+      round: { no: room.roundNo || 1, total: room.roundTotal ? room.roundTotal() : 0, ended: !!room.roundEnded },
+      seatInfo: room.seats.map(x => ({ seat: x.seat, name: x.name, avatar: seatAvatar(x.deviceId), online: x.online })),
+    });
   }
+  /* 结算已下发 → 房间回到等待态（可继续下一局 / 新一轮） */
+  room.backToWaiting();
+  for (const s of room.seats) if (s.online && s.ws) send(s.ws, 'room', { code: room.code, room: room.viewFor(s.deviceId) });
 }
 
 /* 掼蛋：手动驱动 AI（人类出牌后需要连续推进直到轮到下一个人）
