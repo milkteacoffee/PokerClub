@@ -260,11 +260,13 @@ function click(el) {
        '弃牌后出现「跳过本手」或「下一手」按钮');
   }
 
-  /* 一键离桌：不再弹确认层 */
+  /* 一键离桌：不再弹确认层（若结算落库在测试环境失败，先点重试再离桌） */
+  var retryBtn = $('bottomBar').querySelector('.abtn.start, .abtn.skip');
+  if (retryBtn && /重试/.test(retryBtn.textContent)) { click(retryBtn); await tick(300); }
   click($('btnExit'));
   await tick(400);
   ok(!$('ovExitConfirm').classList.contains('show'), '退出不再弹确认层');
-  ok($('modeScreen').classList.contains('active'), '退出对局后回到选择模式界面（实际 ' + $('modeScreen').className + '）');
+  ok($('modeScreen').classList.contains('active'), '退出对局后回到选择模式界面（mode=' + $('modeScreen').className + ' game=' + $('gameScreen').className + ' err=' + errors.slice(0,2).join('|') + '）');
   ok($('lobbyScreen').style.display === 'none', '退出后不直接回大厅');
   click($('modeBack'));
   await tick(60);

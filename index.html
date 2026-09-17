@@ -138,6 +138,30 @@
     filter:drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
   .lobby-bottom { padding:0 20px 18px; display:flex; flex-direction:column;
     align-items:center; gap:9px; position:relative; z-index:2; }
+  /* 残局挑战（对标斗地主残局闯关） */
+  .pz-tier{font-size:11.5px;color:#8fa0b4;margin:12px 0 6px;letter-spacing:1px}
+  .pz-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;margin-bottom:8px;
+    background:rgba(255,255,255,.03);border:1px solid rgba(143,160,180,.18);cursor:pointer}
+  .pz-row:hover{background:rgba(240,215,154,.10)}
+  .pz-row .pz-n{font-size:13.5px;font-weight:700;color:#dbe6ef}
+  .pz-row .pz-g{font-size:11.5px;color:#9fb0c0;margin-top:2px}
+  .pz-row .pz-r{margin-left:auto;font-size:12px;color:#f2c14e;font-weight:700;white-space:nowrap}
+  .pz-row.done{border-color:rgba(79,214,122,.45)}
+  .pz-row.done .pz-n::after{content:' 已通关';font-size:10.5px;color:#7fd8a8;font-weight:600}
+  .pz-top{display:flex;align-items:center;gap:10px;font-size:12px;color:#8fa0b4;margin-bottom:6px}
+  .pz-top b{color:#f2c14e}
+  /* 记牌器（对标斗地主：自动记录已出牌，推算剩余关键牌） */
+  #cardCounter{position:absolute;left:10px;bottom:8px;z-index:22;padding:6px 8px;border-radius:10px;
+    background:rgba(10,17,26,.78);border:1px solid rgba(143,160,180,.28);backdrop-filter:blur(2px)}
+  #cardCounter .cc-h{font-size:10.5px;color:#8fa0b4;margin-bottom:4px;letter-spacing:.5px}
+  #cardCounter .cc-grid{display:flex;gap:3px}
+  #cardCounter .cc-cell{width:21px;text-align:center;border-radius:5px;background:rgba(255,255,255,.05);padding:2px 0}
+  #cardCounter .cc-cell b{display:block;font-size:9.5px;color:#9fb0c0;font-weight:700}
+  #cardCounter .cc-cell i{display:block;font-size:11px;font-style:normal;color:#e8d5a3;font-weight:800}
+  #cardCounter .cc-cell.zero{background:rgba(196,26,26,.18)}
+  #cardCounter .cc-cell.zero i{color:#ff9a9a}
+  .abtn.hint{background:rgba(79,214,122,.16);color:#9fe8bd;border:1px solid rgba(79,214,122,.35)}
+  .abtn.reco{box-shadow:0 0 0 2px rgba(240,215,154,.75) inset}
   /* 大厅底部导航（对标斗地主底栏：图标 + 文字 + 红点） */
   .lobby-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:960px;z-index:70;
     display:flex;justify-content:space-between;gap:2px;padding:6px 10px calc(8px + env(safe-area-inset-bottom));
@@ -1780,6 +1804,7 @@
       <nav class="lobby-topbtns" aria-label="大厅功能">
         <button class="lobby-iconbtn" id="lbQStats" title="战绩、图鉴与段位">档案</button>
         <button class="lobby-iconbtn" id="lbQHelp" title="查看玩法规则">规则</button>
+        <button class="lobby-iconbtn" id="lbPuzzle" title="残局挑战（免费不限次）">残局</button>
         <button class="lobby-iconbtn" id="lbQRegister" title="完善昵称与头像（完成注册）" style="display:none">资料</button>
         <button class="lobby-iconbtn" id="lbBtnSound" title="切换游戏音效">音效开</button>
       </nav>
@@ -1906,6 +1931,7 @@
       </div>
     </div>
     <div id="table">
+      <div id="cardCounter" hidden></div>
       <div id="stageBox"></div>
       <div id="potDisplay"></div>
       <div id="boardArea"></div>
@@ -2103,6 +2129,15 @@
   </div>
 
   <!-- 本局结算 -->
+  <!-- 残局挑战（对标斗地主残局闯关：免费、离线、固定牌局练牌技） -->
+  <div class="overlay" id="ovPuzzle">
+    <div class="panel" style="max-width:520px;">
+      <h2>残局挑战 <button class="closebtn" data-close="ovPuzzle">✕ 返回</button></h2>
+      <div class="pz-top">免费不限次数 · 固定牌局练牌技 · 已通关 <b id="pzDone">0</b> / <b id="pzTotal">0</b></div>
+      <div id="pzList"></div>
+    </div>
+  </div>
+
   <!-- 牌桌「更多」 -->
   <div class="overlay" id="ovMore">
     <div class="panel" style="max-width:420px;">
@@ -2114,6 +2149,8 @@
         <button id="moreStats">我的档案</button>
         <button id="moreSettings">设置</button>
         <button id="moreFeedback">意见反馈</button>
+        <button id="moreCounter">记牌器：关</button>
+        <button id="morePuzzle">残局挑战</button>
       </div>
     </div>
   </div>
@@ -3805,6 +3842,8 @@ var TITLES = [
   { id:'tt_ach_500',    name:'成就大师', icon:'🧠', desc:'解锁 500 项成就',       check:function(p){ return Object.keys(p.achievements||{}).length >= 500; } },
   { id:'tt_net_4',      name:'联机舵手', icon:'🧭', desc:'在线对局 200 局',        check:function(p){ var o=p.online||{}; return (o.games||0) >= 200; } },
   { id:'tt_net_5',      name:'牌友满堂', icon:'🤝', desc:'在线对局赢下 100 场',     check:function(p){ var o=p.online||{}; return (o.wins||0) >= 100; } },
+  { id:'tt_pz_1',    name:'残局新手', icon:'🧩', desc:'通关 1 个残局关卡',   check:function(p){ return Object.keys(p.puzzles||{}).length >= 1; } },
+  { id:'tt_pz_all',  name:'残局大师', icon:'👑', desc:'通关全部残局关卡',     check:function(p){ return Object.keys(p.puzzles||{}).length >= 8; } },
   { id:'tt_net_1',  name:'初次联网', icon:'🌐', desc:'完成首局在线对局', check:function(p){ var o=p.online||{}; return (o.games||0)>=1; } },
   { id:'tt_net_2',  name:'联网常客', icon:'🛰️', desc:'完成 50 局在线对局', check:function(p){ var o=p.online||{}; return (o.games||0)>=50; } },
   { id:'tt_net_3',  name:'网络豪客', icon:'💎', desc:'在线对局赢下 20 场', check:function(p){ var o=p.online||{}; return (o.wins||0)>=20; } },
@@ -5890,6 +5929,174 @@ function renderTable() {
   }
 }
 
+/* ---- 残局挑战（对标斗地主残局闯关）----
+   设计：翻牌前单手残局，固定牌局；目标两类：
+   win  = 识破强势牌局并赢下底池；fold = 识破弱势牌局、及时弃牌止损。
+   完全免费、离线可玩、可重复挑战，通关发金币与称号进度。 */
+function PZCard(str) {
+  var map = { A: 14, K: 13, Q: 12, J: 11, T: 10 };
+  var r = str.charAt(0).toUpperCase();
+  var suit = str.charAt(1).toLowerCase();
+  var sv = { s: 0, h: 1, d: 2, c: 3 };
+  return { r: map[r] || Number(r), s: sv[suit] === undefined ? 0 : sv[suit] };
+}
+var PUZZLES = [
+  { id: 'pz01', tier: '入门', name: '顶对的威力', stack: 2000, sb: 10, bb: 20, goal: 'win', reward: 200,
+    hole: ['As', 'Kh'], foes: [['Ad', '7c'], ['9h', '9d'], ['Ts', '6s']], tip: '手里是顶对，面对多人底池要主动做大' },
+  { id: 'pz02', tier: '入门', name: '识破诈唬', stack: 2000, sb: 10, bb: 20, goal: 'win', reward: 200,
+    hole: ['Ah', 'Ac'], foes: [['Kd', 'Qd'], ['8h', '7h'], ['Jc', 'Tc']], tip: 'AA 属于顶级起手牌，果断加注拿价值' },
+  { id: 'pz03', tier: '入门', name: '该弃就弃', stack: 2000, sb: 10, bb: 20, goal: 'fold', reward: 200,
+    hole: ['7d', '2c'], foes: [['As', 'Ad'], ['Kh', 'Ks'], ['Qc', 'Qs']], tip: '72o 是最差起手牌之一，面对加注请弃牌止损' },
+  { id: 'pz04', tier: '进阶', name: '同花听牌的赔率', stack: 3000, sb: 25, bb: 50, goal: 'win', reward: 350,
+    hole: ['Js', 'Ts'], foes: [['Ah', '9c'], ['Kd', '8h'], ['7c', '6d']], tip: '同花连张适合在合适赔率下跟注进池' },
+  { id: 'pz05', tier: '进阶', name: '中对的抉择', stack: 3000, sb: 25, bb: 50, goal: 'call', reward: 350,
+    hole: ['Th', 'Td'], foes: [['Ah', 'Qc'], ['8s', '7s'], ['5h', '5c']], tip: '中对遇到多人池要控制底池，跟注看牌即可' },
+  { id: 'pz06', tier: '进阶', name: '弱牌不恋战', stack: 3000, sb: 25, bb: 50, goal: 'fold', reward: 350,
+    hole: ['9d', '4h'], foes: [['Ks', 'Kc'], ['Ad', 'Jd'], ['Qs', 'Qh']], tip: '对手明显强牌，早点弃牌保存筹码' },
+  { id: 'pz07', tier: '专家', name: 'AK 的取舍', stack: 5000, sb: 50, bb: 100, goal: 'win', reward: 600,
+    hole: ['As', 'Ks'], foes: [['Qd', 'Jd'], ['9c', '9h'], ['Td', 'Ts']], tip: 'AKs 是强牌，面对中对要敢于加注施压' },
+  { id: 'pz08', tier: '专家', name: '顶级陷阱', stack: 5000, sb: 50, bb: 100, goal: 'win', reward: 800,
+    hole: ['Ah', 'Ad'], foes: [['Kh', 'Kc'], ['Qs', 'Qh'], ['Js', 'Jh']], tip: 'AA 对三家中对是梦幻局面，把底池做大' },
+];
+function puzzleOf(id) { for (var i = 0; i < PUZZLES.length; i++) if (PUZZLES[i].id === id) return PUZZLES[i]; return null; }
+function puzzleDone(id) { return !!(player && player.puzzles && player.puzzles[id]); }
+function goalText(g) { return g === 'fold' ? '目标：识破弱势牌局并弃牌止损' : g === 'call' ? '目标：控制底池、跟注看牌（不输）' : '目标：赢下这个底池'; }
+function renderPuzzles() {
+  var box = $('pzList'); if (!box) return;
+  var done = 0;
+  PUZZLES.forEach(function (p) { if (puzzleDone(p.id)) done++; });
+  var d1 = $('pzDone'); if (d1) d1.textContent = done;
+  var t1 = $('pzTotal'); if (t1) t1.textContent = PUZZLES.length;
+  var tiers = ['入门', '进阶', '专家'];
+  var html = '';
+  tiers.forEach(function (tier) {
+    var list = PUZZLES.filter(function (p) { return p.tier === tier; });
+    if (!list.length) return;
+    html += '<div class="pz-tier">' + tier + ' · ' + list.length + ' 关</div>';
+    list.forEach(function (p) {
+      html += '<div class="pz-row' + (puzzleDone(p.id) ? ' done' : '') + '" data-pz="' + p.id + '">'
+        + '<div><div class="pz-n">' + p.name + '</div><div class="pz-g">' + goalText(p.goal) + ' · 盲注 ' + p.sb + '/' + p.bb + '</div></div>'
+        + '<div class="pz-r">奖励 ' + fmt(p.reward) + ' 金币</div></div>';
+    });
+  });
+  box.innerHTML = html;
+  box.querySelectorAll('[data-pz]').forEach(function (row) {
+    row.onclick = function () { sfx('click'); startPuzzle(row.getAttribute('data-pz')); };
+  });
+}
+function openPuzzles() { renderPuzzles(); openOverlay('ovPuzzle'); }
+/* 构造固定牌堆：先 pop 的牌在前（引擎从 deck 末尾取牌） */
+function puzzleDeck(holesBySeat, dealerSeat, n) {
+  var order = [];
+  for (var k = 1; k <= n; k++) order.push((dealerSeat + k) % n);
+  var pops = [];
+  for (var m = 0; m < 2; m++) for (var o = 0; o < order.length; o++) pops.push(holesBySeat[order[o]][m]);
+  var rest = makeDeck().filter(function (c) {
+    return !pops.some(function (p) { return p.r === c.r && p.s === c.s; });
+  });
+  return rest.concat(pops.reverse());
+}
+function startPuzzle(id) {
+  var def = puzzleOf(id); if (!def) return;
+  closeOverlay('ovPuzzle');
+  G.puzzle = { def: def, start: def.stack, handNo: 0 };
+  App.mode = 'puzzle';
+  App.difficulty = def.bb >= 100 ? 'hard' : def.bb >= 50 ? 'normal' : 'easy';
+  Arcade.difficulty = App.difficulty;
+  /* 固定牌局：玩家在座位 0，三家对手按剧本发牌（dealer 固定为 0 → 玩家在按钮位，先行动） */
+  var holes = [def.hole.map(PZCard)];
+  def.foes.forEach(function (f) { holes.push(f.map(PZCard)); });
+  G.dealer = -1;                                  /* playHand 会 +1 → dealer=0（玩家） */
+  G.puzzleHoles = holes;
+  showToast('残局：' + def.name + ' · ' + def.tip, 3600);
+  startGame(App.difficulty);
+}
+/* 残局判定（本手结束后调用） */
+function settlePuzzle() {
+  var pz = G.puzzle; if (!pz) return;
+  var p = G.players[0];
+  var net = p ? p.chips - pz.start : 0;
+  var goal = pz.def.goal;
+  var pass = goal === 'fold'
+    ? net >= -Math.floor(pz.def.bb / 2)
+    : goal === 'call' ? net >= 0 : net > 0;
+  var first = !puzzleDone(pz.def.id);
+  var msg;
+  if (pass) {
+    if (first) {
+      player.puzzles = player.puzzles || {};
+      player.puzzles[pz.def.id] = true;
+      sfx('win');
+      G.puzzle = null; G.puzzleHoles = null;
+      exitGame();                       /* 先离桌（钱包与牌桌筹码解绑）再发奖励 */
+      addCoins(pz.def.reward);
+      savePlayer();
+      msg = '✅ 残局通关「' + pz.def.name + '」 · 奖励 ' + fmt(pz.def.reward) + ' 金币';
+      showToast(msg, 3200);
+      setTimeout(function () { try { openPuzzles(); } catch (e) {} }, 400);
+      return;
+    }
+    msg = '✅ 再次通关「' + pz.def.name + '」（奖励已领取过）';
+    sfx('win');
+  } else {
+    msg = '❌ 未达成目标（本手 ' + (net >= 0 ? '+' : '') + net + '）· 可再试一次';
+    sfx('lose');
+  }
+  G.puzzle = null;
+  G.puzzleHoles = null;
+  exitGame();
+  showToast(msg, 3200, !pass);
+  setTimeout(function () { try { openPuzzles(); } catch (e) {} }, 400);
+}
+/* ---- 记牌器：统计「已知牌」推算每个点数还剩几张（对标斗地主记牌器） ---- */
+function tallySeenCards() {
+  var seen = {};
+  var add = function (c) { if (c && c.r) seen[c.r] = (seen[c.r] || 0) + 1; };
+  try {
+    if (G.players[0]) (G.players[0].hole || []).forEach(add);
+    (G.community || []).forEach(add);
+    (G.players || []).forEach(function (p) { if (p && !p.human && p.reveal) (p.hole || []).forEach(add); });
+  } catch (e) {}
+  return seen;
+}
+var CARD_LABELS = { 14: 'A', 13: 'K', 12: 'Q', 11: 'J', 10: '10' };
+function renderCardCounter() {
+  var box = $('cardCounter');
+  if (!box) return;
+  if (!player || !player.cardCounter || App.screen !== 'game' || !G.active) { box.hidden = true; return; }
+  var seen = tallySeenCards();
+  var html = '<div class="cc-h">记牌器 · 剩余张数</div><div class="cc-grid">';
+  for (var r = 14; r >= 2; r--) {
+    var left = Math.max(0, 4 - (seen[r] || 0));
+    html += '<span class="cc-cell' + (left === 0 ? ' zero' : '') + '"><b>' + (CARD_LABELS[r] || r) + '</b><i>' + left + '</i></span>';
+  }
+  html += '</div>';
+  box.innerHTML = html;
+  box.hidden = false;
+}
+function toggleCardCounter() {
+  if (!player) return;
+  player.cardCounter = !player.cardCounter;
+  savePlayer();
+  showToast(player.cardCounter ? '记牌器已开启（牌桌左下角）' : '记牌器已关闭', 2000);
+  renderCardCounter();
+  var b = $('moreCounter'); if (b) b.textContent = '记牌器：' + (player.cardCounter ? '开' : '关');
+}
+/* ---- 智能提示（德州）：结合牌力与底池赔率给建议动作 ---- */
+function holdemHint() {
+  var p = G.players && G.players[0];
+  if (!p || p.folded || !p.hole || p.hole.length < 2) return null;
+  var toCall = Math.max(0, G.currentBet - p.bet);
+  var st = (G.community && G.community.length >= 3) ? estimateStrength(p) : preflopStrength(p.hole);
+  var potOdds = toCall > 0 ? toCall / ((G.pot || 0) + toCall) : 0;
+  if (toCall <= 0) {
+    if (st > 0.62 && (G.pot || 0) > G.bb * 2) return { act: 'raise', why: '牌力强（' + Math.round(st * 100) + '%），建议加注做大底池' };
+    return { act: 'check', why: '免费看下一张，建议过牌（牌力 ' + Math.round(st * 100) + '%）' };
+  }
+  if (st > 0.75) return { act: 'raise', why: '牌力很强（' + Math.round(st * 100) + '%），建议加注' };
+  if (st > potOdds + 0.08) return { act: 'call', why: '牌力 ' + Math.round(st * 100) + '% 高于跟注所需 ' + Math.round(potOdds * 100) + '%，建议跟注' };
+  return { act: 'fold', why: '牌力 ' + Math.round(st * 100) + '% 低于跟注赔率，建议弃牌止损' };
+}
 function renderControls() {
   if(G.quickRetry){var retryBar=$('bottomBar');retryBar.innerHTML='';var retryBtn=document.createElement('button');retryBtn.className='abtn start';retryBtn.textContent='重试保存结算';retryBtn.onclick=function(){if(G.quickRetry&&G.quickRetry()){render();if(G.lastSettleData)showSettle(G.lastSettleData);}};retryBar.appendChild(retryBtn);return;}
   if (G.rankRetry) { $('bottomBar').innerHTML='<button class="btn-primary" id="retryRank15">重试保存结算</button>'; $('retryRank15').onclick=function(){var x=G.rankRetry; if(finishHoldemRank15(x.winnings,x.pot,x.net)&&nextHandResolve){var done=nextHandResolve;nextHandResolve=null;done();}}; return; }
@@ -5965,6 +6172,22 @@ function renderControls() {
     }
     el.appendChild(bc);
 
+    /* 智能提示（对标斗地主「提示」） */
+    var bh = document.createElement('button');
+    bh.className = 'abtn hint';
+    bh.innerHTML = '提示<span class="sub">HINT</span>';
+    bh.addEventListener('click', function () {
+      sfx('click');
+      var rec = holdemHint();
+      if (!rec) return;
+      document.querySelectorAll('.abtn.reco').forEach(function (x) { x.classList.remove('reco'); });
+      var sel = rec.act === 'fold' ? '.abtn.fold' : rec.act === 'check' ? '.abtn.check' : rec.act === 'call' ? '.abtn.call' : null;
+      if (sel) { var t = el.querySelector(sel); if (t) t.classList.add('reco'); }
+      if (rec.act === 'raise') { var rp = $('raisePanel'); if (rp) rp.classList.add('reco'); }
+      showToast('建议：' + (rec.act === 'fold' ? '弃牌' : rec.act === 'check' ? '过牌' : rec.act === 'call' ? '跟注' : '加注') + ' · ' + rec.why, 2600);
+    });
+    el.appendChild(bh);
+
     if (maxRaiseTo > G.currentBet) {
       var panel = document.createElement('div');
       panel.id = 'raisePanel';
@@ -6019,6 +6242,7 @@ function render() {
   renderTopbar();
   renderTable();
   renderControls();
+  try { renderCardCounter(); } catch (e) {}
 }
 
 /* 下注 */
@@ -6485,12 +6709,26 @@ function humanStack() {
 }
 /* 把桌上筹码交还钱包：钱包 = 未带入部分 + 桌上剩余 */
 function bankSync() {
+  if (App.mode === 'puzzle') { player.coins = Math.max(0, G.walletBefore || player.coins); return player.coins; }
   var chips = (G.players[0] && G.players[0].chips) || 0;
   player.coins = Math.max(0, (G.walletBefore || 0) + chips);
   return player.coins;
 }
 function initPlayers() {
   var opps = pickOpponents();
+  if (App.mode === 'puzzle' && G.puzzle) {
+    /* 残局：固定筹码、不动钱包、对手同额 */
+    var pzStack = G.puzzle.def.stack;
+    G.tableStack = pzStack;
+    G.buyInMode = false;
+    G.walletBefore = player.coins;
+    G.puzzleStartChips = pzStack;
+    G.players = [makePlayer(0, player.name || '玩家', '🧑', true, 'human', pzStack, '')];
+    for (var pi = 0; pi < 3; pi++) G.players.push(newAIOpponent(pi + 1, opps[pi], G.players.map(function (p) { return p.name; })));
+    G.dealer = -1;
+    G.puzzle.start = pzStack;
+    return;
+  }
   var stack = humanStack();
   G.tableStack = stack;
   G.buyInMode = App.mode !== 'ranked';
@@ -6524,7 +6762,10 @@ async function playHand() {
 
   refreshLowStackOpponents();   /* 低筹码对手自动补位（静默，不再弹提示词） */
   sfx('shuffle');
-  G.deck = shuffle(makeDeck());
+  /* 残局挑战：按剧本固定发牌（其余牌随机补齐） */
+  G.deck = G.puzzleHoles
+    ? puzzleDeck(G.puzzleHoles, 0, G.players.length)
+    : shuffle(makeDeck());
   G.community = [];
   G.pot = 0;
   G.currentBet = 0;
@@ -7791,6 +8032,7 @@ async function runGameLoop() {
     /* 人机对局不设最低筹码门槛：有多少打多少，打光即结束 */
     await playHand();
     if (!G.active) return;
+    if (G.puzzle) { settlePuzzle(); return; }   /* 残局：单手定胜负 */
     await new Promise(function(res){
       nextHandResolve = res;
       if (player.settlePanel !== false && G.lastSettleData) showSettle(G.lastSettleData);
@@ -9309,6 +9551,9 @@ function bindEvents() {
     render();
   });
   $('btnMore').addEventListener('click', function(){ initAudio(); sfx('click'); openOverlay('ovMore'); });
+  var mp = $('morePuzzle'); if (mp) mp.addEventListener('click', function(){ sfx('click'); closeOverlay('ovMore'); openPuzzles(); });
+  var mc = $('moreCounter'); if (mc) mc.addEventListener('click', function(){ sfx('click'); toggleCardCounter(); });
+  var lzp = $('lbPuzzle'); if (lzp) lzp.addEventListener('click', function(){ initAudio(); sfx('click'); openPuzzles(); });
   ['moreRules:openHelp','moreAchieve:openAchieve','moreTasks:openTasks','moreStats:openStats','moreSettings:openSettings','moreFeedback:openFeedback'].forEach(function(pair){
     var el = $(pair.split(':')[0]), fn = pair.split(':')[1];
     if (el) el.addEventListener('click', function(){ sfx('click'); closeOverlay('ovMore'); try { window[fn](); } catch (e) {} });
