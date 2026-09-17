@@ -138,6 +138,13 @@
     filter:drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
   .lobby-bottom { padding:0 20px 18px; display:flex; flex-direction:column;
     align-items:center; gap:9px; position:relative; z-index:2; }
+  /* 首次注册卡片 */
+  .reg-row{display:flex;align-items:center;gap:10px;margin:10px 0}
+  .reg-row label{flex:none;width:44px;font-size:12.5px;color:#8fa0b4}
+  .reg-row input{flex:1;min-width:0}
+  .reg-avatars{display:flex;flex-wrap:wrap;gap:6px}
+  .reg-avatar{padding:3px;border:2px solid transparent;border-radius:50%;background:none;cursor:pointer;line-height:0}
+  .reg-avatar.on{border-color:#d4a847;box-shadow:0 0 8px rgba(212,168,71,.5)}
   .lobby-quickbtns { display:flex; gap:10px; justify-content:center; }
   .lobby-quickbtn { display:flex; flex-direction:column;
     align-items:center; gap:3px; padding:6px 14px;
@@ -1710,6 +1717,7 @@
         <button class="lobby-iconbtn" id="lbQCheckin" title="每日签到与周常">签到<span class="badge green" id="lbQCheckinBadge" style="display:none">!</span></button>
         <button class="lobby-iconbtn" id="lbQStats" title="战绩、图鉴与段位">档案</button>
         <button class="lobby-iconbtn" id="lbQHelp" title="查看玩法规则">规则</button>
+        <button class="lobby-iconbtn" id="lbQRegister" title="完善昵称与头像（完成注册）" style="display:none">资料</button>
         <button class="lobby-iconbtn" id="lbBtnSound" title="切换游戏音效">音效开</button>
         <button class="lobby-iconbtn" id="lbBtnSettings" title="音乐、音量与偏好">设置</button>
       </nav>
@@ -2034,6 +2042,23 @@
         <button class="again" id="settleNext">下一手 ▶</button>
         <button class="back" id="settleLeave">离开牌桌</button>
         <label class="settle-auto" style="margin-left:auto;font-size:12px;color:#8fa0b4;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="settleAutoChk">自动下一手</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 首次使用：完善资料即完成注册 -->
+  <div class="overlay" id="ovRegister">
+    <div class="panel" style="max-width:430px;">
+      <h2>完善资料 · 完成注册</h2>
+      <div style="font-size:12px;color:#8fa0b4;line-height:1.75;margin-bottom:6px">
+        设置昵称和头像即完成注册（<b style="color:#f2c14e">完全免费</b>）：管理端会记录你的玩家号与昵称，好友也能通过玩家号找到你。不填也能继续玩，之后可在大厅「资料」里补。
+      </div>
+      <div class="reg-row"><label>昵称</label><input id="regNick" maxlength="12" placeholder="输入昵称（最多 12 字）"></div>
+      <div class="reg-row"><label>头像</label><div class="reg-avatars" id="regAvatars"></div></div>
+      <div class="reg-row"><label>签名</label><input id="regBio" maxlength="60" placeholder="选填，最多 60 字"></div>
+      <div class="go-btns" style="margin-top:14px">
+        <button class="again" id="regSubmit">保存并完成注册</button>
+        <button class="back" id="regSkip">稍后再说</button>
       </div>
     </div>
   </div>
@@ -2975,6 +3000,72 @@ window.addEventListener('pagehide', function () {
 });
 
 /* ---- 用户资料弹窗（头像 / 昵称签名 / 玩家号 / 恢复码 / 接管） ---- */
+/* ---- 首次注册：显式（引导填昵称/头像）与隐式（开局静默建档）---- */
+function needsRegister(){ return !!(player && player.registered !== true); }
+function regDefaultNick(){ return '牌友' + String(1000 + (typeof randomInt === 'function' ? randomInt(9000) : Math.floor(Math.random() * 9000))); }
+function refreshRegisterChip(){ var b = $('lbQRegister'); if (b) b.style.display = needsRegister() ? 'flex' : 'none'; }
+function renderRegAvatars(){
+  var box = $('regAvatars'); if (!box || typeof AVATARS === 'undefined') return;
+  var cur = (player && player.avatar) || 'a01';
+  box.innerHTML = Object.keys(AVATARS).map(function(k){
+    return '<button type="button" class="reg-avatar' + (k === cur ? ' on' : '') + '" data-av="' + k + '" title="' + AVATARS[k].name + '">' + avatarSVG(k, 26) + '</button>';
+  }).join('');
+  box.querySelectorAll('[data-av]').forEach(function(b){
+    b.onclick = function(){
+      box.querySelectorAll('.reg-avatar').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      player.avatar = b.getAttribute('data-av');
+    };
+  });
+}
+function openRegister(){
+  if (!player) return;
+  var n = $('regNick');
+  if (n) n.value = (player.name && player.name !== '玩家') ? player.name : regDefaultNick();
+  var b = $('regBio'); if (b) b.value = player.bio || '';
+  renderRegAvatars();
+  openOverlay('ovRegister');
+}
+function submitRegister(){
+  if (!player) return;
+  var ctx = $('regNick') || $('pfNick') || { value: player.name };
+  var nm = String(ctx.value || '').trim().slice(0, 12);
+  if (!nm) return showToast('请填写昵称', 2000, true);
+  var bad = nicknameIssue(nm); if (bad) return showToast(bad, 2200, true);
+  var bEl = $('regBio');
+  var bio = String((bEl ? bEl.value : player.bio) || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 60);
+  var badBio = bioIssue(bio); if (badBio) return showToast(badBio, 2200, true);
+  player.name = nm;
+  player.bio = bio;
+  player.registered = true;
+  player.registeredAt = Date.now();
+  if (typeof Online !== 'undefined' && Online) Online.nickname = nm;
+  var ni = $('onlineNick'); if (ni) ni.value = nm;
+  savePlayer(); saveAllSaves(true);
+  try { onlinePushProfile(function (ok) { showToast(ok ? '✅ 注册完成，玩家号已生成' : '资料已保存（服务器暂未连上，稍后自动同步）', 2400, !ok); }); } catch (e) {}
+  refreshRegisterChip();
+  closeOverlay('ovRegister');
+  renderLobby();
+  var pn = $('pfName'); if (pn) pn.textContent = nm;
+}
+function skipRegister(){
+  if (!player) return;
+  player.registerSkipped = true;
+  savePlayer();
+  closeOverlay('ovRegister');
+  showToast('可随时在大厅「资料」里完成注册', 2200);
+  refreshRegisterChip();
+}
+/* 隐式注册：只要真人对局开始，就把身份落到服务端（管理端可见设备ID/昵称/在线时间） */
+function implicitRegister(){
+  try {
+    if (!player || player.registered === true) return;
+    player.registered = true;
+    savePlayer();
+    onlinePushProfile();
+    refreshRegisterChip();
+  } catch (e) {}
+}
 function openProfile() {
   initAudio(); sfx('click');
   renderProfile();
@@ -7406,6 +7497,7 @@ async function finishHand() {
    对局主循环
    ============================================================ */
 function startGame(diffKey) {
+  implicitRegister();               /* 人机对局也把身份落到服务端（管理端可见） */
   App.difficulty = diffKey;
   var cfg = DIFFICULTY_CONFIG[diffKey];
   G.bb = cfg.bb; G.sb = cfg.sb; G.buyIn = cfg.buyIn;
@@ -8864,6 +8956,9 @@ function bindEvents() {
   /* 大厅头像：打开用户资料（头像 / 玩家号 / 恢复码 / 接管） */
   var avEntry = $('lbAvatar'); if (avEntry) avEntry.addEventListener('click', function(){ initAudio(); sfx('click'); openProfile(); });
   $('lbQHelp').addEventListener('click', function(){ initAudio(); sfx('click'); openHelp(); });
+  var rq = $('lbQRegister'); if (rq) rq.addEventListener('click', function(){ initAudio(); sfx('click'); openRegister(); });
+  var rsub = $('regSubmit'); if (rsub) rsub.addEventListener('click', function(){ sfx('click'); submitRegister(); });
+  var rsk = $('regSkip'); if (rsk) rsk.addEventListener('click', function(){ sfx('click'); skipRegister(); });
   $('lbBtnSound').addEventListener('click', function(){ initAudio(); toggleSound(); });
 
   // 商城 / 签到 / 档案 / 设置
@@ -9264,7 +9359,7 @@ function syncCrowns(){
     if(on)c.title='已封顶「'+crownNameOf(b.dataset.game)+'」';
   });
 }
-renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var ret=oldRenderLobby15();try{if(player)syncTitles({silent:false});syncCrowns();}catch(e){}return ret;};
+renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var ret=oldRenderLobby15();try{refreshRegisterChip();}catch(e){}try{if(player)syncTitles({silent:false});syncCrowns();}catch(e){}return ret;};
 renderModeCards=function(){
   if(!player)return;
   ensureRankGift(hubGame);
@@ -9392,7 +9487,7 @@ arcadeRecover=function(){var p=arcadeData().pending;if(!p||(Arcade.round&&!Arcad
  atomic15(function(){if(p.mode==='ranked')applyRankResult15(p.game,p.difficulty,-1);arcadeRecord(p.game,p.stake,0,'未完局离开');arcadeData().history[0].mode=p.mode||'coins';arcadeData().history[0].unit=p.mode==='ranked'?'比赛筹码':'金币';arcadeData().pending=null;});};
 var oldOpenArcade15=openArcade;
 /* 进入小游戏牌桌 = 进场：人机对局免门票，直接用身上金币输赢 */
-openArcade=function(game){if(!GAME_IDS.includes(game)||game==='holdem'||G.active||(Arcade.round&&!Arcade.round.done)||player.rankedPending)return false;arcadeRecover();if(arcadeData().pending)return false;
+openArcade=function(game){implicitRegister();if(!GAME_IDS.includes(game)||game==='holdem'||G.active||(Arcade.round&&!Arcade.round.done)||player.rankedPending)return false;arcadeRecover();if(arcadeData().pending)return false;
  /* 排位门槛在入口处再兜一次：不论从哪里进来，积分不够都不开局 */
  if(Arcade.mode==='ranked'){ensureRankGift(game);if(profile15(game).rankPoints<RANKED_ENTRY_MIN){showToast('🏅 排位需要 '+RANKED_ENTRY_MIN+' 排位积分（当前 '+profile15(game).rankPoints+'）',2800,true);return false;}}
  /* 人机对局：免门票，直接用身上金币输赢 */
@@ -11224,6 +11319,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 try { setTimeout(function(){ try { claimMailbox(); reportInvite(); } catch (e) {} }, 1400); } catch (e) {}
 /* 首次进入：等大厅渲染完再引导（老存档自动跳过） */
 try { setTimeout(function(){ try { if (needsOnboarding()) showOnboarding(); } catch (e) {} }, 900); } catch (e) {}
+/* 首次使用：非新档 / 引导结束后提醒完善资料（完成注册） */
+try { setTimeout(function(){ try {
+  refreshRegisterChip();
+  if (needsRegister() && !player.registerSkipped && !document.querySelector('.overlay.show')) openRegister();
+} catch (e) {} }, 4200); } catch (e) {}
 })(globalThis);
 
 })();
