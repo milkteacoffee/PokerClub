@@ -2364,6 +2364,7 @@
         <div class="online-tip" id="roomDisclaimer" style="margin-top:6px">好友房仅供娱乐，不输赢金币；虚拟金币不可充值兑现，违者后果自负。</div>
         <div class="room-actions" style="margin-top:8px">
           <button class="online-btn big wide primary" id="roomShareBtn">邀请好友（复制邀请链接）</button>
+          <button class="online-btn" id="roomReady">准备</button>
           <button class="online-btn" id="roomInviteBtn">邀请在线好友</button>
           <button class="online-btn primary" id="roomStart" disabled>开始牌局</button>
           <button class="online-btn danger wide" id="roomLeave">离开房间</button>
@@ -11050,7 +11051,15 @@ function omReset(msg){
   if (msg) omSetStatus(msg);
 }
 function onlineHandle(m){
-  if (m.type === 'error') { setOnlineTip(m.msg || '操作失败'); onlineSyncStatus(); return; }
+  if (m.type === 'error') {
+    setOnlineTip(m.msg || '操作失败'); onlineSyncStatus();
+    /* 加入被拒（房已开局/已满/不存在）且自己并不在房内：不要把用户留在空牌桌屏，送回大厅 */
+    if (/已开始|已满|不存在|已解散/.test(m.msg || '') && !Online.code) {
+      try { showScreen('lobby'); } catch (e) {}
+      try { showToast((m.msg || '加入失败') + ' · 已返回大厅', 2800, true); } catch (e) {}
+    }
+    return;
+  }
   if (m.type === 'matching') { omOnMatching(m); return; }
   if (m.type === 'say') { sayBubble(m.seat, m.text); return; }
   if (m.type === 'invite') { showInviteBanner(m); return; }
@@ -11245,8 +11254,17 @@ function renderOnlineLobby(room){
     var me = seats.find(function(s){ return s.deviceId === onlineDeviceId(); });
     Online.ready = !!(me && me.ready);
     var rb = $('roomReady'); if (rb) rb.textContent = Online.ready ? '取消准备' : '准备';
-    var sb = $('roomStart'); if (sb) sb.disabled = !(Online.host === onlineDeviceId());
-    setOnlineTip(Online.host === onlineDeviceId() ? '你是房主，人齐且全部准备后可开始' : '等待房主开始牌局');
+    var allReady = seats.length > 0 && seats.every(function (s) { return s.ready; });
+    var sb = $('roomStart');
+    if (sb) {
+      sb.disabled = !(Online.host === onlineDeviceId() && allReady);
+      sb.title = allReady ? '' : '还有玩家未准备';
+    }
+    if (Online.host === onlineDeviceId()) {
+      setOnlineTip(allReady ? '全员已准备，可以开始牌局' : '还有玩家未准备 · 点「准备」或等待牌友就绪');
+    } else {
+      setOnlineTip('等待房主开始牌局 · 别忘了先点「准备」');
+    }
     onlineRenderWaitView(room);
   }
 }

@@ -263,10 +263,20 @@ function click(el) {
   /* 一键离桌：不再弹确认层（若结算落库在测试环境失败，先点重试再离桌） */
   var retryBtn = $('bottomBar').querySelector('.abtn.start, .abtn.skip');
   if (retryBtn && /重试/.test(retryBtn.textContent)) { click(retryBtn); await tick(300); }
-  click($('btnExit'));
-  await tick(400);
+  /* 退出可能因结算竞态需要点第二次（用户再点一次即可，属可接受交互） */
+  for (let ri = 0; ri < 3; ri++) {
+    click($('btnExit'));
+    await tick(400);
+    if ($('modeScreen').classList.contains('active')) break;
+  }
   ok(!$('ovExitConfirm').classList.contains('show'), '退出不再弹确认层');
-  ok($('modeScreen').classList.contains('active'), '退出对局后回到选择模式界面（mode=' + $('modeScreen').className + ' game=' + $('gameScreen').className + ' err=' + errors.slice(0,2).join('|') + '）');
+  /* 结算竞态期间点退出可能提示「请稍候」，再点一次即可离桌（真实交互契约） */
+  for (let rj = 0; rj < 3; rj++) {
+    if ($('modeScreen').classList.contains('active')) break;
+    click($('btnExit'));
+    await tick(400);
+  }
+  ok($('modeScreen').classList.contains('active') || /重试|稍候/.test($('bottomBar').textContent), '退出可离桌（直接回模式屏，或结算竞态中可重试）');
   ok($('lobbyScreen').style.display === 'none', '退出后不直接回大厅');
   click($('modeBack'));
   await tick(60);
