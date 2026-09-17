@@ -180,8 +180,14 @@ test('选择模式可以从模式卡重新进场，也可以退回大厅', () =>
   assert.ok(cards[0].textContent.includes('免费'), '模式卡写明免费入场');
   w.hubGame = 'holdem';
   w.goModeScreen();
+  /* 德州已改为场次选择页（对标斗地主）：场次卡 + 好友房(绿)/快速开始(橙)/在线匹配 */
+  assert.ok(doc.querySelectorAll('#modeBody .stage-card').length >= 3, '德州场次页渲染场次卡');
+  assert.ok(doc.querySelector('#modeBody .sb.friend'), '场次页有「好友房」按钮');
+  assert.ok(doc.querySelector('#modeBody .sb.quick'), '场次页有「快速开始」按钮');
+  w.hubGame = 'gold';
+  w.goModeScreen();
   const hc = [...doc.querySelectorAll('#modeBody .mode-card')];
-  assert.equal(hc.length, 3, '支持联机的玩法（德州）显示人机/在线匹配/好友开房三卡（实际 ' + hc.length + '）');
+  assert.equal(hc.length, 3, '支持联机的玩法（炸金花）显示人机/在线匹配/好友开房三卡（实际 ' + hc.length + '）');
   doc.getElementById('modeBack').click();
   assert.equal(doc.getElementById('lobbyScreen').style.display, 'flex', '可以退回大厅');
 });

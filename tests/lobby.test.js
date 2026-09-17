@@ -33,10 +33,13 @@ function check(value, msg) { assert.ok(value, msg); checks++; }
     name.click(); input.value = '<测试>123456789012345'; key('Enter');
     check(!saved().includes('<') && Array.from(saved()).length === 12, 'Sanitizes markup and limits length');
     check(d.getElementById('slotList').textContent.includes(saved()), 'Save slot display synced');
-    check(d.querySelectorAll('.lobby-topbtns button').length === 9, 'Nine stable functions: 8 originals + leaderboard (联机入口已并入游戏模式页)');
+    var _navBtns = d.querySelectorAll('.lobby-nav button').length + d.querySelectorAll('.lobby-topbtns button').length;
+    check(_navBtns === 10, '大厅功能入口 10 个（底栏 6 主入口 + 次要 4，实测 ' + _navBtns + '）');
     check(!d.querySelector('.lobby-quickbtns'), 'Duplicate bottom navigation removed');
     for (const id of ['lbQTasks', 'lbQAchieve', 'lbQShop', 'lbQStorage', 'lbQTaskBadge']) check(!d.getElementById(id), 'Removed duplicate: ' + id);
-    for (const id of ['lbQCheckin', 'lbQStats', 'lbQHelp']) check(d.querySelector('.lobby-topbtns').contains(d.getElementById(id)), 'Moved to top: ' + id);
+    /* 底栏 6 个主入口（对标斗地主），次要入口在大厅顶部 */
+    for (const id of ['lbBtnBoard', 'lbBtnTasks', 'lbBtnAchieve', 'lbBtnShop', 'lbQCheckin', 'lbBtnSettings']) check(d.querySelector('.lobby-nav').contains(d.getElementById(id)), '底栏主入口: ' + id);
+    for (const id of ['lbQStats', 'lbQHelp']) check(d.querySelector('.lobby-topbtns').contains(d.getElementById(id)), '次要入口在大厅顶部: ' + id);
     for (const selector of ['.lobby-iconbtn', '.lobby-coins', '.lobby-name-row .rank-badge', '.panel', '.mode-card', '.diff-card']) {
       const actual = d.querySelector(selector);
       const el = actual || d.createElement('div');

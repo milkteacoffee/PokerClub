@@ -76,9 +76,9 @@ function click(el) {
   click($('lbStartBtn'));
   await tick(30);
   ok($('modeScreen').classList.contains('active'), '点击「开始游戏」进入模式选择');
-  click($('modeBody').querySelector('.mode-card.quick'));
+  click($('modeBody').querySelector('.sb.quick'));
   await tick(300);
-  ok($('ovBuyIn').classList.contains('show'), '人机德州先弹带入筹码卡');
+  ok($('ovBuyIn').classList.contains('show'), '场次页点快速开始 → 弹带入筹码卡');
   click($('biStart'));
   await tick(400);
   ok($('gameScreen').classList.contains('active'), '带入后进入牌桌（免门票、无难度页）');
@@ -226,7 +226,7 @@ function click(el) {
   click($('lbStartBtn'));
   await tick(30);
   /* 新链路：大厅 → 模式屏 → 人机对局 → 带入筹码 */
-  click($('modeBody').querySelector('.mode-card.quick'));
+  click($('modeBody').querySelector('.sb.quick'));
   await tick(300);
   click($('biStart'));
   await tick(400);
@@ -262,9 +262,9 @@ function click(el) {
 
   /* 一键离桌：不再弹确认层 */
   click($('btnExit'));
-  await tick(120);
+  await tick(400);
   ok(!$('ovExitConfirm').classList.contains('show'), '退出不再弹确认层');
-  ok($('modeScreen').classList.contains('active'), '退出对局后回到选择模式界面');
+  ok($('modeScreen').classList.contains('active'), '退出对局后回到选择模式界面（实际 ' + $('modeScreen').className + '）');
   ok($('lobbyScreen').style.display === 'none', '退出后不直接回大厅');
   click($('modeBack'));
   await tick(60);
@@ -283,7 +283,7 @@ function click(el) {
   /* 回归：发牌途中直接离桌，不应抛异常（曾因 playHand 发牌循环缺少 G.active 检查而崩溃） */
   click($('lbStartBtn'));
   await tick(30);
-  click($('modeBody').querySelector('.mode-card.quick'));
+  click($('modeBody').querySelector('.sb.quick'));
   await tick(250);
   click($('biStart'));
   await tick(150);                       // 正处于发牌阶段

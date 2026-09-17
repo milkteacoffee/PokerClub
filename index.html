@@ -138,6 +138,50 @@
     filter:drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
   .lobby-bottom { padding:0 20px 18px; display:flex; flex-direction:column;
     align-items:center; gap:9px; position:relative; z-index:2; }
+  /* 大厅底部导航（对标斗地主底栏：图标 + 文字 + 红点） */
+  .lobby-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:960px;z-index:70;
+    display:flex;justify-content:space-between;gap:2px;padding:6px 10px calc(8px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg,rgba(10,17,26,.55),rgba(10,17,26,.96) 45%);border-top:1px solid rgba(143,160,180,.16)}
+  .lobby-nav .lobby-iconbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 2px;border-radius:10px;
+    background:none;border:none;color:#9fb0c0;font-size:10.5px;letter-spacing:.5px;position:relative;cursor:pointer}
+  .lobby-nav .lobby-iconbtn .nav-ic{display:block;width:22px;height:22px;line-height:0;color:#c8d6e2}
+  .lobby-nav .lobby-iconbtn:hover{background:rgba(255,255,255,.04);color:#e8d5a3}
+  .lobby-nav .lobby-iconbtn:hover .nav-ic{color:#e8d5a3}
+  .lobby-nav .badge{position:absolute;top:2px;right:12px}
+  .lobby-minor{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  #lobbyScreen{padding-bottom:78px}
+  /* 牌桌顶部：托管 / 更多 */
+  .topbtns .iconbtn.on{background:linear-gradient(150deg,#f0d79a,#cfa85b);color:#2a1d0c}
+  .more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px}
+  .more-grid button{padding:14px 8px;border-radius:12px;border:1px solid rgba(143,160,180,.28);background:rgba(255,255,255,.03);
+    color:#dbe6ef;font-size:13px;font-family:inherit;cursor:pointer}
+  .more-grid button:hover{background:rgba(240,215,154,.12);color:#e8d5a3}
+  /* 场次选择页（对标斗地主选场） */
+  .stage-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .stage-head .sh-game{font-size:15px;font-weight:800;color:#e8d5a3;letter-spacing:1px}
+  .stage-head .sh-sub{font-size:11.5px;color:#8fa0b4}
+  .stage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+  .stage-card{position:relative;border-radius:14px;padding:14px 12px 12px;text-align:center;cursor:pointer;
+    background:linear-gradient(160deg,rgba(74,122,156,.28),rgba(20,32,46,.65));border:2px solid rgba(255,255,255,.06);color:#dbe6ef}
+  .stage-card:hover{transform:translateY(-2px)}
+  .stage-card.on{border-color:#f0d79a;box-shadow:0 8px 24px rgba(240,215,154,.22)}
+  .stage-card .sc-name{font-size:15px;font-weight:800;letter-spacing:1px}
+  .stage-card .sc-blind{font-size:12px;color:#f2c14e;margin-top:4px;font-weight:700}
+  .stage-card .sc-meta{font-size:11px;color:#9fb0c0;margin-top:6px;line-height:1.6}
+  .stage-card .sc-tag{position:absolute;top:-1px;right:-1px;font-size:10px;padding:2px 7px;border-radius:0 12px 0 10px;background:rgba(240,215,154,.9);color:#2a1d0c;font-weight:800}
+  .stage-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+  .stage-btns .sb{grid-column:auto;padding:15px 16px;font-size:15px;font-weight:800;border-radius:14px;border:none;cursor:pointer;font-family:inherit}
+  .stage-btns .sb.friend{background:linear-gradient(150deg,#7fd8a8,#3fa46f);color:#0d2417}
+  .stage-btns .sb.quick{background:linear-gradient(150deg,#f5c96a,#e08a2b);color:#3a2103}
+  .stage-btns .sb.match{grid-column:1/-1;background:rgba(255,255,255,.06);color:#cfe0ee;border:1px solid rgba(143,160,180,.35);
+    padding:12px;font-size:14px}
+  /* 结算大字与名次 */
+  .settle-result{text-align:center;font-size:30px;font-weight:900;letter-spacing:6px;margin:2px 0 8px;
+    background:linear-gradient(160deg,#ffe9a8,#d4a847);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .settle-result.lose{background:linear-gradient(160deg,#9fb0c0,#63707c);-webkit-background-clip:text;background-clip:text}
+  .settle-result.tie{background:linear-gradient(160deg,#cfe0ee,#8fa0b4);-webkit-background-clip:text;background-clip:text}
+  .settle-row .rankno{flex:none;width:22px;text-align:center;font-weight:800;color:#8fa0b4}
+  .settle-row.human .rankno{color:#f2c14e}
   /* 带入筹码卡 */
   .bi-info{font-size:12px;color:#b9c6d2;line-height:1.8;background:rgba(255,255,255,.03);border-radius:10px;padding:10px 12px;margin-bottom:10px}
   .bi-info b{color:#f2c14e}
@@ -1734,16 +1778,10 @@
       </div>
       <button class="lobby-relief" id="lbBtnRelief" hidden title="金币不足时领取每日救济金">救济金 <b id="lbReliefN">3</b></button>
       <nav class="lobby-topbtns" aria-label="大厅功能">
-        <button class="lobby-iconbtn" id="lbBtnBoard" title="好友榜与全服榜">排行</button>
-        <button class="lobby-iconbtn" id="lbBtnTasks" title="任务与奖励">任务<span class="badge" id="lbTaskBadge" style="display:none">!</span></button>
-        <button class="lobby-iconbtn" id="lbBtnAchieve" title="查看成就">成就</button>
-        <button class="lobby-iconbtn" id="lbBtnShop" title="道具与装扮">商城</button>
-        <button class="lobby-iconbtn" id="lbQCheckin" title="每日签到与周常">签到<span class="badge green" id="lbQCheckinBadge" style="display:none">!</span></button>
         <button class="lobby-iconbtn" id="lbQStats" title="战绩、图鉴与段位">档案</button>
         <button class="lobby-iconbtn" id="lbQHelp" title="查看玩法规则">规则</button>
         <button class="lobby-iconbtn" id="lbQRegister" title="完善昵称与头像（完成注册）" style="display:none">资料</button>
         <button class="lobby-iconbtn" id="lbBtnSound" title="切换游戏音效">音效开</button>
-        <button class="lobby-iconbtn" id="lbBtnSettings" title="音乐、音量与偏好">设置</button>
       </nav>
     </div>
     <div class="save-status">
@@ -1765,6 +1803,15 @@
         <button class="game-tile" data-game="niu"><i class="tile-bg" aria-hidden="true">斗牛</i><span class="tile-art">牛</span><small>凑十成牛 · 倍数对决</small><span class="tile-crown" hidden>👑</span></button>
       </div>
     </div>
+    <!-- 底部导航（对标斗地主底栏） -->
+    <nav class="lobby-nav" aria-label="大厅导航">
+      <button class="lobby-iconbtn" id="lbBtnBoard" title="好友榜与全服榜"><i class="nav-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="17" y="10" width="4" height="10" rx="1"/></svg></i>排行</button>
+      <button class="lobby-iconbtn" id="lbBtnTasks" title="任务与奖励"><i class="nav-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></i>任务<span class="badge" id="lbTaskBadge" style="display:none">!</span></button>
+      <button class="lobby-iconbtn" id="lbBtnAchieve" title="查看成就"><i class="nav-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M10 14h4l1 6H9z"/></svg></i>成就</button>
+      <button class="lobby-iconbtn" id="lbBtnShop" title="道具与装扮"><i class="nav-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 8h14l-1.2 11.2A2 2 0 0 1 15.8 21H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg></i>商城</button>
+      <button class="lobby-iconbtn" id="lbQCheckin" title="每日签到与周常"><i class="nav-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M8 15l2.2 2.2L15 13"/></svg></i>签到<span class="badge green" id="lbQCheckinBadge" style="display:none">!</span></button>
+      <button class="lobby-iconbtn" id="lbBtnSettings" title="音乐、音量与偏好"><i class="nav-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.2M12 18.8V21M4.2 7.5l1.9 1.1M17.9 15.4l1.9 1.1M4.2 16.5l1.9-1.1M17.9 8.6l1.9-1.1"/></svg></i>设置</button>
+    </nav>
     <div class="lobby-bottom">
       <button class="btn-primary lobby-start-btn" id="lbStartBtn" hidden aria-hidden="true">开始游戏</button>
       <div class="lobby-hint" id="hubHint">已选德州扑克 · 所有对手均为本地AI</div>
@@ -1851,11 +1898,11 @@
       </div>
       <div class="mode-tag" id="pMode">⚡ 快速</div>
       <div class="topbtns">
-        <button class="iconbtn" id="btnAchieve" title="成就">🏆</button>
-        <button class="iconbtn" id="btnTasks" title="任务">📋</button>
-        <button class="iconbtn" id="btnSound" title="音效">🔊</button>
-        <button class="iconbtn" id="btnSettings" title="设置">⚙️</button>
-        <button class="iconbtn exit" id="btnExit" title="退出并保存">🚪</button>
+        <button class="iconbtn" id="btnAuto" title="托管：自动过牌/跟注，弃弱牌">托管</button>
+        <button class="iconbtn" id="btnMore" title="更多">更多</button>
+        <button class="iconbtn" id="btnSound" title="音效">音效</button>
+        <button class="iconbtn" id="btnSettings" title="设置">设置</button>
+        <button class="iconbtn exit" id="btnExit" title="退出并保存">退出</button>
       </div>
     </div>
     <div id="table">
@@ -2056,14 +2103,30 @@
   </div>
 
   <!-- 本局结算 -->
+  <!-- 牌桌「更多」 -->
+  <div class="overlay" id="ovMore">
+    <div class="panel" style="max-width:420px;">
+      <h2>更多 <button class="closebtn" data-close="ovMore">✕ 返回</button></h2>
+      <div class="more-grid">
+        <button id="moreRules">玩法规则</button>
+        <button id="moreAchieve">成就</button>
+        <button id="moreTasks">任务</button>
+        <button id="moreStats">我的档案</button>
+        <button id="moreSettings">设置</button>
+        <button id="moreFeedback">意见反馈</button>
+      </div>
+    </div>
+  </div>
+
   <div class="overlay" id="ovSettle">
     <div class="panel" style="max-width:580px;">
-      <h2>📋 本局结算 <button class="closebtn" data-close="ovSettle">✕</button></h2>
+      <h2>本局结算 <button class="closebtn" data-close="ovSettle">✕</button></h2>
+      <div class="settle-result" id="settleResult">结算</div>
       <div id="settleBoard"></div>
       <div id="settleList"></div>
       <div id="settleFoot"></div>
       <div class="go-btns" style="margin-top:14px;align-items:center;">
-        <button class="again" id="settleNext">下一手 ▶</button>
+        <button class="again" id="settleNext">继续游戏 ▶</button>
         <button class="back" id="settleLeave">离开牌桌</button>
         <label class="settle-auto" style="margin-left:auto;font-size:12px;color:#8fa0b4;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="settleAutoChk">自动下一手</label>
       </div>
@@ -5517,12 +5580,15 @@ function renderSettle(data) {
   }
   $('settleBoard').innerHTML = '<div class="settle-board">' + bh + '</div>';
 
+  /* 名次表：按本手净盈亏从高到低（斗地主式结果表） */
+  var sorted = data.rows.slice().sort(function(a, b){ return (b.net || 0) - (a.net || 0); });
   var html = '';
-  for (var r = 0; r < data.rows.length; r++) {
-    var row = data.rows[r];
+  for (var r = 0; r < sorted.length; r++) {
+    var row = sorted[r];
     var cls = 'settle-row' + (row.net > 0 ? ' win' : (row.net < 0 ? ' lose' : ''))
             + (row.human ? ' human' : '');
     html += '<div class="' + cls + '">';
+    html += '<div class="rankno">' + (r + 1) + '</div>';
     html += '<div class="who">' + escapeHTML(row.name) + '</div>';
     html += '<div class="hand">';
     if (row.hole.length) {
@@ -5545,6 +5611,15 @@ function renderSettle(data) {
   var mine = null;
   for (var m = 0; m < data.rows.length; m++) {
     if (data.rows[m].human) { mine = data.rows[m]; break; }
+  }
+  /* 大字结果：按本手净盈亏 */
+  var rs = $('settleResult');
+  if (rs) {
+    var put = function(txt, cls){ rs.textContent = txt; rs.className = 'settle-result' + (cls ? ' ' + cls : ''); };
+    if (!mine) put('结算', '');
+    else if (mine.net > 0) put('胜利', '');
+    else if (mine.net < 0) put('失败', 'lose');
+    else put('平局', 'tie');
   }
   var foot = '';
   if (mine) {
@@ -5569,14 +5644,14 @@ function renderSettle(data) {
 var settleAutoTimer=null;
 function clearSettleAuto(){
   if(settleAutoTimer){clearInterval(settleAutoTimer);clearTimeout(settleAutoTimer);settleAutoTimer=null;}
-  var sb=$('settleNext');if(sb)sb.textContent='下一手 ▶';
+  var sb=$('settleNext');if(sb)sb.textContent='继续游戏 ▶';
 }
 /* 结算后 4 秒自动下一手（可在面板里关闭）；点面板任意处立即继续 */
 function startSettleAuto(){
   clearSettleAuto();
   if(player.settleAuto===false)return;
   var n=60,sb=$('settleNext');
-  function paint(){if(sb)sb.textContent='下一手 ('+n+') ▶';}
+  function paint(){if(sb)sb.textContent='继续游戏 ('+n+') ▶';}
   paint();
   settleAutoTimer=setInterval(function(){
     n--;
@@ -6254,6 +6329,18 @@ function aiDecideWrapper(p) {
 
 async function getAction(p) {
   if (p.human) {
+    if (G.autoPlay) {
+      /* 托管：能过牌就过牌；跟注额超过身上筹码 15% 就弃牌；否则跟注（不足自动全下） */
+      var toCall = G.currentBet - p.bet;
+      var autoAct;
+      if (toCall <= 0) autoAct = { type: 'check' };
+      else if (toCall > p.chips * 0.15) autoAct = { type: 'fold' };
+      else autoAct = { type: 'call' };
+      await sleep(220);
+      if (!G.active) return { type: 'fold' };
+      showToast('托管中：自动' + (autoAct.type === 'check' ? '过牌' : autoAct.type === 'call' ? '跟注' : '弃牌'), 1200);
+      return autoAct;
+    }
     return await new Promise(function(res){
       humanResolve = res;
       renderControls();
@@ -7731,6 +7818,8 @@ function showLevelUp() {
 }
 
 function requestExit() {
+  /* 结算面板打开时，这一手已结算完毕：直接关面板离桌（否则会被"正在结算"挡住出不去） */
+  try { if ($('ovSettle') && $('ovSettle').classList.contains('show')) hideSettle(); } catch (e) {}
   if (G.settling && !G.handSettled) { showToast('本手正在结算，请稍候', 1400); return; }
   /* 一键离桌：自动保存并返回模式选择（不再弹确认层） */
   exitGame();
@@ -9210,8 +9299,22 @@ function bindEvents() {
   });
 
   // 游戏内
-  $('btnAchieve').addEventListener('click', function(){ sfx('click'); openAchieve(); });
-  $('btnTasks').addEventListener('click', function(){ sfx('click'); openTasks(); });
+  $('btnAuto').addEventListener('click', function(){
+    initAudio(); sfx('click');
+    if (App.mode === 'ranked') return showToast('排位赛不支持托管', 1800, true);
+    G.autoPlay = !G.autoPlay;
+    $('btnAuto').classList.toggle('on', !!G.autoPlay);
+    showToast(G.autoPlay ? '已开启托管：自动过牌/跟注，弱牌自动弃' : '已关闭托管', 2000);
+    if (G.autoPlay && humanResolve) { var hr = humanResolve; humanResolve = null; hr({ type: 'check' }); }
+    render();
+  });
+  $('btnMore').addEventListener('click', function(){ initAudio(); sfx('click'); openOverlay('ovMore'); });
+  ['moreRules:openHelp','moreAchieve:openAchieve','moreTasks:openTasks','moreStats:openStats','moreSettings:openSettings','moreFeedback:openFeedback'].forEach(function(pair){
+    var el = $(pair.split(':')[0]), fn = pair.split(':')[1];
+    if (el) el.addEventListener('click', function(){ sfx('click'); closeOverlay('ovMore'); try { window[fn](); } catch (e) {} });
+  });
+  var ba = $('btnAchieve'); if (ba) ba.addEventListener('click', function(){ sfx('click'); openAchieve(); });
+  var bt = $('btnTasks'); if (bt) bt.addEventListener('click', function(){ sfx('click'); openTasks(); });
   $('btnSound').addEventListener('click', function(){ initAudio(); toggleSound(); });
   $('btnExit').addEventListener('click', function(){ sfx('click'); requestExit(); });
   $('exitConfirmYes').addEventListener('click', function(){ sfx('click'); exitGame(); });
@@ -9535,9 +9638,66 @@ function syncCrowns(){
   });
 }
 renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var ret=oldRenderLobby15();try{refreshRegisterChip();}catch(e){}try{if(player)syncTitles({silent:false});syncCrowns();}catch(e){}return ret;};
+/* 德州场次选择页（对标斗地主「选场」）：底分/人数卡片 + 好友房(绿)/快速开始(橙) */
+var STAGE_KEYS = ['easy', 'normal', 'hard'];
+var STAGE_TAGS = { easy: '', normal: '热门', hard: '' };
+function renderStagePage(){
+  var body = $('modeBody'); if (!body) return;
+  body.innerHTML = '';
+  var cur = player.prefDiff && STAGE_KEYS.indexOf(player.prefDiff) >= 0 ? player.prefDiff : 'normal';
+  var head = document.createElement('div');
+  head.className = 'stage-head';
+  head.innerHTML = '<span class="sh-game">' + (GAME_NAMES[hubGame] || '德州扑克') + '</span>'
+    + '<span class="sh-sub">选择场次 · 盲注越大对抗越激烈</span>';
+  body.appendChild(head);
+  var grid = document.createElement('div');
+  grid.className = 'stage-grid';
+  STAGE_KEYS.forEach(function (key, i) {
+    var cfg = DIFFICULTY_CONFIG[key];
+    var min = cfg.bb * 20;
+    var card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'stage-card' + (key === cur ? ' on' : '');
+    card.innerHTML = (STAGE_TAGS[key] ? '<span class="sc-tag">' + STAGE_TAGS[key] + '</span>' : '')
+      + '<div class="sc-name">' + LEVEL_NAMES[i] + '</div>'
+      + '<div class="sc-blind">底分 ' + cfg.sb + ' / ' + cfg.bb + '</div>'
+      + '<div class="sc-meta">4 人桌 · 建议买入 ' + fmt(min) + '<br>身上金币 ' + fmt(player.coins) + '</div>';
+    card.onclick = function () {
+      player.prefDiff = key;
+      savePlayer();
+      sfx('click');
+      renderStagePage();
+    };
+    grid.appendChild(card);
+  });
+  body.appendChild(grid);
+  /* 底部双主按钮：好友房（绿）+ 快速开始（橙）；在线匹配为次要按钮 */
+  var btns = document.createElement('div');
+  btns.className = 'stage-btns';
+  var key = (player.prefDiff && STAGE_KEYS.indexOf(player.prefDiff) >= 0) ? player.prefDiff : 'normal';
+  var bFriend = document.createElement('button');
+  bFriend.className = 'sb friend'; bFriend.textContent = '好友房';
+  bFriend.onclick = function () { sfx('click'); var B = window.PokerOnlineBridge; if (B && B.openRoomSetup) B.openRoomSetup(hubGame); else showToast('联机模块未就绪', 2000, true); };
+  var bQuick = document.createElement('button');
+  bQuick.className = 'sb quick'; bQuick.textContent = '快速开始';
+  bQuick.onclick = function () { sfx('click'); App.difficulty = key; Arcade.difficulty = key; App.mode = 'quick'; Arcade.mode = 'coins'; openBuyIn(); };
+  var bMatch = document.createElement('button');
+  bMatch.className = 'sb match'; bMatch.textContent = '在线匹配 · 和真人同桌（需 2000 金币）';
+  bMatch.onclick = function () {
+    if (player.coins < 2000) return showToast('在线匹配需要至少 2000 金币', 2200, true);
+    initAudio(); sfx('click');
+    var B = window.PokerOnlineBridge;
+    if (!B) return showToast('联机模块未就绪，请刷新页面重试', 2400, true);
+    App.difficulty = key; B.setMatchGame(hubGame); App.mode = 'quick';
+    B.openPanel('match'); B.renderMatchGames(); B.startMatch();
+  };
+  btns.appendChild(bFriend); btns.appendChild(bQuick); btns.appendChild(bMatch);
+  body.appendChild(btns);
+}
 renderModeCards=function(){
   if(!player)return;
   ensureRankGift(hubGame);
+  if (hubGame === 'holdem') { renderStagePage(); return; }   /* 德州走场次选择页 */
   var s=profile15(hubGame),body=$('modeBody');body.innerHTML='';
   /* 联机能力（与服务端一致）：掼蛋/德州/炸金花/骰子比大小；不支持的玩法直接不渲染联机卡，避免假按钮 */
   var canOnline=['guandan','holdem','gold','diceduel'].indexOf(hubGame)>=0;
