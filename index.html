@@ -138,6 +138,11 @@
     filter:drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
   .lobby-bottom { padding:0 20px 18px; display:flex; flex-direction:column;
     align-items:center; gap:9px; position:relative; z-index:2; }
+  /* 带入筹码卡 */
+  .bi-info{font-size:12px;color:#b9c6d2;line-height:1.8;background:rgba(255,255,255,.03);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+  .bi-info b{color:#f2c14e}
+  .bi-chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
+  .bi-val{font-size:22px;font-weight:800;color:#f2c14e;letter-spacing:1px}
   /* 首次注册卡片 */
   .reg-row{display:flex;align-items:center;gap:10px;margin:10px 0}
   .reg-row label{flex:none;width:44px;font-size:12.5px;color:#8fa0b4}
@@ -2065,6 +2070,21 @@
     </div>
   </div>
 
+  <!-- 德州带入筹码（人机场） -->
+  <div class="overlay" id="ovBuyIn">
+    <div class="panel" style="max-width:430px;">
+      <h2>带入筹码</h2>
+      <div class="bi-info" id="biInfo"></div>
+      <div style="font-size:12.5px;color:#8fa0b4">选择带入金额（其余金币留在钱包，不带入就不承担风险）</div>
+      <div class="bi-chips" id="biChips"></div>
+      <div style="margin:6px 0 2px"><span class="bi-val" id="biAmount">0</span> <span style="font-size:12px;color:#8fa0b4">金币</span></div>
+      <div class="go-btns" style="margin-top:12px">
+        <button class="again" id="biStart">带入并开始</button>
+        <button class="back" data-close="ovBuyIn">取消</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 开设房间（好友房参数，对标斗地主开设房间） -->
   <div class="overlay" id="ovRoomSetup">
     <div class="panel" style="max-width:460px;">
@@ -3041,6 +3061,54 @@ window.addEventListener('pagehide', function () {
 });
 
 /* ---- 用户资料弹窗（头像 / 昵称签名 / 玩家号 / 恢复码 / 接管） ---- */
+/* ---- 德州带入登记（人机场）：只带选定金额上桌 ---- */
+var BI_PICK = 0;                    /* 当前选择（0 = 用下次计算的默认值） */
+function biRemember(key, val) { try { localStorage.setItem('poker_buyin_v1', JSON.stringify({ d: key, v: val })); } catch (e) {} }
+function biRecalled(key) {
+  try {
+    var o = JSON.parse(localStorage.getItem('poker_buyin_v1') || 'null');
+    return (o && o.d === key && Number(o.v) > 0) ? Number(o.v) : 0;
+  } catch (e) { return 0; }
+}
+function biRender() {
+  var cfg = DIFFICULTY_CONFIG[App.difficulty];
+  var min = holdemBuyInMin(), max = holdemBuyInMax();
+  var info = $('biInfo');
+  if (info) {
+    info.innerHTML = '本场：<b>' + (LEVEL_NAMES[level15(App.difficulty)] || App.difficulty) + '</b> · 盲注 <b>' + cfg.sb + '/' + cfg.bb + '</b>'
+      + ' · 建议买入 ' + fmt(min) + ' ~ ' + fmt(Math.max(min, max)) + '<br>身上金币 <b>' + fmt(player.coins) + '</b> · 带入后钱包剩余 <b>'
+      + fmt(Math.max(0, player.coins - (BI_PICK || max))) + '</b>';
+  }
+  var box = $('biChips');
+  if (box) {
+    var opts = [20, 40, 60, 100].map(function(bb) { return { v: cfg.bb * bb, t: bb + 'BB' }; });
+    opts.push({ v: Math.max(min, max), t: '全部可带' });
+    var list = opts.filter(function(o, i) { return o.v >= min && o.v <= Math.max(min, max) && opts.findIndex(function(x) { return x.v === o.v; }) === i; });
+    box.innerHTML = list.map(function(o) {
+      return '<button type="button" class="rs-chip' + ((BI_PICK || max) === o.v ? ' on' : '') + '" data-bi="' + o.v + '">' + o.t + '<small style="opacity:.7"> ' + fmt(o.v) + '</small></button>';
+    }).join('');
+    box.querySelectorAll('[data-bi]').forEach(function(b) {
+      b.onclick = function() { BI_PICK = Number(b.getAttribute('data-bi')); biRender(); };
+    });
+  }
+  var am = $('biAmount'); if (am) am.textContent = fmt(BI_PICK || max);
+}
+function openBuyIn() {
+  if (!player) return;
+  var min = holdemBuyInMin(), max = holdemBuyInMax();
+  if (max < DIFFICULTY_CONFIG[App.difficulty].bb) return showToast('金币不足一个大盲（' + fmt(DIFFICULTY_CONFIG[App.difficulty].bb) + '），先去任务或救济金领点金币', 2800, true);
+  var rec = biRecalled(App.difficulty);
+  BI_PICK = (rec >= min && rec <= max) ? rec : max;
+  biRender();
+  openOverlay('ovBuyIn');
+}
+function submitBuyIn() {
+  var min = holdemBuyInMin(), max = holdemBuyInMax();
+  G.humanBuyIn = Math.min(Math.max(BI_PICK || max, min), max);
+  biRemember(App.difficulty, G.humanBuyIn);
+  closeOverlay('ovBuyIn');
+  tryEnterGame(App.difficulty);
+}
 /* ---- 首次注册：显式（引导填昵称/头像）与隐式（开局静默建档）---- */
 function needsRegister(){ return !!(player && player.registered !== true); }
 function regDefaultNick(){ return '牌友' + String(1000 + (typeof randomInt === 'function' ? randomInt(9000) : Math.floor(Math.random() * 9000))); }
@@ -5653,7 +5721,7 @@ function seatHTML(p, i) {
       G.community.length >= 3 && !G.handOver) {
     try { resText = describeHand(bestHand(p.hole.concat(G.community))); } catch(e){}
   }
-  var thinking = (!p.human && G.actor === i && !G.handOver) ?
+  var thinking = (!p.human && G.actor === i && !G.handOver && !G.paceFast) ?
     '<div class="thinking-dots">思考中...</div>' : '';
   var html = '';
   html += thinking;
@@ -5963,14 +6031,14 @@ async function bettingRound(startIdx) {
     if (p && !p.folded && !p.allIn && !(p.acted && p.bet === G.currentBet)) {
       G.actor = idx;
       render();
-      await sleep(120);
+      await sleep(G.paceFast ? 18 : 120);
       if (!G.active || G.skipFlag) return;
       var act = await getAction(p);
       if (!G.active || G.skipFlag) return;
       applyAction(p, act);
       G.actor = -1;
       render();
-      await sleep(140);
+      await sleep(G.paceFast ? 14 : 140);
     }
     idx = (idx + 1) % G.players.length;
   }
@@ -6180,7 +6248,7 @@ async function getAction(p) {
   var fastMode = G.players[0] && G.players[0].folded;
   var cfg = getAIConfig(p.style);
   var d;
-  if (fastMode) d = 30 + Math.random() * 40;
+  if (fastMode || G.paceFast) d = 16 + Math.random() * 28;   /* 快速场：AI 秒动，玩家看到手牌即可操作 */
   else d = cfg.think[0] + Math.random() * (cfg.think[1] - cfg.think[0]);
   await sleep(d);
   return aiDecideWrapper(p);
@@ -6256,13 +6324,17 @@ function randomAIName(excluded) {
   return name;
 }
 function newAIOpponent(id, profile, excluded) {
+  /* AI 带入与玩家同额（按场次门槛自动对齐），保证对抗公平 */
+  var stack = G.tableStack || G.humanBuyIn || DIFFICULTY_CONFIG[App.difficulty].buyIn;
   return makePlayer(id, randomAIName(excluded), profile.avatar, false, profile.style,
-    DIFFICULTY_CONFIG[App.difficulty].buyIn, profile.styleName);
+    stack, profile.styleName);
 }
 function refreshLowStackOpponents() {
   var cfg = DIFFICULTY_CONFIG[App.difficulty], replaced = [];
   // 只在下一手发牌前调用；其它场次仅补足无法支付大盲的座位。
-  var threshold = App.difficulty === 'easy' ? 500 : cfg.bb;
+  /* 门槛随带入额走：带入小也不会每手换人（原固定 500 在小额带入时会不断补位） */
+  var base = G.tableStack || G.humanBuyIn || cfg.buyIn || 500;
+  var threshold = Math.max(cfg.bb * 2, Math.floor(base * 0.33));
   var excluded = G.players.map(function(p){ return p.name; });
   for (var i = 0; i < G.players.length; i++) {
     var old = G.players[i];
@@ -6275,9 +6347,34 @@ function refreshLowStackOpponents() {
   }
   return replaced;
 }
+/* ---- 带入登记：只带选定金额上桌，其余留在钱包；AI 按同额门槛自动对齐 ---- */
+/* 最小带入：常规建议 20BB，但不超过身上全部金币（新手 500 也能在普通场玩人机）；
+   真正下限是「至少一个大盲」——连大盲都不到才判定金币不足。 */
+function holdemBuyInMin() {
+  var cfg = DIFFICULTY_CONFIG[App.difficulty];
+  var max = holdemBuyInMax();
+  return Math.max(cfg.bb, Math.min(cfg.bb * 20, max));
+}
+function holdemBuyInMax() { var cfg = DIFFICULTY_CONFIG[App.difficulty]; return Math.min(player.coins, cfg.buyIn || player.coins); }
+function humanStack() {
+  if (App.mode === 'ranked') return G.buyIn;
+  var max = holdemBuyInMax();
+  if (G.humanBuyIn > 0) return Math.min(G.humanBuyIn, max);
+  return max;                                   /* 默认按场次买入上限，而不是把全部金币压上 */
+}
+/* 把桌上筹码交还钱包：钱包 = 未带入部分 + 桌上剩余 */
+function bankSync() {
+  var chips = (G.players[0] && G.players[0].chips) || 0;
+  player.coins = Math.max(0, (G.walletBefore || 0) + chips);
+  return player.coins;
+}
 function initPlayers() {
   var opps = pickOpponents();
-  G.players = [makePlayer(0, player.name || '玩家', '🧑', true, 'human', App.mode === 'ranked' ? G.buyIn : player.coins, '')];
+  var stack = humanStack();
+  G.tableStack = stack;
+  G.buyInMode = App.mode !== 'ranked';
+  G.walletBefore = App.mode === 'ranked' ? 0 : Math.max(0, player.coins - stack);
+  G.players = [makePlayer(0, player.name || '玩家', '🧑', true, 'human', stack, '')];
   for (var i = 0; i < 3; i++) {
     G.players.push(newAIOpponent(i + 1, opps[i], G.players.map(function(p){ return p.name; })));
   }
@@ -6292,6 +6389,7 @@ async function playHand() {
   G.lastSettleData = null;
   G.skipFlag = false;
   G.bluffAttempt = false;
+  G.paceFast = App.mode !== 'ranked';   /* 人机/好友局：节奏快，看到手牌即可操作 */
   hideSettle();
   G.handNo++;
   player.totalHands++;
@@ -6303,8 +6401,7 @@ async function playHand() {
   bumpDailyProgress('play_5', 1);
   bumpWeeklyProgress('w_play_30', 1);
 
-  var replacements = refreshLowStackOpponents();
-  if (replacements.length) showToast(replacements.map(function(r){ return r.oldName + ' 离桌，' + r.newName + ' 入座'; }).join('；'), 2600);
+  refreshLowStackOpponents();   /* 低筹码对手自动补位（静默，不再弹提示词） */
   sfx('shuffle');
   G.deck = shuffle(makeDeck());
   G.community = [];
@@ -6333,7 +6430,7 @@ async function playHand() {
       if (!tp) return;
       tp.hole.push(G.deck.pop());
       sfx('deal');
-      await sleep(G.skipFlag ? 0 : 80);
+      await sleep(G.skipFlag ? 0 : (G.paceFast ? 16 : 80));
     }
   }
   if (!G.players[sbIdx] || !G.players[bbIdx]) return;
@@ -6344,7 +6441,7 @@ async function playHand() {
   G.currentBet = G.bb;
   G.minRaise = G.bb;
   render();
-  await sleep(G.skipFlag ? 0 : 500);
+  await sleep(G.skipFlag ? 0 : (G.paceFast ? 110 : 500));
   if (!G.active) return;
   await bettingRound((G.dealer + 3) % n);
   if (!G.active) return;
@@ -6363,7 +6460,7 @@ async function playHand() {
       G.community.push(G.deck.pop());
       if (!fastMode && !G.skipFlag) sfx('deal');
       render();                                   // 逐张亮出，而不是三张一起 pop
-      await sleep((fastMode || G.skipFlag) ? 20 : 240);
+      await sleep((fastMode || G.skipFlag) ? 20 : (G.paceFast ? 85 : 240));
     }
     G.stage++;
     try { (G.actionLog = G.actionLog || []).push({ k: 'board', n: G.community.length, pot: Math.round(G.pot || 0) }); } catch (e) {}
@@ -6698,7 +6795,8 @@ function spendCoins(n) {
   if (!player || player.coins < n) return false;
   player.coins -= n;
   if (player.coins < 0) player.coins = 0;
-  if (G.active && G.players[0]) G.players[0].chips = player.coins;
+  /* 带入模式下牌桌筹码独立，钱包支出不再覆盖筹码（避免把带入额冲掉） */
+  if (G.active && G.players[0] && !G.buyInMode) G.players[0].chips = player.coins;
   return true;
 }
 
@@ -7503,9 +7601,8 @@ async function finishHand() {
   addExp(expGain);
   if (dbl) showToast('📜 双倍经验生效（剩余 ' + player.buffs.exp2x + ' 手）', 1500);
 
-  // 同步筹码回存档
-  player.coins = G.players[0].chips;
-  if (player.coins < 0) player.coins = 0;
+  // 同步筹码回存档（钱包 = 未带入部分 + 桌上剩余）
+  bankSync();
   recordGrowth15('holdem',{hands:1,wins:humanWinAmount>human.totalBet?1:0,pair:hv&&hv[0]>=1?1:0,straight:hv&&hv[0]>=4?1:0,flush:hv&&hv[0]>=5?1:0,quads:hv&&hv[0]>=7?1:0,allinwin:humanAllIn&&humanWinAmount>human.totalBet?1:0},App.difficulty);
   syncTitles();
   });
@@ -7562,7 +7659,7 @@ async function runGameLoop() {
   while (G.active) {
     if (App.mode === 'ranked' && G.players[0] && !G.rankRetry) G.players.forEach(function(p){p.chips=G.buyIn;});
     if (!G.players[0] || G.players[0].chips <= 0) {
-      player.coins = G.players[0] ? G.players[0].chips : 0;
+      bankSync();
       G.active = false;
       Timer.stop();
       saveAllSaves(true);
@@ -7617,8 +7714,7 @@ function exitGame() {
     G.handSettled = true;
   }
   if (G.active && G.players[0] && App.mode !== 'ranked') {
-    player.coins = G.players[0].chips;
-    if (player.coins < 0) player.coins = 0;
+    bankSync();
   }
   G.active = false;
   if (humanResolve) { var finishAction = humanResolve; humanResolve = null; finishAction({type:'fold'}); }
@@ -8998,6 +9094,7 @@ function bindEvents() {
   var avEntry = $('lbAvatar'); if (avEntry) avEntry.addEventListener('click', function(){ initAudio(); sfx('click'); openProfile(); });
   $('lbQHelp').addEventListener('click', function(){ initAudio(); sfx('click'); openHelp(); });
   var rq = $('lbQRegister'); if (rq) rq.addEventListener('click', function(){ initAudio(); sfx('click'); openRegister(); });
+  var bis = $('biStart'); if (bis) bis.addEventListener('click', function(){ sfx('click'); submitBuyIn(); });
   var rsub = $('regSubmit'); if (rsub) rsub.addEventListener('click', function(){ sfx('click'); submitRegister(); });
   var rsk = $('regSkip'); if (rsk) rsk.addEventListener('click', function(){ sfx('click'); skipRegister(); });
   $('lbBtnSound').addEventListener('click', function(){ initAudio(); toggleSound(); });
@@ -9114,7 +9211,9 @@ function bindEvents() {
     sfx('click');
     if (!claimDailyRelief()) return;
     $('ovGameOver').classList.remove('show');
-    /* 一键续桌：领完救济金直接重开本桌，省掉回大厅重选 */
+    /* 一键续桌：领完救济金直接重开本桌；钱包仍不够最小带入则回模式选择 */
+    if (player.coins < holdemBuyInMin()) { goModeScreen(); return; }
+    G.humanBuyIn = Math.min(player.coins, holdemBuyInMax());
     startGame(App.difficulty || 'normal');
   });
   $('goBackLobby').addEventListener('click', function(){ sfx('click'); exitGame(); });
@@ -9346,7 +9445,7 @@ function rankedDifficultyFor(game){
 var oldRankProgress15=rankProgress;
 rankProgress=function(){var pts=player.rankPoints;player.rankPoints=profile15().rankPoints;try{return oldRankProgress15();}finally{player.rankPoints=pts;}};
 addRankPoints=function(delta){var s=profile15('holdem');s.rankPoints=Math.max(0,s.rankPoints+delta);s.rankPeak=Math.max(s.rankPeak,rankTierFor(s.rankPoints));player.rankPoints=s.rankPoints;player.rankPeak=s.rankPeak;player.rankTier=rankTierFor(s.rankPoints);};
-addCoins=function(n){if(!player||!Number.isSafeInteger(n)||n<0||!Number.isSafeInteger(player.coins+n))throw Error('金币金额无效');player.coins+=n;if(G.active&&App.mode!=='ranked'&&G.players[0])G.players[0].chips+=n;};
+addCoins=function(n){if(!player||!Number.isSafeInteger(n)||n<0||!Number.isSafeInteger(player.coins+n))throw Error('金币金额无效');player.coins+=n;if(G.active&&App.mode!=='ranked'&&G.players[0]&&!G.buyInMode)G.players[0].chips+=n;};
 spendCoins=function(n){if(!player||!Number.isSafeInteger(n)||n<0||player.coins<n)return false;
   var h=G.active&&App.mode!=='ranked'&&G.players[0];if(h&&h.chips<n)return false;player.coins-=n;if(h)h.chips-=n;return true;};
 function finishHoldemRank15(winnings,potTotal,net){
@@ -9429,7 +9528,7 @@ renderModeCards=function(){
         if(!B)return showToast('联机模块未就绪，请刷新页面重试',2400,true);
         if (B.openRoomSetup) B.openRoomSetup(hubGame);   /* 斗地主式：先设人数/局数，再进房邀请 */
       };body.appendChild(card);return;}
-    card.className='mode-card quick';card.innerHTML='<div class="mode-name">人机对局</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>免费入场 · 可赢金币<br>本地AI或庄家 · 随时开桌</p></div>';card.onclick=function(){App.mode='quick';App.difficulty='normal';Arcade.difficulty='normal';Arcade.mode='coins';if(hubGame==='holdem'){tryEnterGame('normal');return;}openArcade(hubGame);};body.appendChild(card);
+    card.className='mode-card quick';card.innerHTML='<div class="mode-name">人机对局</div><div class="mode-info"><b>'+(GAME_NAMES[hubGame]||'牌友')+'</b><p>免费入场 · 可赢金币<br>本地AI或庄家 · 随时开桌</p></div>';card.onclick=function(){App.mode='quick';App.difficulty='normal';Arcade.difficulty='normal';Arcade.mode='coins';if(hubGame==='holdem'){openBuyIn();return;}openArcade(hubGame);};body.appendChild(card);
   });
   /* 积分/兑换条已随排位取消而移除 */
 };

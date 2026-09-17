@@ -77,8 +77,11 @@ function click(el) {
   await tick(30);
   ok($('modeScreen').classList.contains('active'), '点击「开始游戏」进入模式选择');
   click($('modeBody').querySelector('.mode-card.quick'));
+  await tick(300);
+  ok($('ovBuyIn').classList.contains('show'), '人机德州先弹带入筹码卡');
+  click($('biStart'));
   await tick(400);
-  ok($('gameScreen').classList.contains('active'), '选择人机对局直接开局（免门票、无难度页）');
+  ok($('gameScreen').classList.contains('active'), '带入后进入牌桌（免门票、无难度页）');
 
   console.log('【返回大厅 & 面板】');
   click($('btnExit'));
@@ -222,8 +225,10 @@ function click(el) {
   console.log('【进入牌桌】');
   click($('lbStartBtn'));
   await tick(30);
-  /* 新链路：大厅 → 模式屏 → 人机对局（免门票直接开局） */
+  /* 新链路：大厅 → 模式屏 → 人机对局 → 带入筹码 */
   click($('modeBody').querySelector('.mode-card.quick'));
+  await tick(300);
+  click($('biStart'));
   await tick(400);
   ok($('gameScreen').classList.contains('active'), '进入游戏界面');
   ok($('lobbyScreen').style.display === 'none', '大厅已隐藏');
@@ -279,6 +284,8 @@ function click(el) {
   click($('lbStartBtn'));
   await tick(30);
   click($('modeBody').querySelector('.mode-card.quick'));
+  await tick(250);
+  click($('biStart'));
   await tick(150);                       // 正处于发牌阶段
   const dealing = !$('bottomBar').querySelector('.abtn.fold');
   click($('btnExit'));

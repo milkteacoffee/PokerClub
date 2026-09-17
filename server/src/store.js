@@ -291,6 +291,47 @@ class Store {
     return this.db.prepare('SELECT device_id, nickname, mailbox_coins, last_seen FROM players ORDER BY last_seen DESC LIMIT ?')
       .all(Math.min(200, limit || 100));
   }
+  /* 管理端：分页玩家列表（带总数，供后端分页 UI） */
+  listPlayersPaged(limit, offset, search) {
+    var lim = Math.max(1, Math.min(100, Number(limit) || 20));
+    var off = Math.max(0, Number(offset) || 0);
+    if (search) {
+      var q = '%' + String(search).replace(/[%_]/g, '\\$&') + '%';
+      var total = this.db.prepare('SELECT COUNT(*) AS n FROM players WHERE nickname LIKE ? OR device_id LIKE ?').get(q, q).n;
+      var list = this.db.prepare('SELECT device_id, nickname, mailbox_coins, last_seen, created_at FROM players WHERE nickname LIKE ? OR device_id LIKE ? ORDER BY last_seen DESC LIMIT ? OFFSET ?').all(q, q, lim, off);
+      return { list: list, total: total };
+    }
+    var total2 = this.db.prepare('SELECT COUNT(*) AS n FROM players').get().n;
+    var list2 = this.db.prepare('SELECT device_id, nickname, mailbox_coins, last_seen, created_at FROM players ORDER BY last_seen DESC LIMIT ? OFFSET ?').all(lim, off);
+    return { list: list2, total: total2 };
+  }
+
+  /* 管理端趋势：最近 days 天，每天 新增玩家 / 活跃玩家 / 对局数 */
+  adminTrend(days) {
+    var n = Math.max(3, Math.min(60, Number(days) || 14));
+    var dayMs = 24 * 3600 * 1000;
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var start = today.getTime() - (n - 1) * dayMs;
+    var out = [];
+    var newRows = this.db.prepare('SELECT created_at FROM players WHERE created_at >= ?').all(start);
+    var actRows = this.db.prepare('SELECT last_seen FROM players WHERE last_seen >= ?').all(start);
+    var mRows = this.db.prepare('SELECT ended_at FROM matches WHERE ended_at >= ?').all(start);
+    var bucket = function (rows, key) {
+      var a = new Array(n).fill(0);
+      for (var i = 0; i < rows.length; i++) {
+        var idx = Math.floor((rows[i][key] - start) / dayMs);
+        if (idx >= 0 && idx < n) a[idx]++;
+      }
+      return a;
+    };
+    var nb = bucket(newRows, 'created_at'), ab = bucket(actRows, 'last_seen'), mb = bucket(mRows, 'ended_at');
+    for (var i = 0; i < n; i++) {
+      var d = new Date(start + i * dayMs);
+      out.push({ label: (d.getMonth() + 1) + '/' + d.getDate(), newPlayers: nb[i], active: ab[i], matches: mb[i] });
+    }
+    return out;
+  }
+
   playerDetail(deviceId) {
     var p = this.getPlayer(deviceId);
     if (!p) return null;
