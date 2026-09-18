@@ -3249,12 +3249,12 @@ function biRender() {
   var info = $('biInfo');
   if (info) {
     info.innerHTML = '本场：<b>' + (LEVEL_NAMES[level15(App.difficulty)] || App.difficulty) + '</b> · 盲注 <b>' + cfg.sb + '/' + cfg.bb + '</b>'
-      + ' · 建议买入 ' + fmt(min) + ' ~ ' + fmt(Math.max(min, max)) + '<br>身上金币 <b>' + fmt(player.coins) + '</b> · 带入后钱包剩余 <b>'
+      + ' · 建议买入 100BB = ' + fmt(cfg.bb * 100) + '<br>身上金币 <b>' + fmt(player.coins) + '</b> · 带入后钱包剩余 <b>'
       + fmt(Math.max(0, player.coins - (BI_PICK || max))) + '</b>';
   }
   var box = $('biChips');
   if (box) {
-    var opts = [20, 40, 60, 100].map(function(bb) { return { v: cfg.bb * bb, t: bb + 'BB' }; });
+    var opts = [80, 100, 200].map(function(bb) { return { v: cfg.bb * bb, t: bb + 'BB' }; });
     opts.push({ v: Math.max(min, max), t: '全部可带' });
     var list = opts.filter(function(o, i) { return o.v >= min && o.v <= Math.max(min, max) && opts.findIndex(function(x) { return x.v === o.v; }) === i; });
     box.innerHTML = list.map(function(o) {
@@ -3268,10 +3268,13 @@ function biRender() {
 }
 function openBuyIn() {
   if (!player) return;
+  var cfg = DIFFICULTY_CONFIG[App.difficulty];   /* 注意：本函数内多处用到 cfg，必须在本作用域声明 */
   var min = holdemBuyInMin(), max = holdemBuyInMax();
-  if (max < DIFFICULTY_CONFIG[App.difficulty].bb) return showToast('金币不足一个大盲（' + fmt(DIFFICULTY_CONFIG[App.difficulty].bb) + '），先去任务或救济金领点金币', 2800, true);
+  if (max < cfg.bb) return showToast('金币不足一个大盲（' + fmt(cfg.bb) + '），先去任务或救济金领点金币', 2800, true);
   var rec = biRecalled(App.difficulty);
-  BI_PICK = (rec >= min && rec <= max) ? rec : max;
+  var defBB = 100;   /* 默认 100BB（用户反馈 20/40BB 不够打） */
+  var defV = cfg.bb * defBB;
+  BI_PICK = (rec >= min && rec <= max) ? rec : Math.min(Math.max(defV, min), max);
   biRender();
   openOverlay('ovBuyIn');
 }
@@ -4297,13 +4300,14 @@ var OPPONENTS = [
     styleName:'BOSS',  unlockLv:8, desc:'全能高手，会针对你' }
 ];
 
+/* 阈值对应 preflopStrength 全范围（0.05~0.98）：tight 只玩前 ~40% 的牌，maniac 几乎全玩 */
 var AI_STYLES = {
-  aggressive: { foldT:0.26, betT:0.50, raiseT:0.66, aggr:0.80, bluff:0.20, slowPlay:0.15, call:0.10, think:[400,800], readSkill:0.55 },
+  aggressive: { foldT:0.26, betT:0.46, raiseT:0.62, aggr:0.85, bluff:0.20, slowPlay:0.15, call:0.10, think:[400,800], readSkill:0.55 },
   tight:      { foldT:0.42, betT:0.62, raiseT:0.80, aggr:0.35, bluff:0.05, slowPlay:0.30, call:0.08, think:[500,900], readSkill:0.45 },
-  balanced:   { foldT:0.32, betT:0.56, raiseT:0.72, aggr:0.55, bluff:0.12, slowPlay:0.20, call:0.17, think:[400,800], readSkill:0.55 },
-  maniac:     { foldT:0.20, betT:0.42, raiseT:0.58, aggr:0.90, bluff:0.40, slowPlay:0.08, call:0.30, think:[300,600], readSkill:0.35 },
-  pro:        { foldT:0.36, betT:0.52, raiseT:0.70, aggr:0.68, bluff:0.18, slowPlay:0.28, call:0.12, think:[500,900], readSkill:0.85 },
-  boss:       { foldT:0.38, betT:0.48, raiseT:0.62, aggr:0.82, bluff:0.28, slowPlay:0.25, call:0.06, think:[400,700], readSkill:1.00 }
+  balanced:   { foldT:0.32, betT:0.54, raiseT:0.72, aggr:0.55, bluff:0.12, slowPlay:0.20, call:0.17, think:[400,800], readSkill:0.55 },
+  maniac:     { foldT:0.10, betT:0.34, raiseT:0.50, aggr:0.92, bluff:0.40, slowPlay:0.08, call:0.35, think:[300,600], readSkill:0.35 },
+  pro:        { foldT:0.36, betT:0.50, raiseT:0.70, aggr:0.68, bluff:0.18, slowPlay:0.28, call:0.12, think:[500,900], readSkill:0.85 },
+  boss:       { foldT:0.30, betT:0.46, raiseT:0.60, aggr:0.85, bluff:0.28, slowPlay:0.25, call:0.10, think:[400,700], readSkill:1.00 }
 };
 
 function createPsychology(style) {
@@ -5466,7 +5470,9 @@ function goldAIStrength(v){
   return v[0]*20+Math.round(hi);                                  /* 0~119 */
 }
 function goldAITurns(){var r=Arcade.round,d=level15(Arcade.difficulty);for(var i=1;i<4&&!r.done;i++){var p=r.seats[i];if(p.folded)continue;
-  if(!p.seen&&randomInt(100)<[30,55,80,95][d])p.seen=true;
+  /* 看牌让 AI 成本翻倍（闷牌 1 份、看牌 2 份）却提高不了牌力——真人闷牌到底就能白嫖底池。
+     大幅降低看牌率，让对局回到「拼牌力」；只有少数 AI 会看牌（看牌后强牌积极比牌）。 */
+  if(!p.seen&&randomInt(100)<[12,18,26,34][d])p.seen=true;
   var cost=r.unit*(p.seen?2:1);
   if(p.stack<cost||p.paid+cost>arcadeLimit15()*8){p.folded=true;r.log.push(p.name+' 弃牌');continue;}
   var v=p.seen?goldValue(p.hand):null,score=goldAIStrength(v);
@@ -5481,13 +5487,14 @@ function goldAITurns(){var r=Arcade.round,d=level15(Arcade.difficulty);for(var i
   if(p.paid>r.base*2)foldP*=0.6;   /* 已重投入的 AI 不轻易弃（加注后弃牌自相矛盾） */
   if(p.seen&&randomInt(100)<foldP){p.folded=true;r.log.push(p.name+' 弃牌');continue;}
   /* 加注施压：对子以上按强度加注，把看牌跟注的成本抬起来 */
-  var raiseP=v?Math.max(0,Math.min(70,score*2.6-10+[0,10,20,30][d])):0;
+  var raiseP=v?Math.max(0,Math.min(70,score*2.6-10+[0,10,20,30][d])):0;   /* 加注施压：把看牌跟注与真人闷牌的成本一起抬高，压缩「闷到底」的收益 */
   if(p.seen&&score>=14&&r.unit<r.base*5&&p.stack>=cost*2&&p.paid+cost+r.base*2<=arcadeLimit15()*8&&randomInt(100)<raiseP){r.unit+=r.base;cost=r.unit*2;r.log.push(p.name+' 加注');}
   if(p.paid+cost>arcadeLimit15()*8){p.folded=true;r.log.push(p.name+' 达到单局上限，弃牌');continue;}
   p.stack-=cost;p.paid+=cost;r.pot+=cost;
-  /* 比牌：第 3 轮起，强牌主动摊牌终结对局 */
-  var cmpP=r.turn>=3?(score>=40?38:score>=32?16:0):0;   /* 只用真正强的牌比（减少送死比牌） */
-  if(humanIn&&aiAlive<=1&&r.turn>=4)cmpP=Math.max(cmpP,35);   /* 单挑后期主动收敛 */
+  /* 比牌：AI 看牌后成本是真人 2 倍，若不强逼摊牌，真人闷牌拖到底每轮白赚（结构性剥削）。
+     强牌必须高频比牌终结对局，把胜负交给牌力而不是拖时。 */
+  var cmpP=r.turn>=3?(score>=60?80:score>=48?62:score>=40?45:score>=32?24:0):0;
+  if(humanIn&&aiAlive<=1&&r.turn>=3)cmpP=Math.max(cmpP,60);   /* 单挑第 3 轮起积极收敛 */
   /* AI 只跟真人比牌，AI 之间永不互比：互比会互相淘汰、让旁边跟注的真人白拿底池（结构性剥削） */
   var candidates=r.seats.filter(function(q){return q!==p&&!q.folded;});
   var humanIdx=candidates.indexOf(r.seats[0]);
@@ -6573,19 +6580,20 @@ async function bettingRound(startIdx) {
 }
 
 function preflopStrength(hole) {
+  /* 全范围 0.05~0.98：22≈0.19、72o≈0.31、AKs≈0.80、AA≈0.98。
+     旧版对子基线 +0.50 让最差的 22o 也高于所有风格的弃牌阈值 → 翻牌前永不弃牌、风格失效。 */
   var a = hole[0], b = hole[1];
   if (a.r < b.r) { var t = a; a = b; b = t; }
-  if (a.r === b.r) return 0.50 + (a.r - 2) / 12 * 0.48;
-  var s = (a.r - 2) / 12 * 0.28 + (b.r - 2) / 12 * 0.16;
-  if (a.s === b.s) s += 0.10;
+  if (a.r === b.r) return Math.min(0.98, 0.19 + (a.r - 2) / 12 * 0.79);
+  var s = (a.r - 2) / 12 * 0.72 + 0.05 + (b.r - 2) / 12 * 0.14;
+  if (a.s === b.s) s += 0.08;
   var gap = a.r - b.r;
-  if (gap === 1) s += 0.09;
-  else if (gap === 2) s += 0.05;
-  else if (gap === 3) s += 0.02;
-  else if (gap >= 5) s -= 0.06;
-  if (a.r === 14) s += 0.05;
-  if (b.r >= 10) s += 0.05;
-  return Math.max(0.05, Math.min(0.95, s));
+  if (gap === 1) s += 0.05;
+  else if (gap === 2) s += 0.03;
+  else if (gap <= 4) s += 0.01;
+  else s -= 0.04;
+  if (b.r >= 10) s += 0.04;
+  return Math.max(0.05, Math.min(0.98, s));
 }
 
 function estimateStrength(p) {
@@ -6610,16 +6618,17 @@ function clampRaise(p, target) {
 function getAIConfig(style) {
   var base = AI_STYLES[style] || AI_STYLES.balanced;
   var bonus = DIFFICULTY_CONFIG[App.difficulty].aiBonus;
+  /* 高难度 AI 变强的正确方式：读牌更准、更凶；而不是压低弃牌阈值（那会让 AI 乱弃好牌变弱） */
   return {
-    foldT: Math.max(0.10, Math.min(0.60, base.foldT - bonus * 0.5)),
-    betT:  Math.max(0.30, Math.min(0.80, base.betT  - bonus * 0.5)),
-    raiseT:Math.max(0.40, Math.min(0.90, base.raiseT- bonus * 0.4)),
-    aggr:  Math.max(0.10, Math.min(0.95, base.aggr  + bonus * 0.8)),
-    bluff: Math.max(0.00, Math.min(0.50, base.bluff + bonus * 0.5)),
+    foldT: Math.max(0.08, Math.min(0.60, base.foldT - bonus * 0.15)),
+    betT:  Math.max(0.28, Math.min(0.80, base.betT  - bonus * 0.25)),
+    raiseT:Math.max(0.40, Math.min(0.90, base.raiseT- bonus * 0.15)),
+    aggr:  Math.max(0.10, Math.min(0.98, base.aggr  + bonus * 0.5)),
+    bluff: Math.max(0.00, Math.min(0.50, base.bluff + bonus * 0.35)),
     slowPlay: base.slowPlay,
-    call:  Math.max(0.00, Math.min(0.50, base.call  - bonus * 0.3)),
+    call:  Math.max(0.00, Math.min(0.50, base.call  - bonus * 0.2)),
     think: base.think,
-    readSkill: base.readSkill
+    readSkill: Math.min(1, base.readSkill + Math.max(0, bonus) * 0.6)
   };
 }
 
@@ -6648,7 +6657,7 @@ function aiDecide(p) {
     var posBonus = isLate ? 0.08 : 0;
     if (canCheck) {
       if (s + posBonus > cfg.betT && r < cfg.aggr * aggrMult) {
-        return { type:'raise', amount: clampRaise(p, Math.max(G.bb, G.pot * 0.7)) };
+        return { type:'raise', amount: clampRaise(p, Math.max(G.bb * 2.5, G.pot * (0.7 + cfg.aggr * 0.35))) };
       }
       return { type:'check' };
     }
@@ -6660,7 +6669,7 @@ function aiDecide(p) {
       return { type:'fold' };
     }
     if (s > cfg.raiseT && r < cfg.aggr * aggrMult) {
-      return { type:'raise', amount: clampRaise(p, G.currentBet * 2.5 + G.pot * 0.4) };
+      return { type:'raise', amount: clampRaise(p, G.currentBet * (2.2 + cfg.aggr * 1.1) + G.pot * 0.5) };
     }
     if (s > potOdds + 0.1) return { type:'call' };
     if (toCall <= G.bb * 2 && r < 0.4) return { type:'call' };
@@ -6894,7 +6903,7 @@ function holdemBuyInMin() {
   var max = holdemBuyInMax();
   return Math.max(cfg.bb, Math.min(cfg.bb * 20, max));
 }
-function holdemBuyInMax() { var cfg = DIFFICULTY_CONFIG[App.difficulty]; return Math.min(player.coins, cfg.buyIn || player.coins); }
+function holdemBuyInMax() { var cfg = DIFFICULTY_CONFIG[App.difficulty]; return Math.min(player.coins, Math.max(cfg.buyIn || 0, cfg.bb * 250)); }
 function humanStack() {
   if (App.mode === 'ranked') return G.buyIn;
   var max = holdemBuyInMax();
@@ -10822,7 +10831,7 @@ function patterns(l){var p=[];function add(t,v,req){p.push({t:t,v:v,n:req.length
  for(var len of [2,3])for(var st=0;st<=14-len;st++){var rr=seq.slice(st,st+len);if(rr.length!==len||new Set(rr).size!==len)continue;add(len===2?'plate':'pairs',st,rr.flatMap(r=>Array.from({length:len===2?3:2},()=>[r,-1])));}
  add('king',100,[[15,-1],[15,-1],[16,-1],[16,-1]]);return p;}
 var pc={};function candidates(hand,l,against){var pats=pc[l]||(pc[l]=patterns(l)),out=[],seen=new Set();for(var p of pats){if(p.n>hand.length||!beats(p,against))continue;var available=hand.slice(),used=[],ok=true;for(var req of p.req){var i=available.findIndex(c=>!wild(c,l)&&c.r===req[0]&&(req[1]<0||c.s===req[1]));if(i<0)i=available.findIndex(c=>c.r===req[0]&&(req[1]<0||c.s===req[1]));if(i<0&&req[0]<15)i=available.findIndex(c=>wild(c,l));if(i<0){ok=false;break;}used.push(available.splice(i,1)[0]);}if(ok){/* A wildcard played alone keeps its printed rank. */if(p.t==='single'&&used[0].r!==p.req[0][0])continue;var key=used.map(c=>c.id).sort((a,b)=>a-b).join(',')+p.t+p.v;if(!seen.has(key)){seen.add(key);out.push({t:p.t,v:p.v,n:p.n,cards:used});}}}return out;}
-function classify(cards,l,against){return candidates(cards,l,against).filter(x=>x.n===cards.length).sort((a,b)=>{var aa=a.t==='king'?99:a.t==='bomb'?a.n+5:a.t==='flush'?10:0,bb=b.t==='king'?99:b.t==='bomb'?b.n+5:b.t==='flush'?10:0;return aa-bb||a.v-b.v;})[0]||null;}
+function classify(cards,l,against){return candidates(cards,l,against).filter(x=>x.n===cards.length).sort((a,b)=>{var aa=a.t==='king'?99:a.t==='bomb'?a.n+5:a.t==='flush'?10:0,bb=b.t==='king'?99:b.t==='bomb'?b.n+5:b.t==='flush'?10:0;return bb-aa||b.v-a.v;})[0]||null;}
 function create(l){var d=shuffled();return {level:l||2,hands:[d.slice(0,27),d.slice(27,54),d.slice(54,81),d.slice(81)],turn:random(4),last:null,leader:-1,passed:[],order:[],done:false,log:[],moves:0};}
 function next(g,i){for(var k=1;k<=4;k++){var n=(i+k)%4;if(g.hands[n].length)return n;}return -1;}
 function act(g,seat,ids){if(g.done||seat!==g.turn)return false;var h=g.hands[seat],c=[];if(ids){if(new Set(ids).size!==ids.length||!ids.length)return false;for(var id of ids){var card=h.find(x=>x.id===id);if(!card)return false;c.push(card);}var value=classify(c,g.level,g.last);if(!value)return false;g.last=value;g.leader=seat;g.passed=[];g.hands[seat]=h.filter(x=>!ids.includes(x.id));g.log.push({seat:seat,text:labels[value.t],cards:c});if(!g.hands[seat].length)g.order.push(seat);

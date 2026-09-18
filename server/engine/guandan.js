@@ -108,7 +108,7 @@ function classify(cards, l, against) {
   return candidates(cards, l, against).filter(x => x.n === cards.length).sort((a, b) => {
     const aa = a.t === 'king' ? 99 : a.t === 'bomb' ? a.n + 5 : a.t === 'flush' ? 10 : 0;
     const bb = b.t === 'king' ? 99 : b.t === 'bomb' ? b.n + 5 : b.t === 'flush' ? 10 : 0;
-    return aa - bb || a.v - b.v;
+    return bb - aa || b.v - a.v;   /* 降序：wild 多解释时取最大的牌型（如级牌配 K 而不是配 4） */
   })[0] || null;
 }
 
