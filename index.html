@@ -1864,7 +1864,7 @@
     <div class="lobby-bottom">
       <button class="btn-primary lobby-start-btn" id="lbStartBtn" hidden aria-hidden="true">开始游戏</button>
       <div class="lobby-hint" id="hubHint">已选德州扑克 · 所有对手均为本地AI</div>
-      <div style="font-size:11px;color:#7d8b96;letter-spacing:1px;text-align:center;line-height:1.6">仅限 18 岁以上 · 虚拟金币仅供娱乐，不可充值兑现</div>
+      <div style="font-size:11px;color:#7d8b96;letter-spacing:1px;text-align:center;line-height:1.6">仅限 18 岁以上 · 虚拟金币仅供娱乐，不可充值兑现 · <span id="buildTag" style="opacity:.7"></span></div>
     </div>
   </div>
 
@@ -4301,6 +4301,16 @@ var OPPONENTS = [
 ];
 
 /* 阈值对应 preflopStrength 全范围（0.05~0.98）：tight 只玩前 ~40% 的牌，maniac 几乎全玩 */
+var APP_BUILD = '20260918-1';
+try {
+  var _prevBuild = localStorage.getItem('poker_build');
+  if (_prevBuild && _prevBuild !== APP_BUILD) {
+    setTimeout(function () {
+      showToast('已更新到新版本 · 若界面异常请按 Ctrl+F5 强制刷新', 5000);
+    }, 1500);
+  }
+  localStorage.setItem('poker_build', APP_BUILD);
+} catch (e) {}
 var AI_STYLES = {
   aggressive: { foldT:0.26, betT:0.46, raiseT:0.62, aggr:0.85, bluff:0.20, slowPlay:0.15, call:0.10, think:[400,800], readSkill:0.55 },
   tight:      { foldT:0.42, betT:0.62, raiseT:0.80, aggr:0.35, bluff:0.05, slowPlay:0.30, call:0.08, think:[500,900], readSkill:0.45 },
@@ -9684,7 +9694,8 @@ function bindEvents() {
   var avEntry = $('lbAvatar'); if (avEntry) avEntry.addEventListener('click', function(){ initAudio(); sfx('click'); openProfile(); });
   $('lbQHelp').addEventListener('click', function(){ initAudio(); sfx('click'); openHelp(); });
   var rq = $('lbQRegister'); if (rq) rq.addEventListener('click', function(){ initAudio(); sfx('click'); openRegister(); });
-  var bis = $('biStart'); if (bis) bis.addEventListener('click', function(){ sfx('click'); submitBuyIn(); });
+  var bt = $('buildTag'); if (bt) bt.textContent = 'v' + APP_BUILD;
+  var bis = $('biStart'); if (bis) bis.addEventListener('click', function(){ try { sfx('click'); submitBuyIn(); } catch (e) { showToast('操作异常：' + e.message + ' · 请按 Ctrl+F5 强制刷新', 4000, true); } });
   var rsub = $('regSubmit'); if (rsub) rsub.addEventListener('click', function(){ sfx('click'); submitRegister(); });
   var rsk = $('regSkip'); if (rsk) rsk.addEventListener('click', function(){ sfx('click'); skipRegister(); });
   $('lbBtnSound').addEventListener('click', function(){ initAudio(); toggleSound(); });
@@ -10157,10 +10168,16 @@ function renderStagePage(){
   var key = (player.prefDiff && STAGE_KEYS.indexOf(player.prefDiff) >= 0) ? player.prefDiff : 'normal';
   var bFriend = document.createElement('button');
   bFriend.className = 'sb friend'; bFriend.textContent = '好友房';
-  bFriend.onclick = function () { sfx('click'); var B = window.PokerOnlineBridge; if (B && B.openRoomSetup) B.openRoomSetup(hubGame); else showToast('联机模块未就绪', 2000, true); };
+  bFriend.onclick = function () {
+    try { sfx('click'); var B = window.PokerOnlineBridge; if (B && B.openRoomSetup) B.openRoomSetup(hubGame); else showToast('联机模块未就绪，请刷新页面', 2000, true); }
+    catch (e) { showToast('操作异常：' + e.message + ' · 请按 Ctrl+F5 强制刷新', 4000, true); }
+  };
   var bQuick = document.createElement('button');
   bQuick.className = 'sb quick'; bQuick.textContent = '快速开始';
-  bQuick.onclick = function () { sfx('click'); App.difficulty = key; Arcade.difficulty = key; App.mode = 'quick'; Arcade.mode = 'coins'; openBuyIn(); };
+  bQuick.onclick = function () {
+    try { sfx('click'); App.difficulty = key; Arcade.difficulty = key; App.mode = 'quick'; Arcade.mode = 'coins'; openBuyIn(); }
+    catch (e) { showToast('操作异常：' + e.message + ' · 请按 Ctrl+F5 强制刷新', 4000, true); }
+  };
   var bMatch = document.createElement('button');
   bMatch.className = 'sb match'; bMatch.textContent = '在线匹配 · 和真人同桌（需 2000 金币）';
   bMatch.onclick = function () {
