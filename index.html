@@ -1810,6 +1810,34 @@
   #arcadeScreen .arc-seat h3{color:#f0e6d2;font-size:13.5px}
   #arcadeScreen .arc-seat p{color:#a1b6b9;font-size:12px}
   #arcadeScreen #arcExit{inset:30% 18%;background:#162833;border:1px solid rgba(212,168,71,.35);border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+  /* === Arcade 内桌可读性与色彩提升（欢乐斗地主式：大字、高对比、赢家红/输家绿）=== */
+  #arcadeScreen .arc-seat{background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);padding:14px 12px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+  #arcadeScreen .arc-seat.acting,#arcadeScreen .gold-layout .arc-seat.acting,#arcadeScreen .blackjack-layout .arc-seat.acting{box-shadow:0 0 0 1px rgba(240,215,154,.55),0 0 24px rgba(240,215,154,.18);background:linear-gradient(145deg,rgba(240,215,154,.1),rgba(255,255,255,.03))}
+  #arcadeScreen .arc-seat h3{font-size:14px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:.5px}
+  #arcadeScreen .arc-seat p{font-size:12.5px;color:#c4d5dc;line-height:1.55}
+  #arcadeScreen .arc-card{background:linear-gradient(145deg,#fffdf0,#e6e7dc);color:#1a2934;box-shadow:0 5px 12px rgba(0,0,0,.35)}
+  #arcadeScreen .arc-card.back{background:repeating-linear-gradient(45deg,#2a4a66,#2a4a66 5px,#33557a 5px,#33557a 10px);color:#c8d9e9;border:1px solid rgba(255,255,255,.12)}
+  #arcadeScreen .gold-layout{height:300px;min-height:300px}
+  #arcadeScreen .gold-layout .arc-seat{width:220px;max-width:220px;padding:8px 10px}
+  #arcadeScreen .gold-layout .arc-seat h3{font-size:13.5px}
+  #arcadeScreen .gold-layout .arc-card{height:50px;width:36px;font-size:18px}
+  #arcadeScreen .gold-pot{top:110px;padding:10px 20px;background:rgba(0,0,0,.25);border:1px solid rgba(240,215,154,.22);border-radius:14px;flex-direction:column;gap:4px}
+  #arcadeScreen .gold-pot strong{font-size:17px;color:#f2c14e;text-shadow:0 1px 4px rgba(0,0,0,.3)}
+  #arcadeScreen .gold-pot span,#arcadeScreen .gold-pot small{font-size:11.5px;color:#b8c9d2}
+  #arcadeScreen .blackjack-layout .arc-seat{max-width:720px;padding:14px 18px;background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.01))}
+  #arcadeScreen .blackjack-layout .arc-seat h3{font-size:14.5px;color:#f0e6d2}
+  #arcadeScreen .blackjack-layout .arc-card{height:62px;width:44px;font-size:21px}
+  #arcadeScreen .blackjack-layout .arc-seat p{font-size:13px;color:#c8dce0}
+  #arcadeScreen .niu-area{gap:18px;padding:14px 0}
+  #arcadeScreen .niu-card{width:54px;height:78px;font-size:23px;border-radius:8px;box-shadow:0 5px 12px rgba(0,0,0,.35)}
+  #arcadeScreen .niu-tag{font-size:18px;font-weight:800;color:#f2c14e;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+  #arcadeScreen .dice-head15{gap:20px;justify-content:center;flex-wrap:wrap}
+  #arcadeScreen .dice-faces15 .arc-die{width:64px!important;height:64px!important;border-radius:16px;background:#f5f0e8;color:#9f3440;box-shadow:0 6px 0 #a6a99b,0 8px 18px rgba(0,0,0,.35)}
+  #arcadeScreen .dice-layout15{align-items:stretch}
+  #arcadeScreen .dice-order15{font-size:13px}
+  #arcadeScreen .dice-order15 p{color:#c8d9df}
+  #arcadeScreen .dice-basket15 span{background:rgba(240,215,154,.15);color:#f2c14e;padding:4px 10px;border-radius:999px;font-weight:700}
+  #arcadeScreen .dice-result15{color:#f2c14e;font-size:14px;font-weight:800}
 </style>
 </head>
 <body>
@@ -4324,7 +4352,7 @@ var OPPONENTS = [
 ];
 
 /* 阈值对应 preflopStrength 全范围（0.05~0.98）：tight 只玩前 ~40% 的牌，maniac 几乎全玩 */
-var APP_BUILD = '20260918-2';
+var APP_BUILD = '20260918-3';
 try {
   var _prevBuild = localStorage.getItem('poker_build');
   if (_prevBuild && _prevBuild !== APP_BUILD) {
