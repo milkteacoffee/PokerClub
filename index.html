@@ -222,6 +222,8 @@
   .stage-btns .sb.quick{background:linear-gradient(150deg,#f5c96a,#e08a2b);color:#3a2103}
   .stage-btns .sb.match{grid-column:1/-1;background:rgba(255,255,255,.06);color:#cfe0ee;border:1px solid rgba(143,160,180,.35);
     padding:12px;font-size:14px}
+  .stage-foot{margin-top:10px;text-align:center;font-size:11.5px;color:#9fb0c0;letter-spacing:.5px;
+    padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px dashed rgba(143,160,180,.3)}
   /* 结算大字与名次 */
   .settle-result{text-align:center;font-size:30px;font-weight:900;letter-spacing:6px;margin:2px 0 8px;
     background:linear-gradient(160deg,#ffe9a8,#d4a847);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -10129,6 +10131,145 @@ function syncCrowns(){
   });
 }
 renderLobby=function(){if(player){ensureGames15(player);recoverRanked15();}var ret=oldRenderLobby15();try{refreshRegisterChip();}catch(e){}try{applyAppearance();}catch(e){}try{if(player)syncTitles({silent:false});syncCrowns();}catch(e){}return ret;};
+/* 各玩法主题色（增加可读性与色彩层次，对标欢乐斗地主的场次分色） */
+var GAME_ACCENT = { holdem:'#d4a847', blackjack:'#6cc4a1', gold:'#e05656', dice:'#7fa7d8', diceduel:'#5fb8c4', guandan:'#a98fd8', niu:'#e0913f' };
+var GAME_ACCENT_NAME = { holdem:'金', blackjack:'绿', gold:'红', dice:'蓝', diceduel:'青', guandan:'紫', niu:'橙' };
+/* 单机玩法的排位与联机占位文案（诚实展示进度，不做假按钮） */
+function stageOnlinePending(btns, accent) {
+  var row = document.createElement('div');
+  row.className = 'stage-btns';
+  row.style.marginTop = '10px';
+  ['好友房', '在线匹配'].forEach(function (t) {
+    var b = document.createElement('button');
+    b.className = 'sb match';
+    b.disabled = true;
+    b.style.opacity = '.55';
+    b.textContent = t + ' · 即将开放';
+    row.appendChild(b);
+  });
+  btns.appendChild(row);
+}
+/* 联机玩法（金花/骰子比大小/掼蛋）：三张模式卡 + 底部大按钮，风格与德州场次页一致 */
+function renderOnlineStage(game) {
+  var body = $('modeBody'); if (!body) return;
+  body.innerHTML = '';
+  var accent = GAME_ACCENT[game] || '#d4a847';
+  var head = document.createElement('div');
+  head.className = 'stage-head';
+  head.innerHTML = '<span class="sh-game" style="color:' + accent + '">' + (GAME_NAMES[game] || game) + '</span>'
+    + '<span class="sh-sub">选择进入方式 · 人机练手或真人对抗</span>';
+  body.appendChild(head);
+  var modes = [
+    { key: 'quick', name: '人机对局', icon: '🤖', desc: '免费入场 · 可赢金币<br>本地 AI · 随时开桌', color: '#7fa7d8' },
+    { key: 'online', name: '在线匹配', icon: '🌐', desc: '和在线真人快速凑桌<br>凑满自动开局（需 2000 金币）', color: '#6cc4a1' },
+    { key: 'friend', name: '好友开房', icon: '🏠', desc: '创建好友房间 · 分享房号邀请<br>房间内可聊天与快捷语', color: '#e0913f' },
+  ];
+  var grid = document.createElement('div');
+  grid.className = 'stage-grid';
+  modes.forEach(function (m) {
+    var card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'stage-card' + (m.key === 'quick' ? ' on' : '');
+    card.style.borderColor = m.color === accent ? accent : undefined;
+    card.innerHTML = '<span class="sc-tag" style="background:' + m.color + ';color:#0d1622">' + m.icon + '</span>'
+      + '<div class="sc-name">' + m.name + '</div>'
+      + '<div class="sc-blind" style="color:' + m.color + '">' + (GAME_NAMES[game] || game) + '</div>'
+      + '<div class="sc-meta">' + m.desc + '</div>';
+    card.onclick = function () {
+      sfx('click');
+      if (m.key === 'quick') {
+        App.mode = 'quick'; App.difficulty = 'normal'; Arcade.difficulty = 'normal'; Arcade.mode = 'coins';
+        openArcade(game);
+        return;
+      }
+      if (player.coins < 2000 && m.key === 'online') return showToast('在线匹配需要至少 2000 金币', 2200, true);
+      initAudio();
+      var B = window.PokerOnlineBridge;
+      if (!B) return showToast('联机模块未就绪，请刷新页面重试', 2400, true);
+      if (m.key === 'online') {
+        B.setMatchGame(game); App.mode = 'quick';
+        B.openPanel(); B.renderMatchGames(); B.startMatch();
+      } else {
+        if (B.openRoomSetup) B.openRoomSetup(game);
+      }
+    };
+    grid.appendChild(card);
+  });
+  body.appendChild(grid);
+  var btns = document.createElement('div');
+  btns.className = 'stage-btns';
+  var bFriend = document.createElement('button');
+  bFriend.className = 'sb friend'; bFriend.textContent = '好友房 · 开黑搓局';
+  bFriend.onclick = function () {
+    try { sfx('click'); var B = window.PokerOnlineBridge; if (B && B.openRoomSetup) B.openRoomSetup(game); else showToast('联机模块未就绪，请刷新页面', 2000, true); }
+    catch (e) { showToast('操作异常：' + e.message + ' · 请按 Ctrl+F5 强制刷新', 4000, true); }
+  };
+  var bQuick = document.createElement('button');
+  bQuick.className = 'sb quick'; bQuick.textContent = '快速开始 · 人机对局';
+  bQuick.onclick = function () {
+    try { sfx('click'); App.mode = 'quick'; App.difficulty = 'normal'; Arcade.difficulty = 'normal'; Arcade.mode = 'coins'; openArcade(game); }
+    catch (e) { showToast('操作异常：' + e.message + ' · 请按 Ctrl+F5 强制刷新', 4000, true); }
+  };
+  btns.appendChild(bFriend); btns.appendChild(bQuick);
+  body.appendChild(btns);
+}
+/* 单机玩法（21点/猜骰子/斗牛）：底注场次卡（对标底分选场）+ 快速开始；联机占位诚实标注「即将开放」 */
+function renderArcStage(game) {
+  var body = $('modeBody'); if (!body) return;
+  body.innerHTML = '';
+  var accent = GAME_ACCENT[game] || '#d4a847';
+  var ladder = [];
+  try { Arcade.game = game; ladder = arcBetLadder(); } catch (e) {}
+  var tiers = [];
+  if (ladder.length >= 3) {
+    tiers = [ladder[0], ladder[Math.floor(ladder.length / 2)], ladder[ladder.length - 1]];
+  } else { tiers = ladder.slice(); }
+  var names = ['新手场', '标准场', '高手场'];
+  var head = document.createElement('div');
+  head.className = 'stage-head';
+  head.innerHTML = '<span class="sh-game" style="color:' + accent + '">' + (GAME_NAMES[game] || game) + '</span>'
+    + '<span class="sh-sub">选择底注场次 · 底注越大输赢越大</span>';
+  body.appendChild(head);
+  var grid = document.createElement('div');
+  grid.className = 'stage-grid';
+  var picked = tiers[Math.min(1, tiers.length - 1)];
+  tiers.forEach(function (bet, i) {
+    var card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'stage-card' + (bet === picked ? ' on' : '');
+    card.dataset.bet = bet;
+    card.innerHTML = (i === 1 && tiers.length >= 3 ? '<span class="sc-tag">热门</span>' : '')
+      + '<div class="sc-name">' + names[i] + '</div>'
+      + '<div class="sc-blind" style="color:' + accent + '">底注 ' + fmt(bet) + '</div>'
+      + '<div class="sc-meta">' + (game === 'blackjack' ? '21 点 · 本地庄家' : game === 'dice' ? '猜大小 · 3/5 骰' : '斗牛 · 倍数对决') + '<br>身上金币 ' + fmt(player.coins) + '</div>';
+    card.onclick = function () {
+      sfx('click');
+      grid.querySelectorAll('.stage-card').forEach(function (x) { x.classList.remove('on'); });
+      card.classList.add('on');
+      picked = bet;
+    };
+    grid.appendChild(card);
+  });
+  body.appendChild(grid);
+  var btns = document.createElement('div');
+  btns.className = 'stage-btns';
+  var bQuick = document.createElement('button');
+  bQuick.className = 'sb quick'; bQuick.textContent = '快速开始';
+  bQuick.onclick = function () {
+    try {
+      sfx('click');
+      App.mode = 'quick'; Arcade.mode = 'coins'; Arcade.prefBet = picked;
+      openArcade(game);
+    } catch (e) { showToast('操作异常：' + e.message + ' · 请按 Ctrl+F5 强制刷新', 4000, true); }
+  };
+  btns.appendChild(bQuick);
+  body.appendChild(btns);
+  var foot = document.createElement('div');
+  foot.className = 'stage-foot';
+  foot.innerHTML = '免费入场 · 免门票 · 输赢真实金币' + (game === 'dice' ? ' · 3/5 骰同轮多押' : game === 'blackjack' ? ' · 庄家软 17 停牌' : ' · 倍数对决');
+  body.appendChild(foot);
+  stageOnlinePending(btns, accent);
+}
 /* 德州场次选择页（对标斗地主「选场」）：底分/人数卡片 + 好友房(绿)/快速开始(橙) */
 var STAGE_KEYS = ['easy', 'normal', 'hard'];
 var STAGE_TAGS = { easy: '', normal: '热门', hard: '' };
@@ -10194,7 +10335,10 @@ function renderStagePage(){
 renderModeCards=function(){
   if(!player)return;
   ensureRankGift(hubGame);
-  if (hubGame === 'holdem') { renderStagePage(); return; }   /* 德州走场次选择页 */
+  if (hubGame === 'holdem') { renderStagePage(); return; }
+  if (hubGame === 'gold' || hubGame === 'diceduel' || hubGame === 'guandan') { renderOnlineStage(hubGame); return; }
+  renderArcStage(hubGame);   /* 21点/猜骰子/斗牛：底注场次卡 */
+  return;
   var s=profile15(hubGame),body=$('modeBody');body.innerHTML='';
   /* 联机能力（与服务端一致）：掼蛋/德州/炸金花/骰子比大小；不支持的玩法直接不渲染联机卡，避免假按钮 */
   var canOnline=['guandan','holdem','gold','diceduel'].indexOf(hubGame)>=0;
@@ -10324,7 +10468,7 @@ openArcade=function(game){implicitRegister();if(!GAME_IDS.includes(game)||game==
  if(Arcade.mode==='ranked'){ensureRankGift(game);if(profile15(game).rankPoints<RANKED_ENTRY_MIN){showToast('🏅 排位需要 '+RANKED_ENTRY_MIN+' 排位积分（当前 '+profile15(game).rankPoints+'）',2800,true);return false;}}
  /* 人机对局：免门票，直接用身上金币输赢 */
  Arcade.entryFeePaid=0;
- Arcade.basket=[];Arcade.rankedBank=arcadeBank15();var ok=oldOpenArcade15(game);if(ok){Arcade.message='';if(Arcade.mode!=='ranked')showToast('人机对局 · 免费入场 · 输赢真实金币',1800);arcApplyLastBet=true;renderArcade();}return ok;};
+ Arcade.basket=[];Arcade.rankedBank=arcadeBank15();var ok=oldOpenArcade15(game);if(ok){Arcade.message='';if(Arcade.mode!=='ranked')showToast('人机对局 · 免费入场 · 输赢真实金币',1800);arcApplyLastBet=true;if(Arcade.prefBet){var _ab=document.getElementById('arcBet');if(_ab){var _ok=Array.prototype.some.call(_ab.options,function(o){return o.value===String(Arcade.prefBet)});if(_ok)_ab.value=String(Arcade.prefBet);}Arcade.prefBet=0;}renderArcade();}return ok;};
 
 /* 公平骰子：总点数分布通过枚举生成，赔率为含本金总返还倍数。 */
 var diceDistribution15={};

@@ -174,10 +174,12 @@ test('选择模式可以从模式卡重新进场，也可以退回大厅', () =>
   w.hubGame = 'dice';
   w.goModeScreen();
   assert.equal(doc.getElementById('modeScreen').classList.contains('active'), true);
-  const cards = [...doc.querySelectorAll('#modeBody .mode-card')];
-  console.log('  [mode-cards]', cards.length, cards.map(c => c.className).join(','));
-  assert.equal(cards.length, 1, '不支持联机的玩法（骰子）只显示人机卡（实际 ' + cards.length + '）');
-  assert.ok(cards[0].textContent.includes('免费'), '模式卡写明免费入场');
+  /* 单机玩法已统一为底注场次卡（对标德州场次页）：无联机卡、无假按钮 */
+  const stageCards = [...doc.querySelectorAll('#modeBody .stage-card')];
+  assert.ok(stageCards.length >= 3, '骰子显示底注场次卡（实际 ' + stageCards.length + '）');
+  assert.ok(doc.querySelector('#modeBody .sb.quick'), '单机玩法场次页有快速开始按钮');
+  assert.equal(doc.querySelectorAll('#modeBody .mode-card').length, 0, '单机玩法不渲染联机卡（无假按钮）');
+  assert.ok(doc.getElementById('modeBody').textContent.includes('免费入场'), '场次页写明免费入场');
   w.hubGame = 'holdem';
   w.goModeScreen();
   /* 德州已改为场次选择页（对标斗地主）：场次卡 + 好友房(绿)/快速开始(橙)/在线匹配 */
@@ -186,8 +188,10 @@ test('选择模式可以从模式卡重新进场，也可以退回大厅', () =>
   assert.ok(doc.querySelector('#modeBody .sb.quick'), '场次页有「快速开始」按钮');
   w.hubGame = 'gold';
   w.goModeScreen();
-  const hc = [...doc.querySelectorAll('#modeBody .mode-card')];
+  const hc = [...doc.querySelectorAll('#modeBody .stage-card')];
   assert.equal(hc.length, 3, '支持联机的玩法（炸金花）显示人机/在线匹配/好友开房三卡（实际 ' + hc.length + '）');
+  const names = hc.map(c => c.querySelector('.sc-name') ? c.querySelector('.sc-name').textContent : '').join(',');
+  assert.ok(names.indexOf('人机对局') >= 0 && names.indexOf('在线匹配') >= 0 && names.indexOf('好友开房') >= 0, '三卡为 人机对局/在线匹配/好友开房（实际 ' + names + '）');
   doc.getElementById('modeBack').click();
   assert.equal(doc.getElementById('lobbyScreen').style.display, 'flex', '可以退回大厅');
 });
